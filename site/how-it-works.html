@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works · TrueCFB</title>
+<meta name="description" content="How TrueCFB works in plain English: seven rules that turn game results into a rating for every FBS team. Try rating a game yourself.">
+<meta property="og:title" content="How TrueCFB works">
+<meta property="og:description" content="How TrueCFB works in plain English: seven rules that turn game results into a rating for every FBS team. Try rating a game yourself.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://truecfb.com/how-it-works">
+<meta property="og:site_name" content="TrueCFB">
+<meta property="og:image" content="https://truecfb.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@truecfb">
+<link rel="canonical" href="https://truecfb.com/how-it-works">
+<meta name="theme-color" content="#1f6b45">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="in">
+    <a class="home" href="./" aria-label="TrueCFB home"><span class="wordmark on-accent">TrueCFB</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="./">Rankings</a>
+      <a href="team.html">Teams</a>
+      <a href="conferences.html">Conferences</a>
+      <a href="how-it-works.html" aria-current="page">How it works</a>
+      <a href="about.html">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+<header>
+    <h1>How it works</h1>
+    <p class="sub">Every team earns a Game Rating for each game it plays: 0 to 100 in the regular season, and more in a bowl or playoff game. Its TrueCFB Team Rating is the average of its Game Ratings. The ranking is the teams in order of Team Rating.</p>
+  </header>
+
+  <section class="panel" id="rules">
+    <h2>The seven rules</h2>
+    <ol class="rules">
+      <li>Every game has a Matchup Rating: 100 plus both teams' bonuses. Two average teams make a 100. The two best teams make about 155. That is the pot the two teams split.</li>
+      <li>The winner's share starts at 75 and the loser's at 25.</li>
+      <li>Margin moves it up to 5 points either way: a 1-point win is 70, a 14-point win is 75, a blowout win is 80. A loss mirrors that: a 1-point loss is 30, a blowout loss is 20. An overtime game counts as a 1-point margin.</li>
+      <li>Add 3 on the road, subtract 3 at home, nothing at a neutral site. The exact figure is 2.86.</li>
+      <li>Add your opponent's bonus, win or lose. The bonus is listed beside every team: it is how far the team is rated above or below 50. An FCS opponent counts as a 25, so its bonus is −25.</li>
+      <li>Keep the result between 0 and 100. That is the team's Game Rating. A Team Rating is the average of its Game Ratings.</li>
+      <li>Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final. <a href="#postseason">The postseason, round by round</a></li>
+    </ol>
+    <p class="note">Rules 2 to 5 are how the pot in rule 1 is split. The 100 is divided between the winner and the loser, and each team takes the other team's bonus.</p>
+  </section>
+
+  <section class="panel" id="one-game">
+    <h2>Rate a game yourself</h2>
+    <p class="note">Set how good the opponent is, where the game is played and what kind of game it is. The lines show the Game Rating for the winner and the loser at each final margin. Bowl and playoff points are added after the 0 to 100 limit.</p>
+    <div class="calc">
+      <div class="field wide"><label for="opp">Opponent rating: <span id="opp-v">50</span> (bonus <span id="opp-b">0</span>)</label><input type="range" id="opp" min="15" max="85" step="1" value="50"></div>
+      <div class="field"><span class="lab" id="ven-l">Venue</span>
+        <div class="seg" role="group" aria-labelledby="ven-l" id="ven">
+          <button type="button" data-v="-1" aria-pressed="false">Home</button><button type="button" data-v="0" aria-pressed="true">Neutral</button><button type="button" data-v="1" aria-pressed="false">Road</button>
+        </div>
+      </div>
+      <div class="field"><label for="kind">Game</label>
+        <select id="kind">
+          <option value="reg">Regular season</option>
+          <option value="bowl">Regular bowl</option>
+          <option value="earlier">Playoff, first round</option>
+          <option value="quarterfinal">Playoff, quarterfinal</option>
+          <option value="semifinal">Playoff, semifinal</option>
+          <option value="final">Playoff, final</option>
+        </select>
+      </div>
+    </div>
+    <svg class="chart" id="curve" viewBox="0 0 400 270" role="img" aria-label="Game Rating by final margin for the winner and the loser"></svg>
+    <div class="quick" id="quick"></div>
+  </section>
+
+  <section class="panel" id="example">
+    <h2>A worked example</h2>
+    <div class="prose">
+      <p>Utah beats Idaho, an FCS team, 66-14 at home. A win starts at 75. The blowout adds 5. Playing at home takes off 3. Idaho's bonus is −25. Utah's Game Rating is 52.</p>
+      <p>Utah beats BYU 28-20 at home. An 8-point win is worth 73.6. Home takes off 2.9. BYU is rated <span id="ex-opp">68.5</span>, so its bonus is <span id="ex-bonus">+18.5</span>. Utah's Game Rating is <span id="ex-gr">89.2</span>.</p>
+      <p>Both are wins. The second is worth far more because of who it was against. BYU's rating moves with every game BYU plays, so the second number moves with it until the 2026 season is over. The first never changes, because an FCS opponent always counts as a 25.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="season">
+    <h2>How a season runs</h2>
+    <ul class="plain">
+      <li><b>Start.</b> A team starts at last season's final rating, after all bowl and playoff games. Think of it as six placeholder games at that rating.</li>
+      <li><b>Each game.</b> Each real game replaces one placeholder. After six games the placeholders are gone and the Team Rating is the plain average of this season's Game Ratings. A team new to FBS starts at 25.</li>
+      <li><b>Re-rating.</b> Bonuses update as results come in, so an old win is worth more if that opponent keeps winning. A Team Rating can move in a week the team does not play.</li>
+      <li><b>Solving it.</b> A team's rating depends on its opponents' ratings, and theirs depend on its rating. So start every team at 50, rate every game, average, and repeat with the new ratings until no rating moves. Anyone who does this gets the same numbers.</li>
+      <li><b>Postseason.</b> Every bowl and playoff game counts like any other game, plus the extra points in rule 7.</li>
+      <li><b>Tiebreak.</b> In the two end-of-season rankings only (regular season final and season final): if two neighbors are within 1 point and the lower one beat the higher one, without also losing to it, they swap.</li>
+    </ul>
+  </section>
+
+  <section class="panel" id="postseason">
+    <h2>The postseason, round by round</h2>
+    <div class="prose">
+      <p>A bowl or playoff game is rated like any other game first: rules 1 to 6, kept between 0 and 100. Then the postseason points are added on top, which is how these Game Ratings pass 100.</p>
+    </div>
+    <div class="tablewrap">
+      <table class="t-left t-games">
+        <thead><tr><th>Game</th><th>Both teams</th><th>Winner adds</th><th>Most a win can earn</th></tr></thead>
+        <tbody>
+          <tr><td>Regular bowl</td><td>+10</td><td>–</td><td class="rt">110</td></tr>
+          <tr><td>Playoff, first round</td><td>+15</td><td>+10</td><td class="rt">125</td></tr>
+          <tr><td>Playoff, quarterfinal</td><td>+15</td><td>+20</td><td class="rt">135</td></tr>
+          <tr><td>Playoff, semifinal</td><td>+15</td><td>+30</td><td class="rt">145</td></tr>
+          <tr><td>Playoff, final</td><td>+15</td><td>+40</td><td class="rt">155</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="plain">
+      <li><b>Every playoff game pays both teams.</b> Each gets 15 for playing it, win or lose. That is more than the 10 for a regular bowl.</li>
+      <li><b>Each round pays its winner more than the last.</b> 10, then 20, then 30, then 40. A team earns the winner's points for every round it wins, so the further it goes, the more it has collected.</li>
+      <li><b>A loss ends the run, not the credit.</b> The loser still gets its 15 for that game and keeps everything from the rounds it won.</li>
+      <li><b>A bye is not a game.</b> A team that sits out the first round earns nothing for that round. It plays one game fewer than a team that started in the first round.</li>
+      <li><b>The points go into the average.</b> A Team Rating is still the average of every Game Rating. A playoff win is one more game in that average, at 125 to 155 where a strong regular-season win is 85 to 100. That is why a playoff run lifts a Team Rating so fast.</li>
+      <li><b>Conference championship games are regular-season games.</b> They get no extra points.</li>
+      <li><b>Four-team years.</b> From 2014 to 2023 the playoff was a semifinal and a final, at the same values as today. Any round before the quarterfinals uses the first-round value.</li>
+    </ul>
+    <div id="po-run" hidden>
+      <p class="lab" id="po-title">One playoff, game by game</p>
+      <p class="note" id="po-note"></p>
+      <div class="tablewrap">
+        <table class="t-left t-games">
+          <thead><tr><th>Game</th><th>Result</th><th>Game Rating</th><th>Team Rating</th></tr></thead>
+          <tbody id="po-rows"></tbody>
+        </table>
+      </div>
+      <p class="note" id="po-after"></p>
+    </div>
+    <p class="note">In the 12 seasons from 2014 to 2025, the champion finished 1st in the season-final TrueCFB ranking every time, and the runner-up finished 2nd in 11. The exception is 2019, when 13-1 Ohio State finished ahead of runner-up Clemson.</p>
+  </section>
+
+  <section class="panel" id="anchors">
+    <h2>What the scale means</h2>
+    <p class="note">Regular-season games, before any bowl or playoff points.</p>
+    <div class="tablewrap">
+      <table class="t-left">
+        <thead><tr><th>Game</th><th>Game Rating</th></tr></thead>
+        <tbody>
+          <tr><td>Beat the best team on the road by a lot</td><td class="rt">100</td></tr>
+          <tr><td>Typical win over an average team, neutral site</td><td class="rt">75</td></tr>
+          <tr><td>Lose to the best team on the road by 1</td><td class="rt">61</td></tr>
+          <tr><td>Beat the worst team at home by 1</td><td class="rt">36</td></tr>
+          <tr><td>Typical loss to an average team</td><td class="rt">25</td></tr>
+          <tr><td>Lose to the worst team at home by a lot</td><td class="rt">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="limits">
+    <h2>Known limits</h2>
+    <ul class="plain">
+      <li><b>2020 is unreliable.</b> Most conferences played only themselves, so nothing ties one conference's level to another's. The formula is not adjusted for that season.</li>
+      <li><b>A blowout of a weak team can lower a top team's rating.</b> A Team Rating is an average. A home blowout of an FCS team earns a Game Rating of about 52, and a top team's average is in the mid-70s. The game takes nothing away; it earns less than the team's usual game.</li>
+      <li><b>Year-end ratings run high.</b> Postseason points pass through opponents' bonuses, so ratings drift up by about 8 points for a typical top-40 team during the postseason.</li>
+      <li><b>The playoff field is chosen by the committee,</b> so playoff points go to teams the committee picked.</li>
+    </ul>
+    <p class="note">The exact definitions behind every rule are in the <a href="https://github.com/danbjimenez/truecfb#exact-definitions">README on GitHub</a>. <a href="about.html">About the project</a></p>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="in">
+    <span class="wordmark">True<b>CFB</b></span>
+    <p>Every FBS team rated on results alone. Every game counts. Open source formula.</p>
+    <p>TrueCFB v1.0. <a href="how-it-works.html">How it works</a> · <a href="about.html">About</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
+    <p>Game data from CollegeFootballData.com and ESPN. TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.</p>
+  </div>
+</footer>
+
+<script src="js/site.js"></script>
+<script src="js/how.js"></script>
+</body>
+</html>

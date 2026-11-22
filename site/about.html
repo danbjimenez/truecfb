@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · TrueCFB</title>
+<meta name="description" content="TrueCFB is an open source college football ranking. Why it exists, where the code is, and how to send a change.">
+<meta property="og:title" content="About TrueCFB">
+<meta property="og:description" content="TrueCFB is an open source college football ranking. Why it exists, where the code is, and how to send a change.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://truecfb.com/about">
+<meta property="og:site_name" content="TrueCFB">
+<meta property="og:image" content="https://truecfb.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@truecfb">
+<link rel="canonical" href="https://truecfb.com/about">
+<meta name="theme-color" content="#1f6b45">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="in">
+    <a class="home" href="./" aria-label="TrueCFB home"><span class="wordmark on-accent">TrueCFB</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="./">Rankings</a>
+      <a href="team.html">Teams</a>
+      <a href="conferences.html">Conferences</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="about.html" aria-current="page">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+<header>
+    <h1>About TrueCFB</h1>
+    <p class="sub">An open source college football ranking. The formula, the code and the data pipeline are public.</p>
+  </header>
+
+  <section class="panel" id="why">
+    <h2>Why</h2>
+    <div class="prose">
+      <p>Most college football rankings start with an opinion. A preseason poll ranks teams before anyone has played. A committee meets in a room and weighs what it saw.</p>
+      <p>TrueCFB starts from the scoreboard. It knows who played, where they played, who won and by how much. It does not know a team's name, logo, conference or reputation.</p>
+      <p>Every team is rated by the same seven rules. No game is dropped and no opponent gets a special case. Anyone can run the rules and get the same ranking.</p>
+      <p>It measures the season that was played. It does not predict the next game, and a gap to a poll is a measurement, not a verdict. <a href="how-it-works.html">How it works</a></p>
+    </div>
+  </section>
+
+  <section class="panel" id="open">
+    <h2>Open source</h2>
+    <div class="prose">
+      <p>TrueCFB is an open source project. The formula is one file of code, and the numbers on this site are rebuilt from public game results every two hours by a job anyone can read.</p>
+      <p><b>TrueCFB v1.0</b>, frozen 21 November 2026. The rules and numbers are fixed like a rulebook. They are not tuned to playoff results and not re-fit each year. Any change is a new version, with every season re-run.</p>
+      <p class="cta"><a href="https://github.com/danbjimenez/truecfb">The code on GitHub</a> <a href="https://github.com/danbjimenez/truecfb/blob/main/src/engine.py">The formula, in one file</a> <a href="https://github.com/danbjimenez/truecfb/blob/main/LICENSE">MIT License</a></p>
+    </div>
+  </section>
+
+  <section class="panel" id="contribute">
+    <h2>Send a change</h2>
+    <div class="prose">
+      <p>Pull requests are welcome: bug fixes, data fixes, a clearer page, a faster one. Here is how to send one.</p>
+    </div>
+    <ol class="rules">
+      <li><b>Fork the repo.</b> On <a href="https://github.com/danbjimenez/truecfb">the GitHub page</a>, press Fork. That makes your own copy.</li>
+      <li><b>Make your change</b> in your copy. To check it, run the four commands under “Run it yourself” in the README.</li>
+      <li><b>Open a pull request</b> from your copy. The form asks three things: what you changed, whether any rating or rank moves, and how you checked it.</li>
+      <li><b>It gets reviewed.</b> A fix or a site improvement can be merged as it is.</li>
+    </ol>
+    <div class="prose">
+      <p>A change to a rule or a number is different. The formula is frozen, so that starts as an issue, with before and after rankings, and ships only as a new version.</p>
+      <p class="cta"><a href="https://github.com/danbjimenez/truecfb/blob/main/CONTRIBUTING.md">The contributing guide</a> <a href="https://github.com/danbjimenez/truecfb/issues">Open an issue</a></p>
+    </div>
+  </section>
+
+  <section class="panel" id="data">
+    <h2>Data and credits</h2>
+    <div class="prose">
+      <p>Game results come from CollegeFootballData.com and ESPN, through the public sportsdataverse files. Final CFP rankings come from Wikipedia's season ranking pages.</p>
+      <p>TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="in">
+    <span class="wordmark">True<b>CFB</b></span>
+    <p>Every FBS team rated on results alone. Every game counts. Open source formula.</p>
+    <p>TrueCFB v1.0. <a href="how-it-works.html">How it works</a> · <a href="about.html">About</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
+    <p>Game data from CollegeFootballData.com and ESPN. TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.</p>
+  </div>
+</footer>
+
+<script src="js/site.js"></script>
+</body>
+</html>

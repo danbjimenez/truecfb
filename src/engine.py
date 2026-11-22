@@ -1,7 +1,7 @@
-"""TrueCFB rating engine, version 1.1, frozen 21 Nov 2026  (results only; team-blind; reproducible)
+"""TrueCFB rating engine, version 1.0, frozen 21 Nov 2026  (results only; team-blind; reproducible)
 Any change to a rule or number below is a new version, with every season re-run.
 
-GAME SCORE, computed for each FBS team in each game:
+GAME RATING, computed for each FBS team in each game:
   1. Start: a win is 75, a loss is 25.
   2. Margin moves it up to 5 points either way. Look up F(m): the share of all FBS-vs-FBS games
      (2014-2025) decided by fewer than m points, plus half of those decided by exactly m.
@@ -15,7 +15,7 @@ GAME SCORE, computed for each FBS team in each game:
         regular bowl   +10 to both teams
         playoff game   +15 to both teams, and the winner adds +10 in rounds before the
                        quarterfinals, +20 in a quarterfinal, +30 in a semifinal, +40 in the final
-TEAM RATING = average of its game scores this season. Every game counts. Until a team has played
+TEAM RATING = average of its Game Ratings this season. Every game counts. Until a team has played
   6 games, last season's final rating (after all postseason games) stands in for each game not
   yet played.
 Opponent ratings come from this same calculation: start everyone at 50 and repeat until no
@@ -28,9 +28,9 @@ import numpy as np
 import pandas as pd
 
 NAME = "TrueCFB"              # named 22 Nov 2026; the name is not part of the formula
-VERSION = "1.1"
+VERSION = "1.0"
 WIN_RANGE = (70.0, 80.0)      # 1-point win .. biggest win; losses mirror it (30 .. 20)
-OPP_WEIGHT = 1.0              # the opponent's bonus at full value (0.9 in version 1.0)
+OPP_WEIGHT = 1.0              # the opponent's bonus at full value (0.9 in a draft before the public release)
 FCS_RATING = 25.0
 CARRY = 6
 H2H_WINDOW = 1.0
@@ -85,14 +85,14 @@ def margin_curve(games, seasons=REF_SEASONS):
     return F
 
 
-def raw_score(margin, F, win=WIN_RANGE):
+def raw_rating(margin, F, win=WIN_RANGE):
     w = win[0] + (win[1] - win[0]) * F[np.abs(margin)]
     return np.where(margin > 0, w, 100.0 - w)
 
 
 def home_edge(games, F, win=WIN_RANGE, seasons=REF_SEASONS):
     ref = games[games.season.isin(seasons) & games.home_fbs & games.away_fbs & games.conf_game & ~games.neutral]
-    return float(raw_score(ref.margin_home.to_numpy(), F, win).mean() - 50.0)
+    return float(raw_rating(ref.margin_home.to_numpy(), F, win).mean() - 50.0)
 
 
 def rate(games, F, v, win=WIN_RANGE, b=OPP_WEIGHT, prior=None, carry=CARRY, fcs=FCS_RATING,
@@ -116,7 +116,7 @@ def rate(games, F, v, win=WIN_RANGE, b=OPP_WEIGHT, prior=None, carry=CARRY, fcs=
     mar = np.array([x[2] for x in recs], dtype=int); ven = np.array([x[3] for x in recs])
     both = np.array([x[5] for x in recs], dtype=float); extra = np.array([x[6] for x in recs], dtype=float)
     post_add = both + np.where(mar > 0, extra, 0.0)
-    raw = raw_score(mar, F, win)
+    raw = raw_rating(mar, F, win)
     gp = np.bincount(team, minlength=n).astype(float)
     if prior is None:
         pr = np.full(n, 50.0); npri = np.zeros(n)
@@ -125,17 +125,17 @@ def rate(games, F, v, win=WIN_RANGE, b=OPP_WEIGHT, prior=None, carry=CARRY, fcs=
         npri = np.clip(carry - gp, 0, None)
     rating = np.full(n, 50.0) if start is None else np.asarray(start, dtype=float).copy()
 
-    def scores(rt):
+    def game_ratings(rt):
         oq = np.where(opp >= 0, rt[np.clip(opp, 0, None)], fcs)
         return np.clip(raw + ven + b * (oq - 50.0), 0.0, 100.0) + post_add, oq
 
     for it in range(100000):
-        adj, _ = scores(rating)
+        adj, _ = game_ratings(rating)
         new = (np.bincount(team, weights=adj, minlength=n) + npri * pr) / np.maximum(gp + npri, 1)
         delta = np.max(np.abs(new - rating)); rating = new
         if delta < tol:
             break
-    adj, oq = scores(rating)
+    adj, oq = game_ratings(rating)
     wins = np.bincount(team, weights=(mar > 0), minlength=n).astype(int)
     names = np.array(fbs + ["FCS"])
     table = pd.DataFrame({"team": fbs, "rating": rating, "games": gp.astype(int), "wins": wins,
@@ -144,7 +144,7 @@ def rate(games, F, v, win=WIN_RANGE, b=OPP_WEIGHT, prior=None, carry=CARRY, fcs=
                           "avg_opp": np.bincount(team, weights=oq, minlength=n) / np.maximum(gp, 1)}).set_index("team")
     table.attrs["iters"] = it + 1
     detail = pd.DataFrame({"game_id": [x[4] for x in recs], "team": names[team], "opp": names[opp],
-                           "margin": mar, "venue": ven, "raw": raw, "opp_rating": oq, "score": adj,
+                           "margin": mar, "venue": ven, "raw": raw, "opp_rating": oq, "game_rating": adj,
                            "post_both": both, "post_win": extra, "round": [x[7] for x in recs]})
     return (table if teams is not None else table[table.games > 0]), detail
 

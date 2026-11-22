@@ -39,11 +39,22 @@ for y in range(FIRST, LAST + 1):
             hs, as_ = as_, hs
         call.at[i, "home_points"], call.at[i, "away_points"], call.at[i, "completed"] = hs, as_, True
     filled = len(late)
+    if y == LAST:   # how complete each week of the current season is
+        rg = call[(call.season_type == "regular") & ((call.home_division == "fbs") | (call.away_division == "fbs"))]
+        start = pd.to_datetime(rg.start_date, utc=True, errors="coerce")
+        # "open" = not final yet, and kicking off in the future or within the last 36 hours.
+        # A game that never got a final (cancelled) stops counting as open after that.
+        still_open = (rg.completed != True) & (start > pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=36))
+        week_status = {int(w): {"games": int((rg.week == w).sum()),
+                                "final": int(((rg.completed == True) & (rg.week == w)).sum()),
+                                "open": int((still_open & (rg.week == w)).sum())} for w in sorted(rg.week.unique())}
     c = call[(call.completed == True) & call.home_points.notna() & call.away_points.notna()]
     c = c[(c.home_division == "fbs") | (c.away_division == "fbs")].copy()
     base = pd.DataFrame({
         "game_id": c.game_id.astype("int64"), "season": y, "week": c.week, "season_type": c.season_type,
         "date": c.start_date.str[:10], "neutral": c.neutral_site.astype(bool),
+        # the US game day: a late Saturday kickoff is already Sunday in UTC
+        "day": (pd.to_datetime(c.start_date, utc=True) - pd.Timedelta(hours=8)).dt.strftime("%Y-%m-%d"),
         "home_id": c.home_id.astype("int64"), "home": c.home_team, "home_fbs": c.home_division == "fbs",
         "home_conf": c.home_conference,
         "away_id": c.away_id.astype("int64"), "away": c.away_team, "away_fbs": c.away_division == "fbs",
@@ -61,7 +72,7 @@ for y in range(FIRST, LAST + 1):
             for tid, v in ((int(r.home_id), rk(r.home_current_rank)), (int(r.away_id), rk(r.away_current_rank))):
                 if v and tid in id_name:
                     latest_poll[id_name[tid]] = v
-        latest_poll = {"season": y, "espn_week": cur, "ranks": latest_poll}
+        latest_poll = {"season": y, "espn_week": cur, "ranks": latest_poll, "weeks": week_status}
     ec = e[e.status_type_completed == True].copy()
     ec["ot"] = ec.status_period.astype(float) > 4
     base = base.merge(ec[["gid", "ot"]].drop_duplicates("gid"), left_on="game_id", right_on="gid", how="left").drop(columns="gid")
@@ -78,6 +89,7 @@ for y in range(FIRST, LAST + 1):
         if h not in fbs_ids or a not in fbs_ids:
             continue
         add.append({"game_id": r.gid, "season": y, "week": 99, "season_type": "postseason", "date": str(r.date)[:10],
+                    "day": (pd.to_datetime(r.date, utc=True) - pd.Timedelta(hours=8)).strftime("%Y-%m-%d"),
                     "neutral": bool(r.neutral_site), "home_id": h, "home": names[h], "home_fbs": True, "home_conf": None,
                     "away_id": a, "away": names[a], "away_fbs": True, "away_conf": None, "home_pts": int(r.home_score),
                     "away_pts": int(r.away_score), "note": r.notes_headline, "src": "espn", "ot": bool(r.ot),
