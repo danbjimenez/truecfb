@@ -4,5 +4,7 @@
   "compatibility_date": "2026-11-22",
   "assets": {
     "directory": "./site"
-  }
+  },
+  // Lets Cloudflare build a preview copy of the site for a branch before it goes live.
+  "previews": {}
 }
