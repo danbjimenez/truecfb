@@ -43,9 +43,14 @@ def snapshot(sid, label, games, teams, prior, poll, poll_name, h2h):
             "others": sorted([row(t) for t in seen if rank[t] > 25], key=lambda x: x[5])}, tab, rank, iters, det
 
 
-def conf_table(s, tab):
+def team_conf(s):
     conf = dict(zip(s.home[s.home_fbs & s.home_conf.notna()], s.home_conf[s.home_fbs & s.home_conf.notna()]))
     conf.update(dict(zip(s.away[s.away_fbs & s.away_conf.notna()], s.away_conf[s.away_fbs & s.away_conf.notna()])))
+    return conf
+
+
+def conf_table(s, tab):
+    conf = team_conf(s)
     out = []
     x = s[s.home_fbs & s.away_fbs]
     for c in sorted(set(conf.values())):
@@ -68,14 +73,15 @@ def schedule_lines(s, det, tab):
         opp = gi.away if home else gi.home
         pf, pa = (gi.home_pts, gi.away_pts) if home else (gi.away_pts, gi.home_pts)
         site = "N" if gi.neutral else ("H" if home else "A")
-        out.setdefault(r.team, []).append([gi.date[5:], opp, site, int(pf), int(pa), int(bool(gi.ot)),
+        out.setdefault(r.team, []).append([gi.day[5:], opp, site, int(pf), int(pa), int(bool(gi.ot)),
                                            round(float(r.score), 1), round(float(r.opp_rating), 1), int(r.opp == "FCS"),
                                            int(r.post_both), int(r.post_win)])
     return out
 
 
-data = {"settings": {"win": E.WIN_RANGE, "b": E.OPP_WEIGHT, "fcs": E.FCS_RATING, "carry": E.CARRY, "venue": round(V, 2)},
-        "F": [round(float(x), 4) for x in F[:61]], "seasons": {}, "history": {}, "conf": {}, "ratings": {}}
+data = {"name": E.NAME, "version": E.VERSION,
+        "settings": {"win": E.WIN_RANGE, "b": E.OPP_WEIGHT, "fcs": E.FCS_RATING, "carry": E.CARRY, "venue": round(V, 2)},
+        "F": [round(float(x), 4) for x in F[:61]], "seasons": {}, "history": {}, "conf": {}, "ratings": {}, "team_conf": {}}
 t13, _ = E.rate(g[g.season == 2013], F, V); prior = t13.rating      # 2013 only seeds the 2014 carryover
 weekly_gaps = {}; max_iters = 0; report = []; finals = []
 for y in range(2014, 2027):
@@ -83,9 +89,9 @@ for y in range(2014, 2027):
     teams = sorted(set(s.home[s.home_fbs]) | set(s.away[s.away_fbs]))
     weeks = sorted(int(w) for w in reg.week.unique())
     snaps = []
-    for w in weeks:
+    for i, w in enumerate(weeks):
         poll = latest["ranks"] if (y == 2026 and w == max(weeks)) else poll_from(reg[reg.week == w])
-        label = "Preseason" if w == weeks[0] else f"Entering week {w}"
+        label = "Preseason" if i == 0 else f"Through week {weeks[i - 1]}"
         sn, tab, rank, it, _ = snapshot(f"w{w}", label, reg[reg.week < w], teams, prior, poll, "Poll", False)
         max_iters = max(max_iters, it); snaps.append(sn)
         if sn["gap"] is not None and sn["n"] >= 10: weekly_gaps.setdefault(w, []).append(sn["gap"])
@@ -100,17 +106,34 @@ for y in range(2014, 2027):
         finals.append((y, champ, rankf[champ], runner, rankf[runner], [f"{r[1]} {r[2]}" for r in sn2["rows"][:5]], rank, rankf))
         prior_next = tabf.rating
     else:
+        # The current season. The page opens on the last fully completed week; if the newest week is
+        # still being played, "now" holds every final so far and is labelled as in progress.
         cur_w = max(weeks)
-        sn2, tabf, rankf, it, detf = snapshot("now", f"Now (all completed games through week {cur_w})", reg, teams, prior, latest["ranks"], "CFP", False)
+        st = latest.get("weeks", {}).get(str(cur_w), {})
+        complete = st.get("open", 0) == 0
+        now_label = (f"Through week {cur_w}" if complete
+                     else f"Week {cur_w} in progress ({st.get('final', 0)} of {st.get('games', 0)} games final)")
+        sn2, tabf, rankf, it, detf = snapshot("now", now_label, reg, teams, prior, latest["ranks"], "CFP", False)
         snaps.append(sn2); cur = snaps[-2]; prior_next = prior
+        shown = reg if complete else reg[reg.week < cur_w]
+        prev_w = weeks[weeks.index(cur_w) - 1] if weeks.index(cur_w) > 0 else None
+        data["current"] = {"season": str(y), "default": "now" if complete else f"w{cur_w}",
+                           "week": int(cur_w) if complete else (int(prev_w) if prev_w is not None else None),
+                           "complete": bool(complete), "through": shown.day.max() if len(shown) else None,
+                           "now_through": reg.day.max(), "now_label": now_label}
         s = reg
     for t in teams:
         data["history"].setdefault(t, {})[str(y)] = [round(float(tabf.rating[t]), 1), rankf[t]]
     data["ratings"][str(y)] = {t: [round(float(tabf.rating[t]), 1), rankf[t], int(tabf.wins[t]), int(tabf.losses[t])] for t in teams}
     data["conf"][str(y)] = conf_table(s, tabf)
+    data["team_conf"][str(y)] = {t: c for t, c in sorted(team_conf(s).items()) if t in tabf.index}
     json.dump(schedule_lines(s, detf, tabf), open(f"{out_dir}/sched_{y}.json", "w"), separators=(",", ":"), ensure_ascii=False)
     data["seasons"][str(y)] = snaps
     prior = prior_next
+if "current" not in data:   # every season in the run is finished
+    last_y = max(data["seasons"])
+    data["current"] = {"season": last_y, "default": "final", "week": None, "complete": True, "through": None,
+                       "now_through": None, "now_label": None}
 json.dump(data, open(f"{out_dir}/data.json", "w"), separators=(",", ":"), ensure_ascii=False)
 print("max iterations in any snapshot:", max_iters)
 print("\nREGULAR SEASON FINAL vs FINAL CFP RANKING")
@@ -126,7 +149,7 @@ for y, champ, kc, runner, kr, top5, rank, rankf in finals:
 print("champion 1st:", sum(f[2] == 1 for f in finals), "of", len(finals), "| runner-up 2nd:", sum(f[4] == 2 for f in finals))
 print("\nAVERAGE GAP TO THE POLL BY WEEK:", {w: round(float(np.mean(v)), 1) for w, v in sorted(weekly_gaps.items())})
 print("\n2026 preseason top 8:", [f"{r[1]} {r[2]}" for r in data["seasons"]["2026"][0]["rows"][:8]])
-print("2026 entering week 12 vs latest CFP: gap", cur["gap"], "| in our 25:", sum(1 for r in cur["rows"] if r[5]))
+print("2026 latest weekly snapshot vs latest CFP: gap", cur["gap"], "| in our 25:", sum(1 for r in cur["rows"] if r[5]))
 for r in cur["rows"][:10]: print(f"{r[0]:>2}. {r[1]} ({r[3]}-{r[4]}) {r[2]}  CFP {r[5] or 'NR'}")
 print("rating range 2025 final:", min(v[0] for v in data["ratings"]["2025"].values()), max(v[0] for v in data["ratings"]["2025"].values()))
 print("files:", {f: os.path.getsize(f"{out_dir}/{f}") for f in sorted(os.listdir(out_dir)) if f.endswith(".json")})

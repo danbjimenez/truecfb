@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teams · TrueCFB</title>
+<meta name="description" content="Any FBS team's TrueCFB Team Rating, rank, every game with its score, and rating history since 2014.">
+<meta property="og:title" content="TrueCFB team pages">
+<meta property="og:description" content="Any FBS team's rating, rank and every game, from game results alone.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://truecfb.com/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="in">
+    <a class="home" href="./" aria-label="TrueCFB home"><span class="wordmark on-accent">TrueCFB</span></a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="./">Rankings</a>
+      <a href="team.html" aria-current="page">Teams</a>
+      <a href="about.html">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <header>
+    <h1 id="t-name">Teams</h1>
+    <p class="status" id="t-status">&nbsp;</p>
+  </header>
+
+  <section class="panel controls" aria-label="Team and season">
+    <div class="field"><label for="team">Team</label><select id="team"></select></div>
+    <div class="field"><label for="season">Season</label><select id="season"></select></div>
+  </section>
+
+  <p class="note" id="t-missing" hidden></p>
+
+  <div id="t-body" class="stack">
+    <section class="panel">
+      <div class="readouts">
+        <div class="read"><b id="t-rating">–</b><span id="t-rating-l">TrueCFB Team Rating</span></div>
+        <div class="read"><b id="t-rank">–</b><span id="t-rank-l">of all FBS teams</span></div>
+      </div>
+      <div class="quick" id="t-tiles"></div>
+      <p class="note" id="t-carry" hidden>Until a team has played 6 games, last season's final rating fills in for each game not yet played.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Every game</h2>
+      <p class="note">Score is what the game earned on the 0 to 100 scale. The Game Rating is the pot the two teams split. Bonus is what the opponent was worth. Bowl and playoff games also show their extra points.</p>
+      <div class="tablewrap">
+        <table class="t-left">
+          <thead><tr><th>Game</th><th>Result</th><th>Score</th><th>Effect</th></tr></thead>
+          <tbody id="t-sched"></tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <span><span class="gap up">+9.0</span> the game scored above the team's rating and pulled it up</span>
+        <span><span class="gap down">−9.0</span> it scored below and pulled it down</span>
+      </div>
+    </section>
+
+    <section class="panel" id="t-conf-box">
+      <h2 id="t-conf-title">Conference</h2>
+      <p class="note" id="t-conf-note"></p>
+      <div class="tablewrap">
+        <table class="t-rank">
+          <thead><tr><th>#</th><th>Team</th><th>Rating</th><th>FBS rank</th></tr></thead>
+          <tbody id="t-conf"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Team Rating by year</h2>
+      <p class="note">The season-final rating, after bowls and playoff. The current season shows the rating to date.</p>
+      <div class="hist" id="t-hist"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="site-foot">
+  <div class="in">
+    <span class="wordmark">True<b>CFB</b></span>
+    <p>Blind to the jersey. Every game counts. Open formula.</p>
+    <p>TrueCFB version 1.1. <a href="about.html">How it works</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
+    <p>Game data from CollegeFootballData.com and ESPN. TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.</p>
+  </div>
+</footer>
+
+<script src="js/site.js"></script>
+<script src="js/team.js"></script>
+</body>
+</html>

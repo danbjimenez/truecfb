@@ -125,10 +125,10 @@ The last step rewrites the files in `site/`. Open `site/index.html` through any 
 |---|---|
 | `src/engine.py` | The formula. Every rule and number above is in this one file. |
 | `src/fetch_data.py` | Downloads the public game files. |
-| `src/build_games.py` | Merges them into one games table. |
+| `src/build_games.py` | Merges them into one games table and notes how complete each week of the current season is. |
 | `src/run_all.py` | Runs every season and writes the site's data files. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
-| `site/` | The website: one page and its data files. |
+| `site/` | The website: the Rankings, Teams and About pages, their styles and scripts, and the data files the pipeline writes. |
 | `.github/workflows/refresh.yml` | The scheduled job that refreshes the numbers. |
 | `wrangler.jsonc` | Tells Cloudflare to serve `site/` as the website. |
 
