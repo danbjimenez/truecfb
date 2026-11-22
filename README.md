@@ -139,3 +139,7 @@ The last step rewrites the files in `site/`. Open `site/index.html` through any 
 - Final CFP rankings: Wikipedia season ranking pages, cross-checked against the ranks shown on bowl games.
 
 TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.
+
+## License
+
+The code is released under the [MIT License](LICENSE). The license covers the code. It does not cover the TrueCFB name.
