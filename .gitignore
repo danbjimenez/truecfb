@@ -1,0 +1,8 @@
+# Downloaded source files and the merged games table are rebuilt on every run
+data/schedules/
+data/espn/
+data/games.csv
+data/latest_poll.json
+__pycache__/
+*.pyc
+*.part

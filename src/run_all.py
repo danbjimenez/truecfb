@@ -1,0 +1,132 @@
+"""TrueCFB: run every season 2014-2026 with the current engine version: weekly snapshots, regular-season final, season final,
+conference tables and each team's schedule line.
+Usage: run_all.py <games.csv> <src_dir> <latest_poll.json> <out_dir> <cfp_final.json>"""
+import sys, json, os
+import numpy as np, pandas as pd
+sys.path.insert(0, sys.argv[2])
+import engine as E
+
+SELECTION = {2014: "2014-12-07", 2015: "2015-12-06", 2016: "2016-12-04", 2017: "2017-12-03", 2018: "2018-12-02",
+             2019: "2019-12-08", 2020: "2020-12-20", 2021: "2021-12-05", 2022: "2022-12-04", 2023: "2023-12-03",
+             2024: "2024-12-08", 2025: "2025-12-07"}
+g = E.load_games(sys.argv[1]); latest = json.load(open(sys.argv[3])); out_dir = sys.argv[4]
+CFP_FINAL = json.load(open(sys.argv[5]))   # final committee rankings (Wikipedia season ranking pages)
+F = E.margin_curve(g); V = E.home_edge(g, F)
+print("settings: win range", E.WIN_RANGE, "opp weight", E.OPP_WEIGHT, "venue %.2f" % V, "FCS", E.FCS_RATING,
+      "| bowl", E.BOWL_BONUS, "playoff", E.PLAYOFF_BONUS, E.PLAYOFF_WIN_BONUS)
+
+
+def poll_from(rows):
+    p = {}
+    for r in rows.itertuples():
+        if pd.notna(r.home_rank): p[r.home] = int(r.home_rank)
+        if pd.notna(r.away_rank): p[r.away] = int(r.away_rank)
+    return p
+
+
+def snapshot(sid, label, games, teams, prior, poll, poll_name, h2h):
+    det = None
+    if len(games) == 0:
+        tab = pd.DataFrame({"rating": [prior.get(t, E.FCS_RATING) if prior is not None else 50.0 for t in teams],
+                            "wins": 0, "losses": 0}, index=teams)
+        order = list(tab.sort_values("rating", ascending=False).index); iters = 0
+    else:
+        tab, det = E.rate(games, F, V, prior=prior, teams=teams)
+        iters = tab.attrs["iters"]
+        order = E.rank_with_h2h(tab, games)[0] if h2h else list(tab.sort_values("rating", ascending=False).index)
+    rank = {t: i + 1 for i, t in enumerate(order)}
+    seen = {t: p for t, p in poll.items() if t in rank}
+    gap = float(np.mean([abs(rank[t] - p) for t, p in seen.items()])) if seen else None
+    row = lambda t: [rank[t], t, round(float(tab.rating[t]), 1), int(tab.wins[t]), int(tab.losses[t]), seen.get(t)]
+    return {"id": sid, "label": label, "poll": poll_name, "gap": None if gap is None else round(gap, 1), "n": len(seen),
+            "rows": [row(t) for t in order[:25]],
+            "others": sorted([row(t) for t in seen if rank[t] > 25], key=lambda x: x[5])}, tab, rank, iters, det
+
+
+def conf_table(s, tab):
+    conf = dict(zip(s.home[s.home_fbs & s.home_conf.notna()], s.home_conf[s.home_fbs & s.home_conf.notna()]))
+    conf.update(dict(zip(s.away[s.away_fbs & s.away_conf.notna()], s.away_conf[s.away_fbs & s.away_conf.notna()])))
+    out = []
+    x = s[s.home_fbs & s.away_fbs]
+    for c in sorted(set(conf.values())):
+        teams = [t for t in tab.index if conf.get(t) == c]
+        if not teams: continue
+        ts = set(teams); nc = x[(x.home.isin(ts) ^ x.away.isin(ts))]
+        w = int(((nc.home.isin(ts)) & (nc.margin_home > 0)).sum() + ((nc.away.isin(ts)) & (nc.margin_home < 0)).sum())
+        out.append([c, len(teams), round(float(tab.rating[teams].mean()), 1), w, len(nc) - w])
+    return sorted(out, key=lambda r: -r[2])
+
+
+def schedule_lines(s, det, tab):
+    """Per team: [date, opponent, site, points for, points against, overtime, game score, opponent rating,
+    FCS flag, postseason bonus for both teams, extra bonus the winner of that round gets]."""
+    info = s.set_index("game_id")
+    out = {}
+    for r in det.itertuples():
+        gi = info.loc[r.game_id]
+        home = gi.home == r.team
+        opp = gi.away if home else gi.home
+        pf, pa = (gi.home_pts, gi.away_pts) if home else (gi.away_pts, gi.home_pts)
+        site = "N" if gi.neutral else ("H" if home else "A")
+        out.setdefault(r.team, []).append([gi.date[5:], opp, site, int(pf), int(pa), int(bool(gi.ot)),
+                                           round(float(r.score), 1), round(float(r.opp_rating), 1), int(r.opp == "FCS"),
+                                           int(r.post_both), int(r.post_win)])
+    return out
+
+
+data = {"settings": {"win": E.WIN_RANGE, "b": E.OPP_WEIGHT, "fcs": E.FCS_RATING, "carry": E.CARRY, "venue": round(V, 2)},
+        "F": [round(float(x), 4) for x in F[:61]], "seasons": {}, "history": {}, "conf": {}, "ratings": {}}
+t13, _ = E.rate(g[g.season == 2013], F, V); prior = t13.rating      # 2013 only seeds the 2014 carryover
+weekly_gaps = {}; max_iters = 0; report = []; finals = []
+for y in range(2014, 2027):
+    s = g[g.season == y]; reg = s[s.season_type == "regular"]
+    teams = sorted(set(s.home[s.home_fbs]) | set(s.away[s.away_fbs]))
+    weeks = sorted(int(w) for w in reg.week.unique())
+    snaps = []
+    for w in weeks:
+        poll = latest["ranks"] if (y == 2026 and w == max(weeks)) else poll_from(reg[reg.week == w])
+        label = "Preseason" if w == weeks[0] else f"Entering week {w}"
+        sn, tab, rank, it, _ = snapshot(f"w{w}", label, reg[reg.week < w], teams, prior, poll, "Poll", False)
+        max_iters = max(max_iters, it); snaps.append(sn)
+        if sn["gap"] is not None and sn["n"] >= 10: weekly_gaps.setdefault(w, []).append(sn["gap"])
+    if y in SELECTION:
+        rs = reg[reg.date <= SELECTION[y]]
+        cfp = {t: i + 1 for i, t in enumerate(CFP_FINAL[str(y)])}
+        sn, tab, rank, it, _ = snapshot("reg", "Regular season final", rs, teams, prior, cfp, "CFP", True); snaps.append(sn)
+        report.append((y, sn, rank, cfp, tab))
+        sn2, tabf, rankf, it, detf = snapshot("final", "Season final (after bowls and playoff)", s, teams, prior, {}, None, True); snaps.append(sn2)
+        fin = detf[detf["round"] == "final"]
+        champ, runner = fin[fin.margin > 0].team.iloc[0], fin[fin.margin < 0].team.iloc[0]
+        finals.append((y, champ, rankf[champ], runner, rankf[runner], [f"{r[1]} {r[2]}" for r in sn2["rows"][:5]], rank, rankf))
+        prior_next = tabf.rating
+    else:
+        cur_w = max(weeks)
+        sn2, tabf, rankf, it, detf = snapshot("now", f"Now (all completed games through week {cur_w})", reg, teams, prior, latest["ranks"], "CFP", False)
+        snaps.append(sn2); cur = snaps[-2]; prior_next = prior
+        s = reg
+    for t in teams:
+        data["history"].setdefault(t, {})[str(y)] = [round(float(tabf.rating[t]), 1), rankf[t]]
+    data["ratings"][str(y)] = {t: [round(float(tabf.rating[t]), 1), rankf[t], int(tabf.wins[t]), int(tabf.losses[t])] for t in teams}
+    data["conf"][str(y)] = conf_table(s, tabf)
+    json.dump(schedule_lines(s, detf, tabf), open(f"{out_dir}/sched_{y}.json", "w"), separators=(",", ":"), ensure_ascii=False)
+    data["seasons"][str(y)] = snaps
+    prior = prior_next
+json.dump(data, open(f"{out_dir}/data.json", "w"), separators=(",", ":"), ensure_ascii=False)
+print("max iterations in any snapshot:", max_iters)
+print("\nREGULAR SEASON FINAL vs FINAL CFP RANKING")
+allgap = []
+for y, sn, rank, cfp, tab in report:
+    top4 = [f"{r[1]} ({r[3]}-{r[4]}) {r[2]}" for r in sn["rows"][:4]]; cfp4 = [t for t, k in sorted(cfp.items(), key=lambda kv: kv[1])[:4]]
+    allgap.append(sn["gap"])
+    print(f"{y}: gap {sn['gap']}, {sum(1 for r in sn['rows'] if r[5])} of CFP 25 in ours | ours: {', '.join(top4)} | CFP: {', '.join(cfp4)} | same four: {set(r[1] for r in sn['rows'][:4]) == set(cfp4)}")
+print("average gap over seasons: %.2f" % np.mean(allgap))
+print("\nSEASON FINAL (after postseason)")
+for y, champ, kc, runner, kr, top5, rank, rankf in finals:
+    print(f"{y}: champion {champ} #{kc}, runner-up {runner} #{kr} | top 5: {', '.join(top5)}")
+print("champion 1st:", sum(f[2] == 1 for f in finals), "of", len(finals), "| runner-up 2nd:", sum(f[4] == 2 for f in finals))
+print("\nAVERAGE GAP TO THE POLL BY WEEK:", {w: round(float(np.mean(v)), 1) for w, v in sorted(weekly_gaps.items())})
+print("\n2026 preseason top 8:", [f"{r[1]} {r[2]}" for r in data["seasons"]["2026"][0]["rows"][:8]])
+print("2026 entering week 12 vs latest CFP: gap", cur["gap"], "| in our 25:", sum(1 for r in cur["rows"] if r[5]))
+for r in cur["rows"][:10]: print(f"{r[0]:>2}. {r[1]} ({r[3]}-{r[4]}) {r[2]}  CFP {r[5] or 'NR'}")
+print("rating range 2025 final:", min(v[0] for v in data["ratings"]["2025"].values()), max(v[0] for v in data["ratings"]["2025"].values()))
+print("files:", {f: os.path.getsize(f"{out_dir}/{f}") for f in sorted(os.listdir(out_dir)) if f.endswith(".json")})
