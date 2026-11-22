@@ -1,0 +1,50 @@
+name: Publish a release
+
+# Creates a version tag and a GitHub release for the current state of main.
+# It only runs when started by hand: Actions tab -> Publish a release -> Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag, for example v1.0"
+        required: true
+        type: string
+      title:
+        description: "Release title, for example TrueCFB v1.0"
+        required: true
+        type: string
+      notes:
+        description: "Release notes (Markdown)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create the tag and the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          TITLE: ${{ inputs.title }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "::error::The version must look like v1.0 or v1.0.1, not '$VERSION'."
+            exit 1
+          fi
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Releases are published from main only."
+            exit 1
+          fi
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "::error::Release $VERSION already exists. A published version is never replaced."
+            exit 1
+          fi
+          gh release create "$VERSION" --target "$GITHUB_SHA" --title "$TITLE" --notes "$NOTES"
