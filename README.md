@@ -130,6 +130,7 @@ The last step rewrites the files in `site/`. Open `site/index.html` through any 
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
 | `site/` | The website: one page and its data files. |
 | `.github/workflows/refresh.yml` | The scheduled job that refreshes the numbers. |
+| `wrangler.jsonc` | Tells Cloudflare to serve `site/` as the website. |
 
 ## Data
 

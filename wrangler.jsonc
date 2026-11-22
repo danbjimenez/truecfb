@@ -1,0 +1,8 @@
+// Cloudflare settings: serve the files in site/ as a static website.
+{
+  "name": "truecfb",
+  "compatibility_date": "2026-11-22",
+  "assets": {
+    "directory": "./site"
+  }
+}
