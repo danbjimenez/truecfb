@@ -33,6 +33,8 @@ The maintainer decides what becomes a new version. The formula is not tuned to m
 The site follows the TrueCFB brand rules:
 
 - **Blind to the jersey.** No team colors, logos, helmets or mascots. Every team is plain text.
+- **The name is TrueCFB.** Capital T, lowercase r, u, e, capital CFB. Never in all capitals, including inside a heading.
+- **Rating, not score.** TrueCFB's numbers are a Game Rating, a Team Rating, a Conference Rating or a Matchup Rating. "Score" only ever means the points on the scoreboard.
 - **Blue means higher than the comparison and orange means lower.** Never red or green as a verdict.
 - **Both themes.** Check the page in light and dark.
 - **Phone first.** Check it at phone width. A wide table scrolls inside its frame; the page does not.

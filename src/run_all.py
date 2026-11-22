@@ -5,7 +5,7 @@ Usage: run_all.py <games.csv> <src_dir> <latest_poll.json> <out_dir> <cfp_final.
 Writes to <out_dir>:
   data.json        settings, the list of snapshots per season, final ratings, conferences
   rank_{year}.json every snapshot's full ranking: [rank, team, rating, wins, losses, CFP rank, AP rank]
-  sched_{year}.json every team's games"""
+  sched_{year}.json every team's rating at the start of the season and every game, with the Team Rating after it"""
 import sys, json, os
 import numpy as np, pandas as pd
 sys.path.insert(0, sys.argv[2])
@@ -95,9 +95,18 @@ def conf_table(s, tab):
     return sorted(out, key=lambda r: -r[2])
 
 
-def schedule_lines(s, det, tab):
-    """Per team: [date, opponent, site, points for, points against, overtime, game score, opponent rating,
-    FCS flag, postseason bonus for both teams, extra bonus the winner of that round gets]."""
+def note_after(after, games, tab, rank):
+    """Record each team's Team Rating and rank once these games are counted."""
+    for r in games.itertuples():
+        for t, fbs in ((r.home, r.home_fbs), (r.away, r.away_fbs)):
+            if fbs: after[(t, r.game_id)] = (round(float(tab.rating[t]), 1), int(rank[t]))
+
+
+def schedule_lines(s, det, tab, after):
+    """Per team: [date, opponent, site, points for, points against, overtime, Game Rating, opponent rating,
+    FCS flag, postseason bonus for both teams, extra bonus the winner of that round gets,
+    Team Rating after the game, rank after the game].
+    "After" means once that week's games are counted in the regular season, or that day's in the postseason."""
     info = s.set_index("game_id")
     out = {}
     for r in det.itertuples():
@@ -107,8 +116,8 @@ def schedule_lines(s, det, tab):
         pf, pa = (gi.home_pts, gi.away_pts) if home else (gi.away_pts, gi.home_pts)
         site = "N" if gi.neutral else ("H" if home else "A")
         out.setdefault(r.team, []).append([gi.day[5:], opp, site, int(pf), int(pa), int(bool(gi.ot)),
-                                           round(float(r.score), 1), round(float(r.opp_rating), 1), int(r.opp == "FCS"),
-                                           int(r.post_both), int(r.post_win)])
+                                           round(float(r.game_rating), 1), round(float(r.opp_rating), 1), int(r.opp == "FCS"),
+                                           int(r.post_both), int(r.post_win)] + list(after.get((r.team, r.game_id), (None, None))))
     return out
 
 
@@ -121,7 +130,7 @@ for y in range(2014, 2027):
     s = g[g.season == y]; reg = s[s.season_type == "regular"]
     teams = sorted(set(s.home[s.home_fbs]) | set(s.away[s.away_fbs]))
     weeks = sorted(int(w) for w in reg.week.unique())
-    snaps = []
+    snaps = []; after = {}; start = {}
     P = POLLS.get(y, {"regular": {}, "postseason": {}})
     for i, w in enumerate(weeks):
         poll = latest["ranks"] if (y == 2026 and w == max(weeks)) else poll_from(reg[reg.week == w])
@@ -134,6 +143,8 @@ for y in range(2014, 2027):
         sn, tab, rank, it, _ = snapshot(f"w{w}", label, reg[reg.week < w], teams, prior, poll, "Poll", False,
                                         ap=pw.get("ap"), cfp=cfp_w)
         max_iters = max(max_iters, it); snaps.append(sn)
+        if i == 0: start = {t: [round(float(tab.rating[t]), 1), int(rank[t])] for t in teams}   # the season's starting point
+        else: note_after(after, reg[reg.week == weeks[i - 1]], tab, rank)   # this snapshot is the first to hold last week's games
         if sn["gap"] is not None and sn["n"] >= 10: weekly_gaps.setdefault(w, []).append(sn["gap"])
     if y in SELECTION:
         rs = reg[reg.date <= SELECTION[y]]
@@ -146,6 +157,7 @@ for y in range(2014, 2027):
         sn, tab, rank, it, _ = snapshot("reg", "Regular season final", rs, teams, prior, cfp, "CFP", True,
                                         ap=last.get("ap") if on_time else None, cfp=cfp); snaps.append(sn)
         report.append((y, sn, rank, cfp, tab))
+        note_after(after, rs[rs.week == weeks[-1]], tab, rank)
         post = P["postseason"].get(min(P["postseason"]), {}) if P["postseason"] else {}   # the AP poll after the bowls
         sn2, tabf, rankf, it, detf = snapshot("final", "Season final (after bowls and playoff)", s, teams, prior, {}, None, True,
                                               ap=post.get("ap")); snaps.append(sn2)
@@ -153,6 +165,17 @@ for y in range(2014, 2027):
         champ, runner = fin[fin.margin > 0].team.iloc[0], fin[fin.margin < 0].team.iloc[0]
         finals.append((y, champ, rankf[champ], runner, rankf[runner], [f"{r[1]} {r[2]}" for r in sn2["rows"][:5]], rank, rankf))
         prior_next = tabf.rating
+        # Bowl and playoff games (and any regular-season game after selection day): the Team Rating
+        # after each one, from a ranking run through that day.
+        late = s[~s.game_id.isin(rs.game_id)]
+        days = sorted(late.day.unique())
+        for d in days:
+            if d == days[-1]:
+                note_after(after, late[late.day == d], tabf, rankf)
+                continue
+            td, _ = E.rate(pd.concat([rs, late[late.day <= d]]), F, V, prior=prior, teams=teams)
+            rd = {t: k + 1 for k, t in enumerate(td.sort_values("rating", ascending=False).index)}
+            note_after(after, late[late.day == d], td, rd)
     else:
         # The current season. The page opens on the last fully completed week; if the newest week is
         # still being played, "now" holds every final so far and is labelled as in progress.
@@ -173,13 +196,15 @@ for y in range(2014, 2027):
                            "week": int(cur_w) if complete else (int(prev_w) if prev_w is not None else None),
                            "complete": bool(complete), "through": shown.day.max() if len(shown) else None,
                            "now_through": reg.day.max(), "now_label": now_label}
+        note_after(after, reg[reg.week == cur_w], tabf, rankf)
         s = reg
     for t in teams:
         data["history"].setdefault(t, {})[str(y)] = [round(float(tabf.rating[t]), 1), rankf[t]]
     data["ratings"][str(y)] = {t: [round(float(tabf.rating[t]), 1), rankf[t], int(tabf.wins[t]), int(tabf.losses[t])] for t in teams}
     data["conf"][str(y)] = conf_table(s, tabf)
     data["team_conf"][str(y)] = {t: c for t, c in sorted(team_conf(s).items()) if t in tabf.index}
-    json.dump(schedule_lines(s, detf, tabf), open(f"{out_dir}/sched_{y}.json", "w"), separators=(",", ":"), ensure_ascii=False)
+    json.dump({"start": start, "games": schedule_lines(s, detf, tabf, after)}, open(f"{out_dir}/sched_{y}.json", "w"),
+              separators=(",", ":"), ensure_ascii=False)
     json.dump({sn["id"]: sn["all"] for sn in snaps}, open(f"{out_dir}/rank_{y}.json", "w"), separators=(",", ":"), ensure_ascii=False)
     data["seasons"][str(y)] = snaps
     prior = prior_next

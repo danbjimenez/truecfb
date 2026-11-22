@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How it works · TrueCFB</title>
-<meta name="description" content="How TrueCFB works in plain English: seven rules that turn game results into a rating for every FBS team. Try scoring a game yourself.">
+<meta name="description" content="How TrueCFB works in plain English: seven rules that turn game results into a rating for every FBS team. Try rating a game yourself.">
 <meta property="og:title" content="How TrueCFB works">
-<meta property="og:description" content="How TrueCFB works in plain English: seven rules that turn game results into a rating for every FBS team. Try scoring a game yourself.">
+<meta property="og:description" content="How TrueCFB works in plain English: seven rules that turn game results into a rating for every FBS team. Try rating a game yourself.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://truecfb.com/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -31,25 +31,25 @@
 <main class="page">
 <header>
     <h1>How it works</h1>
-    <p class="sub">Every team gets a score from 0 to 100 for each game it plays. Its TrueCFB Team Rating is the average of those scores. The ranking is the teams in order of rating.</p>
+    <p class="sub">Every team earns a Game Rating from 0 to 100 for each game it plays. Its TrueCFB Team Rating is the average of its Game Ratings. The ranking is the teams in order of Team Rating.</p>
   </header>
 
   <section class="panel" id="rules">
     <h2>The seven rules</h2>
     <ol class="rules">
-      <li>Every game has a Game Rating: 100 plus both teams' bonuses. Two average teams make a 100. The two best teams make about 155. That is the pot the two teams split.</li>
+      <li>Every game has a Matchup Rating: 100 plus both teams' bonuses. Two average teams make a 100. The two best teams make about 155. That is the pot the two teams split.</li>
       <li>The winner's share starts at 75 and the loser's at 25.</li>
       <li>Margin moves it up to 5 points either way: a 1-point win is 70, a blowout win is 80. An overtime game counts as a 1-point margin.</li>
       <li>Add 3 on the road, subtract 3 at home, nothing at a neutral site.</li>
       <li>Add your opponent's bonus, win or lose. The bonus is listed beside every team: it is how far the team is rated above or below 50. An FCS opponent counts as a 25, so its bonus is −25.</li>
-      <li>Keep the result between 0 and 100. A team's rating is the average of its game scores.</li>
-      <li>Postseason games are worth more, and their scores can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.</li>
+      <li>Keep the result between 0 and 100. That is the team's Game Rating. A Team Rating is the average of its Game Ratings.</li>
+      <li>Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.</li>
     </ol>
   </section>
 
   <section class="panel" id="one-game">
-    <h2>Score a game yourself</h2>
-    <p class="note">Set how good the opponent is and where the game is played. The lines show the score for the winner and the loser at each final margin.</p>
+    <h2>Rate a game yourself</h2>
+    <p class="note">Set how good the opponent is and where the game is played. The lines show the Game Rating for the winner and the loser at each final margin.</p>
     <div class="calc">
       <div class="field"><label for="opp">Opponent rating: <span id="opp-v">50</span> (bonus <span id="opp-b">0</span>)</label><input type="range" id="opp" min="15" max="85" step="1" value="50"></div>
       <div class="field"><span class="lab" id="ven-l">Venue</span>
@@ -58,15 +58,15 @@
         </div>
       </div>
     </div>
-    <svg class="chart" id="curve" viewBox="0 0 400 270" role="img" aria-label="Game score by final margin for the winner and the loser"></svg>
+    <svg class="chart" id="curve" viewBox="0 0 400 270" role="img" aria-label="Game Rating by final margin for the winner and the loser"></svg>
     <div class="quick" id="quick"></div>
   </section>
 
   <section class="panel" id="example">
     <h2>A worked example</h2>
     <div class="prose">
-      <p>Utah beats Idaho, an FCS team, 66-14 at home. A win starts at 75. The blowout adds 5. Playing at home takes off 3. Idaho's bonus is −25. The game scores 52.</p>
-      <p>Utah beats BYU 28-20 at home. An 8-point win is worth 73.6. Home takes off 2.9. BYU was rated 68.5 through week 12 of 2026, so its bonus is +18.5. The game scores 89.</p>
+      <p>Utah beats Idaho, an FCS team, 66-14 at home. A win starts at 75. The blowout adds 5. Playing at home takes off 3. Idaho's bonus is −25. Utah's Game Rating is 52.</p>
+      <p>Utah beats BYU 28-20 at home. An 8-point win is worth 73.6. Home takes off 2.9. BYU was rated 68.5 through week 12 of 2026, so its bonus is +18.5. Utah's Game Rating is 89.</p>
       <p>Both are wins. The second is worth far more because of who it was against.</p>
     </div>
   </section>
@@ -75,8 +75,8 @@
     <h2>How a season runs</h2>
     <ul class="plain">
       <li><b>Start.</b> A team starts at last season's final rating, after all bowl and playoff games. Think of it as six placeholder games at that rating.</li>
-      <li><b>Each game.</b> Each real game replaces one placeholder. After six games the placeholders are gone and the rating is the plain average of this season's game scores. A team new to FBS starts at 25.</li>
-      <li><b>Re-scoring.</b> Bonuses update as results come in, so an old win is worth more if that opponent keeps winning. A rating can move in a week the team does not play.</li>
+      <li><b>Each game.</b> Each real game replaces one placeholder. After six games the placeholders are gone and the Team Rating is the plain average of this season's Game Ratings. A team new to FBS starts at 25.</li>
+      <li><b>Re-rating.</b> Bonuses update as results come in, so an old win is worth more if that opponent keeps winning. A Team Rating can move in a week the team does not play.</li>
       <li><b>Postseason.</b> Every bowl and playoff game counts like any other game, plus the extra points in rule 7.</li>
       <li><b>Tiebreak.</b> At season's end only: if two neighbors are within 1 point and the lower one won their game, they swap.</li>
     </ul>
@@ -86,7 +86,7 @@
     <h2>What the scale means</h2>
     <div class="tablewrap">
       <table class="t-left">
-        <thead><tr><th>Game</th><th>Score</th></tr></thead>
+        <thead><tr><th>Game</th><th>Game Rating</th></tr></thead>
         <tbody>
           <tr><td>Beat the best team on the road by a lot</td><td class="rt">100</td></tr>
           <tr><td>Typical win over an average team, neutral site</td><td class="rt">75</td></tr>
@@ -103,7 +103,7 @@
     <h2>Known limits</h2>
     <ul class="plain">
       <li><b>2020 is unreliable.</b> Most conferences played only themselves, so nothing ties one conference's level to another's. The formula is not adjusted for that season.</li>
-      <li><b>A blowout of a weak team can lower a top team's rating.</b> A rating is an average. A home blowout of an FCS team scores about 52, and a top team's average is in the mid-70s. The game takes nothing away; it earns less than the team's usual game.</li>
+      <li><b>A blowout of a weak team can lower a top team's rating.</b> A Team Rating is an average. A home blowout of an FCS team earns a Game Rating of about 52, and a top team's average is in the mid-70s. The game takes nothing away; it earns less than the team's usual game.</li>
       <li><b>Year-end ratings run high.</b> Postseason points pass through opponents' bonuses, so ratings drift up by about 8 points for a typical top-40 team during the postseason.</li>
       <li><b>The playoff field is chosen by the committee,</b> so playoff points go to teams the committee picked.</li>
     </ul>

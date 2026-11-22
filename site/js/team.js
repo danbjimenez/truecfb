@@ -69,24 +69,35 @@
     $("t-sched").innerHTML = '<tr><td colspan="4">Loading the games…</td></tr>';
     loadSched(y).then(all => {
       if($("team").value !== t || $("season").value !== y) return;
-      const games = all[t] || [];
-      $("t-sched").innerHTML = games.length ? games.map(g => {
-        const d = g[6] - info[0], cls = d > 0.05 ? "up" : d < -0.05 ? "down" : "same";
+      const games = (all.games || {})[t] || [], start = (all.start || {})[t];
+      // How far the Team Rating moved from the row above.
+      const move = (now, before) => {
+        if(now == null || before == null) return "";
+        const d = Math.round((now - before) * 10) / 10, cls = d > 0 ? "up" : d < 0 ? "down" : "same";
+        return '<span class="gap ' + cls + '">' + (d > 0 ? "+" + d.toFixed(1) : d < 0 ? "\u2212" + (-d).toFixed(1) : "=") + "</span>";
+      };
+      let prev = start ? start[0] : null;
+      const first = start ? '<tr><td>Start of season<span class="sub2">' +
+        (D.history[t] && D.history[t][String(+y - 1)] ? "Last season's final Team Rating" : "A team new to FBS starts at " + D.settings.fcs) +
+        '</span></td><td></td><td></td><td class="rt">' + start[0].toFixed(1) + '<span class="sub2">#' + start[1] + "</span></td></tr>" : "";
+      const rows = games.map(g => {
         const pot = Math.round(100 + D.settings.b * (info[0] - 50) + D.settings.b * (g[7] - 50) + 2 * g[9] + g[10]);
-        const post = g[9] ? " · " + (g[9] === 15 ? "playoff" : "bowl") + " +" + (g[9] + (g[3] > g[4] ? g[10] : 0)) : "";
+        const post = g[9] ? " \u00b7 " + (g[9] === 15 ? "playoff" : "bowl") + " +" + (g[9] + (g[3] > g[4] ? g[10] : 0)) : "";
         const opp = g[8] ? esc(g[1]) + ' <span class="rec">FCS</span>' : teamLink(g[1], isCurrent ? null : y);
-        return "<tr><td>" + where(g) + opp + '<span class="sub2">' + day(g[0]) + " · Game Rating " + pot + " · bonus " + bonus(D, g[7]) + post +
-          "</span></td><td>" + resultText(g) + '</td><td class="rt">' + g[6].toFixed(1) + '</td><td><span class="gap ' + cls + '">' +
-          (d > 0.05 ? "+" : d < -0.05 ? "−" : "") + Math.abs(d).toFixed(1) + "</span></td></tr>";
-      }).join("") : '<tr><td colspan="4">No games played yet this season.</td></tr>';
+        const after = g[11] == null ? "" : g[11].toFixed(1) + '<span class="sub2">' + move(g[11], prev) + (g[12] ? " #" + g[12] : "") + "</span>";
+        if(g[11] != null) prev = g[11];
+        return "<tr><td>" + where(g) + opp + '<span class="sub2"><span>' + day(g[0]) + " \u00b7 bonus " + bonus(D, g[7]) + " \u00b7</span> <span>Matchup Rating " + pot + post +
+          "</span></span></td><td>" + resultText(g) + "</td><td>" + g[6].toFixed(1) + '</td><td class="rt">' + after + "</td></tr>";
+      }).join("");
+      $("t-sched").innerHTML = first + (rows || '<tr><td colspan="4">No games played yet this season.</td></tr>');
 
       const tiles = [[bonus(D, info[0]), "Bonus: what " + t + " is worth to anyone who plays it"]];
       if(games.length){
         const best = games.reduce((a, b) => b[6] > a[6] ? b : a), low = games.reduce((a, b) => b[6] < a[6] ? b : a);
         const avgOpp = games.reduce((s, g) => s + g[7], 0) / games.length;
-        tiles.push([best[6].toFixed(0), "Best game: " + resultText(best) + " " + where(best) + best[1]]);
-        tiles.push([low[6].toFixed(0), "Lowest game: " + resultText(low) + " " + where(low) + low[1]]);
-        tiles.push([avgOpp.toFixed(0), "Average opponent rating (an average team is 50)"]);
+        tiles.push([best[6].toFixed(0), "Best Game Rating: " + resultText(best) + " " + where(best) + best[1]]);
+        tiles.push([low[6].toFixed(0), "Lowest Game Rating: " + resultText(low) + " " + where(low) + low[1]]);
+        tiles.push([avgOpp.toFixed(0), "Average opponent Team Rating (an average team is 50)"]);
       }
       $("t-tiles").innerHTML = tiles.map(q => "<div><b>" + esc(q[0]) + "</b><span>" + esc(q[1]) + "</span></div>").join("");
     }).catch(() => {

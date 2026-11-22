@@ -10,21 +10,21 @@ TrueCFB measures the season that was played. It does not predict games. It knows
 
 ## The rules
 
-1. Every game has a **Game Rating**: 100 plus both teams' bonuses. Two average teams make a 100. The two best teams make about 155. That is the pot the two teams split.
+1. Every game has a **Matchup Rating**: 100 plus both teams' bonuses. Two average teams make a 100. The two best teams make about 155. That is the pot the two teams split.
 2. The winner's share starts at 75 and the loser's at 25.
 3. Margin moves it up to 5 points either way: a 1-point win is 70, a blowout win is 80. An overtime game counts as a 1-point margin.
 4. Add 3 on the road, subtract 3 at home, nothing at a neutral site.
 5. Add your opponent's **bonus**, win or lose. The bonus is how far the opponent is rated above or below 50. An FCS opponent counts as a 25, so its bonus is −25.
-6. Keep the result between 0 and 100. A team's **Team Rating** is the average of its game scores.
-7. Postseason games are worth more, and their scores can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.
+6. Keep the result between 0 and 100. That is the team's **Game Rating**. A **Team Rating** is the average of its Game Ratings.
+7. Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.
 
 A **Conference Rating** is the plain average of its members' Team Ratings. It is published, not used as an input.
 
 ### How a season runs
 
 - **Start.** A team starts at last season's final rating, after all bowl and playoff games. Think of it as six placeholder games at that rating.
-- **Each game.** Each real game replaces one placeholder. After six games the placeholders are gone and the rating is the plain average of this season's game scores. Weeks 1 to 6 are provisional. A team new to FBS starts at 25.
-- **Re-scoring.** Bonuses update as results come in, so an old game is worth more if that opponent keeps winning. A team's rating can move in a week it does not play.
+- **Each game.** Each real game replaces one placeholder. After six games the placeholders are gone and the Team Rating is the plain average of this season's Game Ratings. Weeks 1 to 6 are provisional. A team new to FBS starts at 25.
+- **Re-rating.** Bonuses update as results come in, so an old game is worth more if that opponent keeps winning. A team's rating can move in a week it does not play.
 - **Postseason.** Every bowl and playoff game counts like any other game, plus the extra points in rule 7.
 - **Tiebreak.** At season's end only: if two neighbors are within 1 point and the lower one won their game (with no split), they swap.
 
@@ -42,7 +42,7 @@ Utah, 2026. Home win 66-14 over Idaho (FCS): 75 + 5 − 3 − 25 = 52. Home win 
 | Venue | 2.86 (road +, home −, neutral 0) |
 | Opponent bonus | opponent's rating − 50 |
 | FCS opponent rating | 25 |
-| Game score limits | 0 to 100, applied before postseason points |
+| Game Rating limits | 0 to 100, applied before postseason points |
 | Regular bowl | +10 to both teams |
 | Playoff game | +15 to both teams |
 | Playoff winner, by round | +10 before the quarterfinals, +20 quarterfinal, +30 semifinal, +40 final |
@@ -57,7 +57,7 @@ Utah, 2026. Home win 66-14 over Idaho (FCS): 75 + 5 − 3 − 25 = 52. Home win 
 
 ## Anchor games
 
-| Game | Score |
+| Game | Game Rating |
 |---|---|
 | Typical win over an average team, neutral site | 75 |
 | Beat the best team on the road by a lot | 100 |
@@ -93,7 +93,7 @@ A gap from the committee is not an error in either direction. It is only a measu
 ## Known limits
 
 - **2020 is unreliable.** Most conferences played only themselves, so nothing ties one conference's level to another's. In five late-season snapshots the ratings depend on the starting point. The formula is not adjusted for that season.
-- **A blowout of a weak team can lower a top team's rating.** A rating is an average. A home blowout of an FCS team scores about 52, and a top team's average is in the mid-70s. The game takes nothing away; it earns less than the team's usual game.
+- **A blowout of a weak team can lower a top team's rating.** A Team Rating is an average. A home blowout of an FCS team earns a Game Rating of about 52, and a top team's average is in the mid-70s. The game takes nothing away; it earns less than the team's usual game.
 - **Year-end ratings run high.** Postseason points pass through opponents' bonuses, so ratings drift up by about 8 points for a typical top-40 team during the postseason.
 - **The playoff field is chosen by the committee,** so playoff points go to teams the committee picked.
 - **Poll comparison has gaps.** Weekly poll ranks come from that week's games, so a ranked team on a bye is missing that week. Final AP polls, after the bowls, are not in the data.
@@ -135,6 +135,8 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `site/` | The website: the Rankings, Teams, Conferences, How it works and About pages, their styles and scripts, and the data files the pipeline writes. |
 | `.github/workflows/refresh.yml` | The scheduled job that refreshes the numbers. |
 | `wrangler.jsonc` | Tells Cloudflare to serve `site/` as the website. |
+
+The words used throughout: a **Game Rating** is what one team earns for one game, a **Team Rating** is the average of a team's Game Ratings, a **Conference Rating** is the average of its members' Team Ratings, and a **Matchup Rating** is the pot two teams split. "Score" always means the points on the scoreboard.
 
 ## Data
 
