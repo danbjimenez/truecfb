@@ -127,16 +127,24 @@ for y in range(2014, 2027):
         poll = latest["ranks"] if (y == 2026 and w == max(weeks)) else poll_from(reg[reg.week == w])
         label = "Preseason" if i == 0 else f"Through week {weeks[i - 1]}"
         pw = P["regular"].get(w, {})    # the polls published going into week w
+        cfp_w = pw.get("cfp")
+        # Where this is the committee's final ranking, use the checked list (the committee has no ties).
+        if cfp_w and str(y) in CFP_FINAL and sorted(cfp_w, key=cfp_w.get) == CFP_FINAL[str(y)]:
+            cfp_w = {t: k + 1 for k, t in enumerate(CFP_FINAL[str(y)])}
         sn, tab, rank, it, _ = snapshot(f"w{w}", label, reg[reg.week < w], teams, prior, poll, "Poll", False,
-                                        ap=pw.get("ap"), cfp=pw.get("cfp"))
+                                        ap=pw.get("ap"), cfp=cfp_w)
         max_iters = max(max_iters, it); snaps.append(sn)
         if sn["gap"] is not None and sn["n"] >= 10: weekly_gaps.setdefault(w, []).append(sn["gap"])
     if y in SELECTION:
         rs = reg[reg.date <= SELECTION[y]]
         cfp = {t: i + 1 for i, t in enumerate(CFP_FINAL[str(y)])}
-        last = P["regular"].get(max(P["regular"]), {}) if P["regular"] else {}   # polls of selection day
+        # The polls of selection day are the last regular-season entry. The saved final CFP list is the
+        # check: if the entry's CFP ranking is not that list (2020, where the last entry is a week
+        # early), its AP poll is a week early too and is left out.
+        last = P["regular"].get(max(P["regular"]), {}) if P["regular"] else {}
+        on_time = sorted(last.get("cfp", {}), key=last.get("cfp", {}).get) == CFP_FINAL[str(y)]
         sn, tab, rank, it, _ = snapshot("reg", "Regular season final", rs, teams, prior, cfp, "CFP", True,
-                                        ap=last.get("ap"), cfp=last.get("cfp") or cfp); snaps.append(sn)
+                                        ap=last.get("ap") if on_time else None, cfp=cfp); snaps.append(sn)
         report.append((y, sn, rank, cfp, tab))
         post = P["postseason"].get(min(P["postseason"]), {}) if P["postseason"] else {}   # the AP poll after the bowls
         sn2, tabf, rankf, it, detf = snapshot("final", "Season final (after bowls and playoff)", s, teams, prior, {}, None, True,
