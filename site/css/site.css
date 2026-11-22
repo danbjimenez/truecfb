@@ -89,13 +89,30 @@ td.rt{font-weight:600}
 .gap{display:inline-block;min-width:34px;margin-left:var(--space-6);padding:1px 6px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;background:var(--chip);text-align:center;font-variant-numeric:tabular-nums}
 .gap.up{color:var(--up)} .gap.down{color:var(--down)} .gap.same{color:var(--muted)}
 
-.hist{display:flex;flex-direction:column;gap:var(--space-6)}
-.hrow{display:grid;grid-template-columns:44px 1fr 86px;gap:var(--space-10);align-items:center;font-variant-numeric:tabular-nums}
-.hrow .yr{font-family:var(--font-display);font-weight:600;font-size:17px}
-.bar{height:14px;background:var(--chip);border-radius:var(--radius-sm);overflow:hidden}
-.bar i{display:block;height:100%;background:var(--accent);border-radius:var(--radius-sm)}
-.hrow .val{text-align:right;font-weight:600}
-.hrow .val small{color:var(--muted);font-weight:400;margin-left:var(--space-6)}
+/* History chart: one rating line across every season, with a data label for the week under the pointer */
+.hc{position:relative}
+.hc-plot{border-radius:var(--radius-sm);touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}
+.hc-plot:focus-visible{outline:2px solid var(--up);outline-offset:2px}
+.hc-plot svg{display:block;width:100%;height:auto}
+.hc-sel{fill:var(--chip)}
+.hc-ctx{fill:none;stroke:var(--muted);stroke-width:1;stroke-linejoin:round;opacity:.3}
+.hc-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.hc-cross{stroke:var(--muted);stroke-width:1}
+.hc-dot{fill:var(--accent);stroke:var(--panel);stroke-width:2}
+.axis.hc-on{fill:var(--ink);font-weight:600}
+.hc-tip{position:absolute;z-index:2;width:max-content;max-width:270px;pointer-events:none;background:var(--panel);border:1px solid var(--muted);border-radius:var(--radius-md);padding:var(--space-8) var(--space-10);display:flex;flex-direction:column;gap:var(--space-6);font-size:13px;font-variant-numeric:tabular-nums}
+.hc-h{font-family:var(--font-display);font-weight:600;font-size:15px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.hc-v{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--space-6)}
+.hc-v b{font-family:var(--font-display);font-weight:700;font-size:26px;line-height:1}
+.hc-v .gap{margin-left:0}
+.hc-k,.hc-s{color:var(--muted)}
+.hc-s{font-size:12px}
+.hc-g{font-weight:500}
+.hc-g .hc-s{font-weight:400}
+/* On a phone the label sits under the chart, so a thumb never covers it */
+.hc-narrow .hc-tip{position:static;width:auto;max-width:none;pointer-events:auto;border:0;background:var(--chip);min-height:118px;margin-top:var(--space-8)}
+.hc-key{display:inline-block;width:18px;height:2px;border-radius:1px;background:var(--accent);vertical-align:middle;margin-right:var(--space-6)}
+.hc-key.ctx{height:1px;background:var(--muted);opacity:.5}
 
 .grid{stroke:var(--line);stroke-width:1}
 .axis{fill:var(--muted);font-family:var(--font-body);font-size:12px}

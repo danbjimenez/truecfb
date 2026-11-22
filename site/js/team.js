@@ -1,14 +1,60 @@
 /* TrueCFB: one team's page. */
 (() => {
-  const {$, load, loadSched, esc, day, signed, bonus, teamLink, readHash, writeHash, ordinal} = TC;
+  const {$, load, loadSched, loadHistory, esc, day, bonus, matchup, moveChip, teamLink, readHash, writeHash, ordinal} = TC;
   let D = null;
+  const got = {};   // seasons whose game files have arrived, for the chart's data labels
 
-  const clamp = v => Math.max(0, Math.min(100, v));
   function resultText(g){
     return (g[3] > g[4] ? "W " : "L ") + g[3] + "-" + g[4] + (g[5] ? " OT" : "");
   }
   function where(g){
     return g[2] === "H" ? "vs " : g[2] === "A" ? "at " : "vs (N) ";
+  }
+
+  // Where a team's first rating of a season came from.
+  function startNote(t, y, rating){
+    if(D.history[t] && D.history[t][String(+y - 1)]) return "Last season's final Team Rating";
+    // The first season shown starts from the season before it, which is run only to set this number.
+    const first = Object.keys(D.seasons).sort()[0];
+    return y === first && rating !== D.settings.fcs ? "The final " + (+y - 1) + " Team Rating" : "A team new to FBS starts at " + D.settings.fcs;
+  }
+
+  // Team Rating History: one point for every snapshot of every season.
+  function drawHistory(t, y){
+    const box = $("t-chart");
+    loadHistory().then(H => {
+      if($("team").value !== t || $("season").value !== y) return;
+      const mine = H.teams[t] || {}, pick = (flat, odd) => flat ? flat.filter((_, i) => i % 2 === odd) : null;
+      let top = 100;
+      const seasons = Object.keys(D.seasons).sort().map(k => {
+        const values = pick(mine[k], 0);
+        if(values) top = Math.max(top, Math.max.apply(null, values));
+        return {year: k, points: D.seasons[k], values, ranks: pick(mine[k], 1)};
+      });
+      TC.historyChart(box, {
+        label: "Team Rating History for " + t, seasons, selected: y,
+        domain: [0, Math.ceil(top / 10) * 10], ticks: [0, 25, 50, 75, 100],
+        onPick: k => { $("season").value = k; render(); },
+        tip: (p, again) => {
+          const s = seasons.find(x => x.year === p.year);
+          const head = '<div class="hc-h">' + p.year + " \u00b7 " + esc(p.label.replace(/ \(.*\)$/, "")) + '</div><div class="hc-v"><b>' + p.v.toFixed(1) + "</b>" +
+            (p.i ? moveChip(p.v, s.values[p.i - 1]) : "") + '<span class="hc-k">Team Rating \u00b7 #' + s.ranks[p.i] + "</span></div>";
+          if(p.i === 0) return head + '<div class="hc-s">' + esc(startNote(t, p.year, p.v)) + "</div>";
+          const all = got[p.year];
+          if(!all){
+            loadSched(p.year).then(a => { got[p.year] = a; }).catch(() => { got[p.year] = {failed: true}; }).then(again);
+            return head + '<div class="hc-s">Loading the game\u2026</div>';
+          }
+          if(all.failed) return head + '<div class="hc-s">The game did not load.</div>';
+          const games = ((all.games || {})[t] || []).filter(g => g[13] === p.id), rating = D.ratings[p.year][t][0];
+          if(!games.length) return head + '<div class="hc-s">' + (p.id === "final" ? "No bowl or playoff game" : p.id === "reg" ? "No new game" : "No game this week") + "</div>";
+          return head + games.map(g => '<div class="hc-g"><div>' + resultText(g) + " " + where(g) + esc(g[1]) + '</div><div class="hc-s">' + day(g[0]) +
+            " \u00b7 Game Rating " + g[6].toFixed(1) + " \u00b7 Matchup Rating " + matchup(D, rating, g) + "</div></div>").join("");
+        }
+      });
+    }).catch(() => {
+      if($("team").value === t && $("season").value === y) box.innerHTML = '<p class="note">The history did not load. Reload the page to try again.</p>';
+    });
   }
 
   function render(){
@@ -40,11 +86,7 @@
     $("t-rank-l").textContent = "of " + nTeams + " FBS teams";
     $("t-carry").hidden = info[2] + info[3] >= D.settings.carry;
 
-    // History
-    const h = D.history[t] || {};
-    $("t-hist").innerHTML = Object.keys(h).sort().map(k =>
-      '<div class="hrow"><span class="yr">' + k + '</span><span class="bar"><i style="width:' + clamp(h[k][0]) + '%"></i></span><span class="val">' +
-      h[k][0].toFixed(1) + "<small>#" + h[k][1] + "</small></span></div>").join("");
+    drawHistory(t, y);
 
     // Conference table
     if(conf){
@@ -69,19 +111,15 @@
     $("t-sched").innerHTML = '<tr><td colspan="4">Loading the games…</td></tr>';
     loadSched(y).then(all => {
       if($("team").value !== t || $("season").value !== y) return;
+      got[y] = all;
       const games = (all.games || {})[t] || [], start = (all.start || {})[t];
-      // How far the Team Rating moved from the row above.
-      const move = (now, before) => {
-        if(now == null || before == null) return "";
-        const d = Math.round((now - before) * 10) / 10, cls = d > 0 ? "up" : d < 0 ? "down" : "same";
-        return '<span class="gap ' + cls + '">' + (d > 0 ? "+" + d.toFixed(1) : d < 0 ? "\u2212" + (-d).toFixed(1) : "=") + "</span>";
-      };
+      const move = moveChip;   // how far the Team Rating moved from the row above
       let prev = start ? start[0] : null;
       const first = start ? '<tr><td>Start of season<span class="sub2">' +
-        (D.history[t] && D.history[t][String(+y - 1)] ? "Last season's final Team Rating" : "A team new to FBS starts at " + D.settings.fcs) +
+        esc(startNote(t, y, start[0])) +
         '</span></td><td></td><td></td><td class="rt">' + start[0].toFixed(1) + '<span class="sub2">#' + start[1] + "</span></td></tr>" : "";
       const rows = games.map(g => {
-        const pot = Math.round(100 + D.settings.b * (info[0] - 50) + D.settings.b * (g[7] - 50) + 2 * g[9] + g[10]);
+        const pot = matchup(D, info[0], g);
         const post = g[9] ? " \u00b7 " + (g[9] === 15 ? "playoff" : "bowl") + " +" + (g[9] + (g[3] > g[4] ? g[10] : 0)) : "";
         const opp = g[8] ? esc(g[1]) + ' <span class="rec">FCS</span>' : teamLink(g[1], isCurrent ? null : y);
         const after = g[11] == null ? "" : g[11].toFixed(1) + '<span class="sub2">' + move(g[11], prev) + (g[12] ? " #" + g[12] : "") + "</span>";

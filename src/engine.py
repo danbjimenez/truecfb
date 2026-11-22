@@ -1,4 +1,4 @@
-"""TrueCFB rating engine, version 1.1, frozen 21 Nov 2026  (results only; team-blind; reproducible)
+"""TrueCFB rating engine, version 1.0, frozen 21 Nov 2026  (results only; team-blind; reproducible)
 Any change to a rule or number below is a new version, with every season re-run.
 
 GAME RATING, computed for each FBS team in each game:
@@ -28,9 +28,9 @@ import numpy as np
 import pandas as pd
 
 NAME = "TrueCFB"              # named 22 Nov 2026; the name is not part of the formula
-VERSION = "1.1"
+VERSION = "1.0"
 WIN_RANGE = (70.0, 80.0)      # 1-point win .. biggest win; losses mirror it (30 .. 20)
-OPP_WEIGHT = 1.0              # the opponent's bonus at full value (0.9 in version 1.0)
+OPP_WEIGHT = 1.0              # the opponent's bonus at full value (0.9 in a draft before the public release)
 FCS_RATING = 25.0
 CARRY = 6
 H2H_WINDOW = 1.0

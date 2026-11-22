@@ -4,6 +4,7 @@ const TC = (() => {
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   let dataPromise = null;
   const sched = {}, ranks = {};
+  let historyPromise = null;
 
   // The whole data file, fetched once per page.
   function load(){
@@ -22,6 +23,12 @@ const TC = (() => {
       .catch(e => { delete ranks[y]; throw e; });
     return ranks[y];
   }
+  // Every team's and conference's rating and rank at every point of every season, fetched when first needed.
+  function loadHistory(){
+    if(!historyPromise) historyPromise = fetch("history.json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+      .catch(e => { historyPromise = null; throw e; });
+    return historyPromise;
+  }
   const esc = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
   // "2026-11-21" -> "21 Nov 2026"; "11-21" -> "21 Nov"
   function day(s){
@@ -35,6 +42,14 @@ const TC = (() => {
     return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
   }
   const bonus = (D, rating) => signed(D.settings.b * (rating - 50));
+  // The Matchup Rating: the pot the two teams split. g is one line of a team's schedule.
+  const matchup = (D, teamRating, g) => Math.round(100 + D.settings.b * (teamRating - 50) + D.settings.b * (g[7] - 50) + 2 * g[9] + g[10]);
+  // A chip for how far a rating moved: +1.3, −1.3, =
+  function moveChip(now, before){
+    if(now == null || before == null) return "";
+    const d = Math.round((now - before) * 10) / 10, cls = d > 0 ? "up" : d < 0 ? "down" : "same";
+    return '<span class="gap ' + cls + '">' + (d > 0 ? "+" + d.toFixed(1) : d < 0 ? "−" + (-d).toFixed(1) : "=") + "</span>";
+  }
   // A poll's rank for a team, with a chip for how far TrueCFB is from it.
   function pollCell(ours, theirs){
     if(!theirs) return '<span class="nr">NR</span>';
@@ -57,5 +72,5 @@ const TC = (() => {
     history.replaceState(null, "", q ? "#" + q : location.pathname + location.search);
   }
   const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
-  return {$, load, loadSched, loadRank, esc, day, signed, bonus, pollCell, teamHref, teamLink, readHash, writeHash, ordinal};
+  return {$, load, loadSched, loadRank, loadHistory, esc, day, signed, bonus, matchup, moveChip, pollCell, teamHref, teamLink, readHash, writeHash, ordinal};
 })();

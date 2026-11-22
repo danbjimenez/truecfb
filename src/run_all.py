@@ -5,7 +5,8 @@ Usage: run_all.py <games.csv> <src_dir> <latest_poll.json> <out_dir> <cfp_final.
 Writes to <out_dir>:
   data.json        settings, the list of snapshots per season, final ratings, conferences
   rank_{year}.json every snapshot's full ranking: [rank, team, rating, wins, losses, CFP rank, AP rank]
-  sched_{year}.json every team's rating at the start of the season and every game, with the Team Rating after it"""
+  sched_{year}.json every team's rating at the start of the season and every game, with the Team Rating after it
+  history.json     every team's and every conference's rating and rank at every snapshot of every season"""
 import sys, json, os
 import numpy as np, pandas as pd
 sys.path.insert(0, sys.argv[2])
@@ -95,17 +96,35 @@ def conf_table(s, tab):
     return sorted(out, key=lambda r: -r[2])
 
 
-def note_after(after, games, tab, rank):
-    """Record each team's Team Rating and rank once these games are counted."""
+def note_after(after, games, tab, rank, sid):
+    """Record each team's Team Rating and rank once these games are counted, and the snapshot (sid)
+    that is the first to hold them."""
     for r in games.itertuples():
         for t, fbs in ((r.home, r.home_fbs), (r.away, r.away_fbs)):
-            if fbs: after[(t, r.game_id)] = (round(float(tab.rating[t]), 1), int(rank[t]))
+            if fbs: after[(t, r.game_id)] = (round(float(tab.rating[t]), 1), int(rank[t]), sid)
+
+
+INDEPENDENTS = "FBS Independents"   # listed with the conferences, but not ranked as one
+
+
+def note_history(hist, y, conf, tab, rank):
+    """Add one snapshot to the rating history: every team's Team Rating and rank, and every conference's
+    Conference Rating (the plain average of its members' Team Ratings) and rank among conferences."""
+    for t in tab.index:
+        hist["teams"].setdefault(t, {}).setdefault(str(y), []).extend([round(float(tab.rating[t]), 1), int(rank[t])])
+    avg = {}
+    for c in sorted(set(conf.values())):
+        members = [t for t in tab.index if conf.get(t) == c]
+        if members: avg[c] = round(float(tab.rating[members].mean()), 1)
+    order = sorted((c for c in avg if c != INDEPENDENTS), key=lambda c: -avg[c])
+    for c, v in avg.items():
+        hist["conf"].setdefault(c, {}).setdefault(str(y), []).extend([v, order.index(c) + 1 if c in order else None])
 
 
 def schedule_lines(s, det, tab, after):
     """Per team: [date, opponent, site, points for, points against, overtime, Game Rating, opponent rating,
     FCS flag, postseason bonus for both teams, extra bonus the winner of that round gets,
-    Team Rating after the game, rank after the game].
+    Team Rating after the game, rank after the game, the snapshot that first holds the game].
     "After" means once that week's games are counted in the regular season, or that day's in the postseason."""
     info = s.set_index("game_id")
     out = {}
@@ -117,7 +136,7 @@ def schedule_lines(s, det, tab, after):
         site = "N" if gi.neutral else ("H" if home else "A")
         out.setdefault(r.team, []).append([gi.day[5:], opp, site, int(pf), int(pa), int(bool(gi.ot)),
                                            round(float(r.game_rating), 1), round(float(r.opp_rating), 1), int(r.opp == "FCS"),
-                                           int(r.post_both), int(r.post_win)] + list(after.get((r.team, r.game_id), (None, None))))
+                                           int(r.post_both), int(r.post_win)] + list(after.get((r.team, r.game_id), (None, None, None))))
     return out
 
 
@@ -126,11 +145,13 @@ data = {"name": E.NAME, "version": E.VERSION,
         "F": [round(float(x), 4) for x in F[:61]], "seasons": {}, "history": {}, "conf": {}, "ratings": {}, "team_conf": {}}
 t13, _ = E.rate(g[g.season == 2013], F, V); prior = t13.rating      # 2013 only seeds the 2014 carryover
 weekly_gaps = {}; max_iters = 0; report = []; finals = []
+history = {"teams": {}, "conf": {}}
 for y in range(2014, 2027):
     s = g[g.season == y]; reg = s[s.season_type == "regular"]
     teams = sorted(set(s.home[s.home_fbs]) | set(s.away[s.away_fbs]))
     weeks = sorted(int(w) for w in reg.week.unique())
     snaps = []; after = {}; start = {}
+    conf_of = team_conf(s if y in SELECTION else reg)
     P = POLLS.get(y, {"regular": {}, "postseason": {}})
     for i, w in enumerate(weeks):
         poll = latest["ranks"] if (y == 2026 and w == max(weeks)) else poll_from(reg[reg.week == w])
@@ -142,9 +163,9 @@ for y in range(2014, 2027):
             cfp_w = {t: k + 1 for k, t in enumerate(CFP_FINAL[str(y)])}
         sn, tab, rank, it, _ = snapshot(f"w{w}", label, reg[reg.week < w], teams, prior, poll, "Poll", False,
                                         ap=pw.get("ap"), cfp=cfp_w)
-        max_iters = max(max_iters, it); snaps.append(sn)
+        max_iters = max(max_iters, it); snaps.append(sn); note_history(history, y, conf_of, tab, rank)
         if i == 0: start = {t: [round(float(tab.rating[t]), 1), int(rank[t])] for t in teams}   # the season's starting point
-        else: note_after(after, reg[reg.week == weeks[i - 1]], tab, rank)   # this snapshot is the first to hold last week's games
+        else: note_after(after, reg[reg.week == weeks[i - 1]], tab, rank, sn["id"])   # this snapshot is the first to hold last week's games
         if sn["gap"] is not None and sn["n"] >= 10: weekly_gaps.setdefault(w, []).append(sn["gap"])
     if y in SELECTION:
         rs = reg[reg.date <= SELECTION[y]]
@@ -156,11 +177,12 @@ for y in range(2014, 2027):
         on_time = sorted(last.get("cfp", {}), key=last.get("cfp", {}).get) == CFP_FINAL[str(y)]
         sn, tab, rank, it, _ = snapshot("reg", "Regular season final", rs, teams, prior, cfp, "CFP", True,
                                         ap=last.get("ap") if on_time else None, cfp=cfp); snaps.append(sn)
-        report.append((y, sn, rank, cfp, tab))
-        note_after(after, rs[rs.week == weeks[-1]], tab, rank)
+        report.append((y, sn, rank, cfp, tab)); note_history(history, y, conf_of, tab, rank)
+        note_after(after, rs[rs.week == weeks[-1]], tab, rank, "reg")
         post = P["postseason"].get(min(P["postseason"]), {}) if P["postseason"] else {}   # the AP poll after the bowls
         sn2, tabf, rankf, it, detf = snapshot("final", "Season final (after bowls and playoff)", s, teams, prior, {}, None, True,
                                               ap=post.get("ap")); snaps.append(sn2)
+        note_history(history, y, conf_of, tabf, rankf)
         fin = detf[detf["round"] == "final"]
         champ, runner = fin[fin.margin > 0].team.iloc[0], fin[fin.margin < 0].team.iloc[0]
         finals.append((y, champ, rankf[champ], runner, rankf[runner], [f"{r[1]} {r[2]}" for r in sn2["rows"][:5]], rank, rankf))
@@ -171,11 +193,11 @@ for y in range(2014, 2027):
         days = sorted(late.day.unique())
         for d in days:
             if d == days[-1]:
-                note_after(after, late[late.day == d], tabf, rankf)
+                note_after(after, late[late.day == d], tabf, rankf, "final")
                 continue
             td, _ = E.rate(pd.concat([rs, late[late.day <= d]]), F, V, prior=prior, teams=teams)
             rd = {t: k + 1 for k, t in enumerate(td.sort_values("rating", ascending=False).index)}
-            note_after(after, late[late.day == d], td, rd)
+            note_after(after, late[late.day == d], td, rd, "final")
     else:
         # The current season. The page opens on the last fully completed week; if the newest week is
         # still being played, "now" holds every final so far and is labelled as in progress.
@@ -190,13 +212,14 @@ for y in range(2014, 2027):
         sn2, tabf, rankf, it, detf = snapshot("now", now_label, reg, teams, prior, latest["ranks"], "CFP", False,
                                               ap=nxt.get("ap"), cfp=nxt.get("cfp"))
         snaps.append(sn2); cur = snaps[-2]; prior_next = prior
+        note_history(history, y, conf_of, tabf, rankf)
         shown = reg if complete else reg[reg.week < cur_w]
         prev_w = weeks[weeks.index(cur_w) - 1] if weeks.index(cur_w) > 0 else None
         data["current"] = {"season": str(y), "default": "now" if complete else f"w{cur_w}",
                            "week": int(cur_w) if complete else (int(prev_w) if prev_w is not None else None),
                            "complete": bool(complete), "through": shown.day.max() if len(shown) else None,
                            "now_through": reg.day.max(), "now_label": now_label}
-        note_after(after, reg[reg.week == cur_w], tabf, rankf)
+        note_after(after, reg[reg.week == cur_w], tabf, rankf, "now")
         s = reg
     for t in teams:
         data["history"].setdefault(t, {})[str(y)] = [round(float(tabf.rating[t]), 1), rankf[t]]
@@ -217,6 +240,9 @@ full_seasons = data["seasons"]
 data["seasons"] = {y: [{"id": sn["id"], "label": sn["label"], "cfp": sn["cfp"], "ap": sn["ap"]} for sn in snaps]
                    for y, snaps in full_seasons.items()}
 json.dump(data, open(f"{out_dir}/data.json", "w"), separators=(",", ":"), ensure_ascii=False)
+# history.json: per team and per conference, per season, a flat list [rating, rank, rating, rank, ...] with one
+# pair for each of that season's snapshots, in the order data.json lists them.
+json.dump(history, open(f"{out_dir}/history.json", "w"), separators=(",", ":"), ensure_ascii=False)
 data["seasons"] = full_seasons
 print("max iterations in any snapshot:", max_iters)
 print("\nREGULAR SEASON FINAL vs FINAL CFP RANKING")

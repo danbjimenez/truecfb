@@ -1,9 +1,9 @@
 # TrueCFB
 
-College football rankings from game results alone. Blind to the jersey. Every game counts. Open formula.
+Every FBS team rated on results alone. Every game counts. Open source formula.
 
 - Site: [truecfb.com](https://truecfb.com)
-- Formula: version 1.1, frozen 21 November 2026
+- Formula: v1.0, frozen 21 November 2026
 - Covers every FBS season from 2014 to now
 
 TrueCFB measures the season that was played. It does not predict games. It knows nothing about a team except its results: no reputation, no recruiting rankings, no preseason poll.
@@ -105,8 +105,9 @@ The rules and numbers are fixed like a rulebook. They are not tuned to playoff r
 
 | Version | Date | Change |
 |---|---|---|
-| 1.0 | 21 Nov 2026 | First frozen version. Opponent bonus = 0.9 × (rating − 50). |
-| 1.1 | 21 Nov 2026 | Opponent bonus at full value: rating − 50. 2020 marked unreliable. Every season re-run. |
+| v1.0 | 21 Nov 2026 | First public version. The rules above, frozen. |
+
+Before the public release the formula went through two drafts, numbered 1.0 and 1.1 while it was being built. Older commits use those numbers. The first draft set the opponent bonus at 0.9 × (rating − 50). The second set it at the full value, and that second draft is what was released as v1.0.
 
 ## Run it yourself
 
@@ -129,7 +130,7 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `src/fetch_data.py` | Downloads the public game files. |
 | `src/fetch_polls.py` | Saves the weekly AP and CFP rankings (needs a free CollegeFootballData key). |
 | `src/build_games.py` | Merges them into one games table and notes how complete each week of the current season is. |
-| `src/run_all.py` | Runs every season and writes the site's data files: `data.json`, `rank_{year}.json` and `sched_{year}.json`. |
+| `src/run_all.py` | Runs every season and writes the site's data files: `data.json`, `rank_{year}.json`, `sched_{year}.json` and `history.json`. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
 | `data/polls/` | Weekly AP and CFP rankings by season, as saved by `fetch_polls.py`. |
 | `site/` | The website: the Rankings, Teams, Conferences, How it works and About pages, their styles and scripts, and the data files the pipeline writes. |

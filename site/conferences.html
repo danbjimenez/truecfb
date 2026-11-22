@@ -63,9 +63,10 @@
   </section>
 
   <section class="panel">
-    <h2>Conference Rating by year</h2>
-    <p class="note" id="c-hist-note">The rating at season's end, after bowls and playoff. The current season shows the rating to date. Membership changes from year to year.</p>
-    <div class="hist" id="c-hist"></div>
+    <h2>Conference Rating History</h2>
+    <p class="note">The Conference Rating at every point of every season since 2014: preseason, after each week, and after the bowls and playoff. Point at the line, or tap it, to see that week. Click a season to open it above. Every conference rises at the end of a season because bowl and playoff games carry extra points. Membership changes from year to year.</p>
+    <div class="hc" id="c-chart"></div>
+    <div class="legend"><span><i class="hc-key"></i><span id="c-key">This conference</span></span><span><i class="hc-key ctx"></i>The other conferences</span></div>
   </section>
 </main>
 
@@ -73,12 +74,13 @@
   <div class="in">
     <span class="wordmark">True<b>CFB</b></span>
     <p>Every FBS team rated on results alone. Every game counts. Open source formula.</p>
-    <p>TrueCFB version 1.1. <a href="how-it-works.html">How it works</a> · <a href="about.html">About</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
+    <p>TrueCFB v1.0. <a href="how-it-works.html">How it works</a> · <a href="about.html">About</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
     <p>Game data from CollegeFootballData.com and ESPN. TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.</p>
   </div>
 </footer>
 
 <script src="js/site.js"></script>
+<script src="js/chart.js"></script>
 <script src="js/conferences.js"></script>
 </body>
 </html>
