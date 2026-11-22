@@ -140,6 +140,10 @@ The last step rewrites the files in `site/`. Open `site/index.html` through any 
 
 TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.
 
+## Contributing
+
+Fixes and improvements are welcome. Changes to the formula start as an issue and ship only as a new version. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 The code is released under the [MIT License](LICENSE). The license covers the code. It does not cover the TrueCFB name.
