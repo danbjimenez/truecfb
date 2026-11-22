@@ -12,11 +12,13 @@ TrueCFB measures the season that was played. It does not predict games. It knows
 
 1. Every game has a **Matchup Rating**: 100 plus both teams' bonuses. Two average teams make a 100. The two best teams make about 155. That is the pot the two teams split.
 2. The winner's share starts at 75 and the loser's at 25.
-3. Margin moves it up to 5 points either way: a 1-point win is 70, a blowout win is 80. An overtime game counts as a 1-point margin.
-4. Add 3 on the road, subtract 3 at home, nothing at a neutral site.
+3. Margin moves it up to 5 points either way: a 1-point win is 70, a 14-point win is 75, a blowout win is 80. A loss mirrors that: a 1-point loss is 30, a blowout loss is 20. An overtime game counts as a 1-point margin.
+4. Add 3 on the road, subtract 3 at home, nothing at a neutral site. The exact figure is 2.86.
 5. Add your opponent's **bonus**, win or lose. The bonus is how far the opponent is rated above or below 50. An FCS opponent counts as a 25, so its bonus is −25.
 6. Keep the result between 0 and 100. That is the team's **Game Rating**. A **Team Rating** is the average of its Game Ratings.
 7. Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.
+
+Rules 2 to 5 are how the pot in rule 1 is split: the 100 is divided between the winner and the loser, and each team takes the other team's bonus.
 
 A **Conference Rating** is the plain average of its members' Team Ratings. It is published, not used as an input.
 
@@ -26,11 +28,34 @@ A **Conference Rating** is the plain average of its members' Team Ratings. It is
 - **Each game.** Each real game replaces one placeholder. After six games the placeholders are gone and the Team Rating is the plain average of this season's Game Ratings. Weeks 1 to 6 are provisional. A team new to FBS starts at 25.
 - **Re-rating.** Bonuses update as results come in, so an old game is worth more if that opponent keeps winning. A team's rating can move in a week it does not play.
 - **Postseason.** Every bowl and playoff game counts like any other game, plus the extra points in rule 7.
-- **Tiebreak.** At season's end only: if two neighbors are within 1 point and the lower one won their game (with no split), they swap.
+- **Solving it.** A team's rating depends on its opponents' ratings, and theirs depend on its rating. So start every team at 50, rate every game, average, and repeat with the new ratings until no rating moves.
+- **Tiebreak.** In the two end-of-season rankings only (regular season final and season final): if two neighbors are within 1 point and the lower one beat the higher one, without also losing to it, they swap.
 
 ### Worked example
 
-Utah, 2026. Home win 66-14 over Idaho (FCS): 75 + 5 − 3 − 25 = 52. Home win 28-20 over BYU, rated 68.7 at the time: 73.6 for an 8-point win, −2.9 at home, +18.7 for BYU's bonus = 89.4.
+Utah, 2026. Home win 66-14 over Idaho (FCS): 75 + 5 − 3 − 25 = 52. Home win 28-20 over BYU, rated 68.5 through week 12: 73.6 for an 8-point win, −2.9 at home, +18.5 for BYU's bonus = 89.3 (the parts are rounded). That number moves whenever BYU's rating does.
+
+### The postseason, round by round
+
+A bowl or playoff game is rated like any other game first, kept between 0 and 100. Then the postseason points are added on top.
+
+| Game | Both teams | Winner adds | Most a win can earn |
+|---|---|---|---|
+| Regular bowl | +10 | none | 110 |
+| Playoff, first round | +15 | +10 | 125 |
+| Playoff, quarterfinal | +15 | +20 | 135 |
+| Playoff, semifinal | +15 | +30 | 145 |
+| Playoff, final | +15 | +40 | 155 |
+
+- Every playoff game pays both teams 15 for playing it, win or lose.
+- Each round pays its winner more than the last. A team earns the winner's points for every round it wins.
+- The loser of a round still gets its 15 for that game and keeps everything from the rounds it won.
+- A bye is not a game, so it earns nothing.
+- The points go into the average like any Game Rating. A playoff win is one more game in that average, at 125 to 155.
+- Conference championship games are regular-season games and get no extra points.
+- From 2014 to 2023 the playoff was a semifinal and a final, at the same values. Any round before the quarterfinals uses the first-round value.
+
+Example, the 2025 season: Indiana went from 78.8 before the playoff to 98.0 after three wins worth 135, 145 and 155. Miami went from 69.4 to 89.3 with wins worth 125, 135 and 145 and a loss in the final worth 90.5.
 
 ## Exact definitions
 
@@ -131,6 +156,7 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `src/fetch_polls.py` | Saves the weekly AP and CFP rankings (needs a free CollegeFootballData key). |
 | `src/build_games.py` | Merges them into one games table and notes how complete each week of the current season is. |
 | `src/run_all.py` | Runs every season and writes the site's data files: `data.json`, `rank_{year}.json`, `sched_{year}.json` and `history.json`. |
+| `src/fetch_colors.py` | Saves each team's main color to `data/team_colors.json`. Colors only color the lines of the Top 25 chart. They are never an input to a rating. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
 | `data/polls/` | Weekly AP and CFP rankings by season, as saved by `fetch_polls.py`. |
 | `site/` | The website: the Rankings, Teams, Conferences, How it works and About pages, their styles and scripts, and the data files the pipeline writes. |

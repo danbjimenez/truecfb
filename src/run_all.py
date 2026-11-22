@@ -3,7 +3,7 @@ conference tables, each team's schedule line, and each snapshot's full ranking b
 Usage: run_all.py <games.csv> <src_dir> <latest_poll.json> <out_dir> <cfp_final.json> [polls_dir]
 
 Writes to <out_dir>:
-  data.json        settings, the list of snapshots per season, final ratings, conferences
+  data.json        settings, the list of snapshots per season, final ratings, conferences, team colours
   rank_{year}.json every snapshot's full ranking: [rank, team, rating, wins, losses, CFP rank, AP rank]
   sched_{year}.json every team's rating at the start of the season and every game, with the Team Rating after it
   history.json     every team's and every conference's rating and rank at every snapshot of every season"""
@@ -18,6 +18,9 @@ SELECTION = {2014: "2014-12-07", 2015: "2015-12-06", 2016: "2016-12-04", 2017: "
 g = E.load_games(sys.argv[1]); latest = json.load(open(sys.argv[3])); out_dir = sys.argv[4]
 CFP_FINAL = json.load(open(sys.argv[5]))   # final committee rankings (Wikipedia season ranking pages)
 POLLS_DIR = sys.argv[6] if len(sys.argv) > 6 else None
+# Team colours for the Top 25 chart (saved by fetch_colors.py beside the CFP list). Display only.
+COLORS_FILE = os.path.join(os.path.dirname(os.path.abspath(sys.argv[5])), "team_colors.json")
+COLORS = json.load(open(COLORS_FILE)) if os.path.exists(COLORS_FILE) else {}
 
 
 def load_polls(folder):
@@ -141,7 +144,8 @@ def schedule_lines(s, det, tab, after):
 
 
 data = {"name": E.NAME, "version": E.VERSION,
-        "settings": {"win": E.WIN_RANGE, "b": E.OPP_WEIGHT, "fcs": E.FCS_RATING, "carry": E.CARRY, "venue": round(V, 2)},
+        "settings": {"win": E.WIN_RANGE, "b": E.OPP_WEIGHT, "fcs": E.FCS_RATING, "carry": E.CARRY, "venue": round(V, 2),
+                     "post": {"bowl": E.BOWL_BONUS, "playoff": E.PLAYOFF_BONUS, "win": E.PLAYOFF_WIN_BONUS}},
         "F": [round(float(x), 4) for x in F[:61]], "seasons": {}, "history": {}, "conf": {}, "ratings": {}, "team_conf": {}}
 t13, _ = E.rate(g[g.season == 2013], F, V); prior = t13.rating      # 2013 only seeds the 2014 carryover
 weekly_gaps = {}; max_iters = 0; report = []; finals = []
@@ -235,6 +239,7 @@ if "current" not in data:   # every season in the run is finished
     last_y = max(data["seasons"])
     data["current"] = {"season": last_y, "default": "final", "week": None, "complete": True, "through": None,
                        "now_through": None, "now_label": None}
+data["colors"] = {t: COLORS[t] for t in sorted(data["history"]) if t in COLORS}
 # data.json lists each season's snapshots; the rankings themselves are in rank_{year}.json.
 full_seasons = data["seasons"]
 data["seasons"] = {y: [{"id": sn["id"], "label": sn["label"], "cfp": sn["cfp"], "ap": sn["ap"]} for sn in snaps]

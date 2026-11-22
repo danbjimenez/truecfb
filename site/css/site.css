@@ -111,6 +111,20 @@ td.rt{font-weight:600}
 .hc-g .hc-s{font-weight:400}
 /* On a phone the label sits under the chart, so a thumb never covers it */
 .hc-narrow .hc-tip{position:static;width:auto;max-width:none;pointer-events:auto;border:0;background:var(--chip);min-height:118px;margin-top:var(--space-8)}
+/* Top 25 chart: one line per team, in the team's colour, with its name at the end of the line */
+.rk-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.rk-line:not([stroke]){stroke:var(--accent)}
+.rk-end:not([fill]){fill:var(--accent)}
+.rk-name{fill:var(--ink);font-family:var(--font-body);font-size:12px}
+.rk a{text-decoration:none}
+.rk a:hover .rk-name,.rk a:focus-visible .rk-name{text-decoration:underline}
+.rk-mark{stroke:var(--panel);stroke-width:2;color:var(--accent)}
+.rk-dim .rk-line,.rk-dim .rk-end{opacity:.14}
+.rk-dim .rk-line.on,.rk-dim .rk-end.on{opacity:1}
+.rk-dim .rk-line.on{stroke-width:3.5}
+.rk-dim .rk-name{fill:var(--muted)}
+.rk-dim .rk-name.on{fill:var(--ink);font-weight:600}
+.hc-narrow .rk + .hc-tip{min-height:84px}
 .hc-key{display:inline-block;width:18px;height:2px;border-radius:1px;background:var(--accent);vertical-align:middle;margin-right:var(--space-6)}
 .hc-key.ctx{height:1px;background:var(--muted);opacity:.5}
 
@@ -171,6 +185,7 @@ button.link:focus-visible{outline:2px solid var(--up);outline-offset:2px}
 .prose p{margin:0}
 ol.rules,ul.plain{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
 .calc{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-14)}
+.calc .wide{grid-column:1/-1}
 svg.chart{width:100%;height:auto;display:block;max-width:560px}
 .cta{display:flex;flex-wrap:wrap;gap:var(--space-6) var(--space-16);align-items:baseline}
 

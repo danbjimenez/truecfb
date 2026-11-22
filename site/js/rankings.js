@@ -1,6 +1,6 @@
 /* TrueCFB: the rankings page. */
 (() => {
-  const {$, load, loadRank, esc, day, bonus, pollCell, teamLink, readHash, writeHash} = TC;
+  const {$, load, loadRank, esc, day, bonus, pollCell, teamLink, teamHref, readHash, writeHash} = TC;
   let D = null, showAll = false;
 
   const snapsOf = y => D.seasons[y];
@@ -25,6 +25,31 @@
       '</span></td><td class="rt">' + r[2].toFixed(1) + "</td><td>" + bonus(D, r[2]) + "</td><td>" + cell(s.cfp, r[5]) +
       "</td><td>" + cell(s.ap, r[6]) + "</td></tr>";
   }
+  // The chart under the table: how this top 25 moved through the season, up to the point picked above.
+  function drawTrack(all, y, id, isCurrent){
+    const snaps = snapsOf(y), points = snaps.slice(0, snaps.findIndex(x => x.id === id) + 1), top = (all[id] || []).slice(0, 25);
+    $("track-box").hidden = !top.length;
+    if(!top.length) return;
+    const at = points.map(p => { const m = {}; (all[p.id] || []).forEach(r => { m[r[1]] = r; }); return m; });
+    const teams = top.map(r => ({name: r[1], color: (D.colors || {})[r[1]], href: teamHref(r[1], isCurrent ? null : y),
+      ranks: at.map(m => m[r[1]] ? m[r[1]][0] : null)}));
+    const last = points[points.length - 1].label.replace(/ \(.*\)$/, "");
+    $("track-note").textContent = points.length < 2
+      ? "This is the starting order. Pick a later point in the season above to see the lines."
+      : "Each line is one team's TrueCFB rank at every point of the " + y + " season, from the preseason to " + last.charAt(0).toLowerCase() + last.slice(1) +
+        ". The teams are the top 25 at that point. A line on the bottom row was outside the top 25 that week. Lines are in each team's main color. Point at a line, or tap it, to follow one team.";
+    TC.rankChart($("track"), {
+      label: "Top 25 through the " + y + " season", points, teams,
+      tip: (k, i) => {
+        const t = teams[k], r = at[i][t.name], before = i ? at[i - 1][t.name] : null;
+        const d = before ? before[0] - r[0] : null, cls = d > 0 ? "up" : d < 0 ? "down" : "same";
+        const chip = d == null ? "" : '<span class="gap ' + cls + '">' + (d > 0 ? "+" + d : d < 0 ? "\u2212" + (-d) : "=") + "</span>";
+        return '<div class="hc-h">' + esc(points[i].label.replace(/ \(.*\)$/, "")) + '</div><div class="hc-g">' + teamLink(t.name, isCurrent ? null : y) + "</div>" +
+          '<div class="hc-v"><b>#' + r[0] + "</b>" + chip + '<span class="hc-k">Team Rating ' + r[2].toFixed(1) + " \u00b7 " + r[3] + "-" + r[4] + "</span></div>";
+      }
+    });
+  }
+
   function render(){
     const y = $("season").value, id = $("snap").value, s = snapsOf(y).find(x => x.id === id);
     const cur = D.current, isCurrent = y === cur.season;
@@ -66,6 +91,7 @@
       const rows = all[id] || [];
       $("rows").innerHTML = (showAll ? rows : rows.slice(0, 25)).map(r => row(r, y, s, isCurrent)).join("") ||
         '<tr><td colspan="6">No ranking for this point in the season.</td></tr>';
+      drawTrack(all, y, id, isCurrent);
     }).catch(() => {
       $("rows").innerHTML = '<tr><td colspan="6">The ranking did not load. Reload the page to try again.</td></tr>';
     });
