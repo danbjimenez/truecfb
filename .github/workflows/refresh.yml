@@ -2,9 +2,18 @@ name: Refresh ratings
 
 # Pulls the latest game results, re-runs every season with the frozen formula,
 # and saves the new numbers to site/. The site republishes whenever site/ changes.
+#
+# Three updates a week, each with a backup run in case the first is early or GitHub skips it.
+# A run that finds nothing new saves nothing. Times are UTC; US Eastern is 4 or 5 hours behind.
 on:
   schedule:
-    - cron: "17 */2 * * *"   # every two hours
+    - cron: "17 10 * * 0"    # Sunday morning: the week's games are final
+    - cron: "17 16 * * 0"    #   backup
+    - cron: "17 21 * * 0"    # Sunday late afternoon US time: after the AP poll (and the final CFP ranking on selection day)
+    - cron: "17 13 * * 1"    #   backup, Monday morning
+    - cron: "17 3 * * 3"     # Tuesday night US time: after the CFP ranking
+    - cron: "17 13 * * 3"    #   backup, Wednesday morning
+    - cron: "47 10 * 12,1 *" # every morning in December and January: bowl and playoff games are played most days
   workflow_dispatch:          # the "Run workflow" button on the Actions tab
 
 permissions:
