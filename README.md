@@ -111,7 +111,7 @@ Regular-season final TrueCFB ranking against the final College Football Playoff 
 | 2025 | 2.9 | 23 | Indiana, Ohio State, Georgia, Texas Tech | Indiana, Ohio State, Georgia, Texas Tech |
 
 - The same four teams as the committee in 6 of 12 seasons. The average gap is 3.0 spots without 2020.
-- After the postseason, the champion finishes 1st in every season. The runner-up finishes 2nd in all but one (in 2019, 13-0 Ohio State stays ahead of Clemson).
+- After the postseason, the champion finishes 1st in every season. The runner-up finishes 2nd in all but one (in 2019, 13-1 Ohio State stays ahead of Clemson).
 
 A gap from the committee is not an error in either direction. It is only a measure of how far the two differ.
 
