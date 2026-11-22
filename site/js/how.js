@@ -1,4 +1,4 @@
-/* TrueCFB: the game-score chart on the About page. */
+/* TrueCFB: the game-score chart on the How it works page. */
 (() => {
   const {$, load, bonus} = TC;
   let D = null, venue = 0;

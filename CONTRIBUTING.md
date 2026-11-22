@@ -25,7 +25,7 @@ The maintainer decides what becomes a new version. The formula is not tuned to m
 
 - **Run it.** The README has the four commands under "Run it yourself".
 - **Say whether any rating changes.** If your change touches `src/`, run the pipeline before and after and compare the files in `site/`. A change that is not meant to move a rating should leave every rating the same.
-- **Do not edit the data files by hand.** `site/data.json` and `site/sched_*.json` are written by the pipeline. A scheduled job rewrites them every two hours, so leave them out of your pull request unless they are the point of it.
+- **Do not edit the data files by hand.** `site/data.json`, `site/rank_*.json` and `site/sched_*.json` are written by the pipeline. A scheduled job rewrites them every two hours, so leave them out of your pull request unless they are the point of it.
 - **Do not commit downloads.** Everything under `data/schedules/` and `data/espn/` is fetched on each run.
 
 ## Site changes

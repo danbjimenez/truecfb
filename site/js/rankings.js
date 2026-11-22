@@ -1,10 +1,10 @@
 /* TrueCFB: the rankings page. */
 (() => {
-  const {$, load, esc, day, bonus, pollCell, teamLink, teamHref, readHash, writeHash} = TC;
-  let D = null;
+  const {$, load, loadRank, esc, day, bonus, pollCell, teamLink, readHash, writeHash} = TC;
+  let D = null, showAll = false;
 
   const snapsOf = y => D.seasons[y];
-  // Which point in the season a page opens on: the last fully completed week of the
+  // Which point in the season the page opens on: the last fully completed week of the
   // current season, or the season-final ranking of a finished one.
   function defaultSnap(y){
     const snaps = snapsOf(y);
@@ -16,61 +16,63 @@
     $("snap").innerHTML = snaps.map(s => '<option value="' + s.id + '">' + esc(s.label) + "</option>").join("");
     $("snap").value = keep && snaps.some(s => s.id === keep) ? keep : defaultSnap(y);
   }
-  function row(r, y, withPoll){
-    return '<tr><td class="rk">' + r[0] + "</td><td>" + teamLink(r[1], y) + '<span class="rec">' + r[3] + "-" + r[4] +
-      '</span></td><td class="rt">' + r[2].toFixed(1) + "</td><td>" + bonus(D, r[2]) + "</td>" +
-      (withPoll ? "<td>" + pollCell(r[0], r[5]) + "</td>" : "") + "</tr>";
+  // r = [rank, team, rating, wins, losses, CFP rank, AP rank]
+  function row(r, y, s, isCurrent){
+    // A poll that was published shows a rank or NR; one that was not published leaves the cell empty.
+    // Below the top 25, NR would be on almost every row, so only ranked teams are marked there.
+    const cell = (has, theirs) => !has ? "" : theirs ? pollCell(r[0], theirs) : r[0] <= 25 ? '<span class="nr">NR</span>' : "";
+    return '<tr><td class="rk">' + r[0] + "</td><td>" + teamLink(r[1], isCurrent ? null : y) + '<span class="rec">' + r[3] + "-" + r[4] +
+      '</span></td><td class="rt">' + r[2].toFixed(1) + "</td><td>" + bonus(D, r[2]) + "</td><td>" + cell(s.cfp, r[5]) +
+      "</td><td>" + cell(s.ap, r[6]) + "</td></tr>";
   }
   function render(){
-    const y = $("season").value, s = snapsOf(y).find(x => x.id === $("snap").value);
-    const cur = D.current, isCurrent = y === cur.season, withPoll = !!s.n;
-    const pollName = (!s.poll || s.poll === "Poll") ? "poll" : s.poll;
+    const y = $("season").value, id = $("snap").value, s = snapsOf(y).find(x => x.id === id);
+    const cur = D.current, isCurrent = y === cur.season;
 
     // Status line: what this ranking covers.
     let status = y + " season · " + s.label.replace(" (after bowls and playoff)", "");
-    if(isCurrent && s.id === cur.default && cur.through) status += " · " + day(cur.through);
-    else if(isCurrent && s.id === "now" && cur.now_through) status += " · " + day(cur.now_through);
+    if(isCurrent && id === cur.default && cur.through) status += " · " + day(cur.through);
+    else if(isCurrent && id === "now" && cur.now_through) status += " · " + day(cur.now_through);
     $("status").textContent = status;
 
     // A week that is still being played is not in the default view.
     const prog = $("progress-note");
-    if(isCurrent && !cur.complete && s.id !== "now"){
+    if(isCurrent && !cur.complete && id !== "now"){
       prog.hidden = false;
       prog.textContent = cur.now_label + ". This ranking stops at the last full week. Choose “" + cur.now_label + "” above to count the finals so far.";
-    } else if(isCurrent && !cur.complete && s.id === "now"){
+    } else if(isCurrent && !cur.complete && id === "now"){
       prog.hidden = false;
       prog.textContent = "This week is still being played, so these ratings will move as games finish.";
     } else prog.hidden = true;
     $("season-note").hidden = y !== "2020";
 
-    $("rank-head").innerHTML = "<tr><th>#</th><th>Team</th><th>Rating</th><th>Bonus</th>" + (withPoll ? "<th>" + esc(s.poll || "Poll") + "</th>" : "") + "</tr>";
-    $("rows").innerHTML = s.rows.map(r => row(r, y, withPoll)).join("");
-    document.querySelectorAll(".poll-only").forEach(el => { el.hidden = !withPoll; });
-
-    $("readouts").hidden = !withPoll;
-    $("others-box").hidden = !withPoll;
-    if(withPoll){
-      $("r-in").textContent = s.rows.filter(r => r[5]).length + " of " + s.n;
-      $("r-in-l").textContent = pollName + " teams are in the TrueCFB top 25";
-      $("r-gap").textContent = s.gap.toFixed(1);
-      $("r-gap-l").textContent = "average spots between the TrueCFB rank and the " + pollName + " rank";
-      $("others").innerHTML = s.others.length
-        ? '<div class="tablewrap"><table class="t-rank"><thead><tr><th>#</th><th>Team</th><th>Rating</th><th>Bonus</th><th>' + esc(s.poll || "Poll") + "</th></tr></thead><tbody>" +
-          s.others.map(r => row(r, y, true)).join("") + "</tbody></table></div>"
-        : '<p class="note">None. Every ' + esc(pollName) + " team is in the TrueCFB top 25.</p>";
+    // Why a poll column is empty.
+    const pn = $("poll-note");
+    if(s.cfp && s.ap) pn.hidden = true;
+    else {
+      pn.hidden = false;
+      pn.textContent = isCurrent && id === "now" && cur.complete
+        ? "A poll is only compared once it includes these games. The AP poll comes out on Sunday and the CFP ranking on Tuesday."
+        : id === "final" ? "After the bowls and the playoff, only the AP publishes a final poll."
+        : !s.cfp && !s.ap ? "No AP or CFP ranking is on file for this point in the season."
+        : !s.cfp ? "The CFP committee had not published a ranking at this point in the season."
+        : "No AP poll is on file for this point in the season.";
     }
-    writeHash(isCurrent && s.id === cur.default ? {} : {season: y, view: s.id});
+
+    writeHash(isCurrent && id === cur.default && !showAll ? {} : {season: isCurrent ? null : y, view: isCurrent && id === cur.default ? null : id, show: showAll ? "all" : null});
+
+    loadRank(y).then(all => {
+      if($("season").value !== y || $("snap").value !== id) return;
+      const rows = all[id] || [];
+      $("rows").innerHTML = (showAll ? rows : rows.slice(0, 25)).map(r => row(r, y, s, isCurrent)).join("") ||
+        '<tr><td colspan="6">No ranking for this point in the season.</td></tr>';
+    }).catch(() => {
+      $("rows").innerHTML = '<tr><td colspan="6">The ranking did not load. Reload the page to try again.</td></tr>';
+    });
   }
-  function renderSeason(){
-    const y = $("season").value, last = snapsOf(y)[snapsOf(y).length - 1];
-    $("conf-note").textContent = "The plain average of every member's Team Rating, " +
-      (last.id === "now" ? "from all games played so far." : "at season's end.") +
-      " Non-conf is the record against FBS teams from other conferences.";
-    $("conf").innerHTML = D.conf[y].map(c => "<tr><td>" + esc(c[0]) + '<span class="rec">' + c[1] + ' teams</span></td><td class="rt">' +
-      c[2].toFixed(1) + "</td><td>" + c[3] + "-" + c[4] + "</td></tr>").join("");
-    const teams = Object.keys(D.ratings[y]).sort((a, b) => a.localeCompare(b));
-    $("jump").innerHTML = '<option value="">Choose a team</option>' +
-      teams.map(t => '<option value="' + esc(t) + '">' + esc(t) + " (#" + D.ratings[y][t][1] + ")</option>").join("");
+  function setShow(all){
+    showAll = all;
+    document.querySelectorAll("#show button").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.v === "all") === all)));
   }
 
   load().then(d => {
@@ -78,11 +80,12 @@
     const ys = Object.keys(D.seasons).sort().reverse(), h = readHash();
     $("season").innerHTML = ys.map(y => "<option>" + y + "</option>").join("");
     $("season").value = ys.includes(h.season) ? h.season : D.current.season;
-    fillSnaps(h.view); renderSeason(); render();
-    $("season").addEventListener("change", () => { fillSnaps(); renderSeason(); render(); });
+    setShow(h.show === "all");
+    fillSnaps(h.view); render();
+    $("season").addEventListener("change", () => { fillSnaps(); render(); });
     $("snap").addEventListener("change", render);
-    $("jump").addEventListener("change", e => { if(e.target.value) location.href = teamHref(e.target.value, $("season").value); });
+    document.querySelectorAll("#show button").forEach(b => b.addEventListener("click", () => { setShow(b.dataset.v === "all"); render(); }));
   }).catch(() => {
-    $("rows").innerHTML = "<tr><td>The ranking data did not load. Reload the page to try again.</td></tr>";
+    $("rows").innerHTML = '<tr><td colspan="6">The ranking data did not load. Reload the page to try again.</td></tr>';
   });
 })();

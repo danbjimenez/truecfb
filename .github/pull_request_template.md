@@ -13,4 +13,4 @@
 
 - [ ] I ran the pipeline (the four commands in the README).
 - [ ] For a site change: I looked at the page at phone width, in light and dark.
-- [ ] I left `site/data.json` and `site/sched_*.json` out, unless they are the point of this change.
+- [ ] I left the generated files in `site/` (`data.json`, `rank_*.json`, `sched_*.json`) out, unless they are the point of this change.

@@ -1,6 +1,11 @@
 """TrueCFB: run every season 2014-2026 with the current engine version: weekly snapshots, regular-season final, season final,
-conference tables and each team's schedule line.
-Usage: run_all.py <games.csv> <src_dir> <latest_poll.json> <out_dir> <cfp_final.json>"""
+conference tables, each team's schedule line, and each snapshot's full ranking beside the AP and CFP polls.
+Usage: run_all.py <games.csv> <src_dir> <latest_poll.json> <out_dir> <cfp_final.json> [polls_dir]
+
+Writes to <out_dir>:
+  data.json        settings, the list of snapshots per season, final ratings, conferences
+  rank_{year}.json every snapshot's full ranking: [rank, team, rating, wins, losses, CFP rank, AP rank]
+  sched_{year}.json every team's games"""
 import sys, json, os
 import numpy as np, pandas as pd
 sys.path.insert(0, sys.argv[2])
@@ -11,6 +16,26 @@ SELECTION = {2014: "2014-12-07", 2015: "2015-12-06", 2016: "2016-12-04", 2017: "
              2024: "2024-12-08", 2025: "2025-12-07"}
 g = E.load_games(sys.argv[1]); latest = json.load(open(sys.argv[3])); out_dir = sys.argv[4]
 CFP_FINAL = json.load(open(sys.argv[5]))   # final committee rankings (Wikipedia season ranking pages)
+POLLS_DIR = sys.argv[6] if len(sys.argv) > 6 else None
+
+
+def load_polls(folder):
+    """Weekly AP and CFP rankings saved by fetch_polls.py: {season: {"regular": {week: {"ap": {team: rank},
+    "cfp": {team: rank}}}, "postseason": {...}}}. A season with no file is simply missing."""
+    out = {}
+    if not folder or not os.path.isdir(folder):
+        return out
+    for name in sorted(os.listdir(folder)):
+        if not name.endswith(".json"):
+            continue
+        raw = json.load(open(os.path.join(folder, name)))
+        out[int(raw["season"])] = {kind: {int(w): {p: {team: int(rk) for rk, team in pairs} for p, pairs in polls.items()}
+                                          for w, polls in raw.get(kind, {}).items()} for kind in ("regular", "postseason")}
+    return out
+
+
+POLLS = load_polls(POLLS_DIR)
+print("poll files for seasons:", sorted(POLLS) or "none")
 F = E.margin_curve(g); V = E.home_edge(g, F)
 print("settings: win range", E.WIN_RANGE, "opp weight", E.OPP_WEIGHT, "venue %.2f" % V, "FCS", E.FCS_RATING,
       "| bowl", E.BOWL_BONUS, "playoff", E.PLAYOFF_BONUS, E.PLAYOFF_WIN_BONUS)
@@ -24,7 +49,9 @@ def poll_from(rows):
     return p
 
 
-def snapshot(sid, label, games, teams, prior, poll, poll_name, h2h):
+def snapshot(sid, label, games, teams, prior, poll, poll_name, h2h, ap=None, cfp=None):
+    """poll / poll_name: the one poll used for the printed report. ap / cfp: {team: rank} for the two
+    columns on the site, or None when that poll was not published for this point in the season."""
     det = None
     if len(games) == 0:
         tab = pd.DataFrame({"rating": [prior.get(t, E.FCS_RATING) if prior is not None else 50.0 for t in teams],
@@ -38,7 +65,13 @@ def snapshot(sid, label, games, teams, prior, poll, poll_name, h2h):
     seen = {t: p for t, p in poll.items() if t in rank}
     gap = float(np.mean([abs(rank[t] - p) for t, p in seen.items()])) if seen else None
     row = lambda t: [rank[t], t, round(float(tab.rating[t]), 1), int(tab.wins[t]), int(tab.losses[t]), seen.get(t)]
+    full = [[rank[t], t, round(float(tab.rating[t]), 1), int(tab.wins[t]), int(tab.losses[t]),
+             (cfp or {}).get(t), (ap or {}).get(t)] for t in order]
+    for name, p in (("CFP", cfp), ("AP", ap)):
+        lost = sorted(t for t in (p or {}) if t not in rank)
+        if lost: print(f"  note: {name} teams not matched to an FBS team in {sid}: {lost}")
     return {"id": sid, "label": label, "poll": poll_name, "gap": None if gap is None else round(gap, 1), "n": len(seen),
+            "cfp": cfp is not None, "ap": ap is not None, "all": full,
             "rows": [row(t) for t in order[:25]],
             "others": sorted([row(t) for t in seen if rank[t] > 25], key=lambda x: x[5])}, tab, rank, iters, det
 
@@ -89,18 +122,25 @@ for y in range(2014, 2027):
     teams = sorted(set(s.home[s.home_fbs]) | set(s.away[s.away_fbs]))
     weeks = sorted(int(w) for w in reg.week.unique())
     snaps = []
+    P = POLLS.get(y, {"regular": {}, "postseason": {}})
     for i, w in enumerate(weeks):
         poll = latest["ranks"] if (y == 2026 and w == max(weeks)) else poll_from(reg[reg.week == w])
         label = "Preseason" if i == 0 else f"Through week {weeks[i - 1]}"
-        sn, tab, rank, it, _ = snapshot(f"w{w}", label, reg[reg.week < w], teams, prior, poll, "Poll", False)
+        pw = P["regular"].get(w, {})    # the polls published going into week w
+        sn, tab, rank, it, _ = snapshot(f"w{w}", label, reg[reg.week < w], teams, prior, poll, "Poll", False,
+                                        ap=pw.get("ap"), cfp=pw.get("cfp"))
         max_iters = max(max_iters, it); snaps.append(sn)
         if sn["gap"] is not None and sn["n"] >= 10: weekly_gaps.setdefault(w, []).append(sn["gap"])
     if y in SELECTION:
         rs = reg[reg.date <= SELECTION[y]]
         cfp = {t: i + 1 for i, t in enumerate(CFP_FINAL[str(y)])}
-        sn, tab, rank, it, _ = snapshot("reg", "Regular season final", rs, teams, prior, cfp, "CFP", True); snaps.append(sn)
+        last = P["regular"].get(max(P["regular"]), {}) if P["regular"] else {}   # polls of selection day
+        sn, tab, rank, it, _ = snapshot("reg", "Regular season final", rs, teams, prior, cfp, "CFP", True,
+                                        ap=last.get("ap"), cfp=last.get("cfp") or cfp); snaps.append(sn)
         report.append((y, sn, rank, cfp, tab))
-        sn2, tabf, rankf, it, detf = snapshot("final", "Season final (after bowls and playoff)", s, teams, prior, {}, None, True); snaps.append(sn2)
+        post = P["postseason"].get(min(P["postseason"]), {}) if P["postseason"] else {}   # the AP poll after the bowls
+        sn2, tabf, rankf, it, detf = snapshot("final", "Season final (after bowls and playoff)", s, teams, prior, {}, None, True,
+                                              ap=post.get("ap")); snaps.append(sn2)
         fin = detf[detf["round"] == "final"]
         champ, runner = fin[fin.margin > 0].team.iloc[0], fin[fin.margin < 0].team.iloc[0]
         finals.append((y, champ, rankf[champ], runner, rankf[runner], [f"{r[1]} {r[2]}" for r in sn2["rows"][:5]], rank, rankf))
@@ -113,7 +153,11 @@ for y in range(2014, 2027):
         complete = st.get("open", 0) == 0
         now_label = (f"Through week {cur_w}" if complete
                      else f"Week {cur_w} in progress ({st.get('final', 0)} of {st.get('games', 0)} games final)")
-        sn2, tabf, rankf, it, detf = snapshot("now", now_label, reg, teams, prior, latest["ranks"], "CFP", False)
+        # Polls that include this week's games are numbered as going into the next week. Until they are
+        # published (the AP on Sunday, the CFP on Tuesday) the two columns stay empty.
+        nxt = P["regular"].get(cur_w + 1, {}) if complete else {}
+        sn2, tabf, rankf, it, detf = snapshot("now", now_label, reg, teams, prior, latest["ranks"], "CFP", False,
+                                              ap=nxt.get("ap"), cfp=nxt.get("cfp"))
         snaps.append(sn2); cur = snaps[-2]; prior_next = prior
         shown = reg if complete else reg[reg.week < cur_w]
         prev_w = weeks[weeks.index(cur_w) - 1] if weeks.index(cur_w) > 0 else None
@@ -128,13 +172,19 @@ for y in range(2014, 2027):
     data["conf"][str(y)] = conf_table(s, tabf)
     data["team_conf"][str(y)] = {t: c for t, c in sorted(team_conf(s).items()) if t in tabf.index}
     json.dump(schedule_lines(s, detf, tabf), open(f"{out_dir}/sched_{y}.json", "w"), separators=(",", ":"), ensure_ascii=False)
+    json.dump({sn["id"]: sn["all"] for sn in snaps}, open(f"{out_dir}/rank_{y}.json", "w"), separators=(",", ":"), ensure_ascii=False)
     data["seasons"][str(y)] = snaps
     prior = prior_next
 if "current" not in data:   # every season in the run is finished
     last_y = max(data["seasons"])
     data["current"] = {"season": last_y, "default": "final", "week": None, "complete": True, "through": None,
                        "now_through": None, "now_label": None}
+# data.json lists each season's snapshots; the rankings themselves are in rank_{year}.json.
+full_seasons = data["seasons"]
+data["seasons"] = {y: [{"id": sn["id"], "label": sn["label"], "cfp": sn["cfp"], "ap": sn["ap"]} for sn in snaps]
+                   for y, snaps in full_seasons.items()}
 json.dump(data, open(f"{out_dir}/data.json", "w"), separators=(",", ":"), ensure_ascii=False)
+data["seasons"] = full_seasons
 print("max iterations in any snapshot:", max_iters)
 print("\nREGULAR SEASON FINAL vs FINAL CFP RANKING")
 allgap = []

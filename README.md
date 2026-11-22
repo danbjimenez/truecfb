@@ -116,19 +116,23 @@ You need Python 3.10 or later.
 pip install -r requirements.txt
 python src/fetch_data.py data/schedules data/espn
 python src/build_games.py data/schedules data/espn data/games.csv data/latest_poll.json
-python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_final.json
+python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_final.json data/polls
 ```
 
-The last step rewrites the files in `site/`. Open `site/index.html` through any local web server to see the result.
+The last step rewrites the data files in `site/`. Open `site/index.html` through any local web server to see the result.
+
+The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `data/polls/`, so the commands above work as they are. To refresh those files yourself, get a free key from [CollegeFootballData.com](https://collegefootballdata.com/key) and run `CFBD_API_KEY=your-key python src/fetch_polls.py data/polls` before the last step. The polls are only shown for comparison. They are never an input to a rating.
 
 | Path | What it is |
 |---|---|
 | `src/engine.py` | The formula. Every rule and number above is in this one file. |
 | `src/fetch_data.py` | Downloads the public game files. |
+| `src/fetch_polls.py` | Saves the weekly AP and CFP rankings (needs a free CollegeFootballData key). |
 | `src/build_games.py` | Merges them into one games table and notes how complete each week of the current season is. |
-| `src/run_all.py` | Runs every season and writes the site's data files. |
+| `src/run_all.py` | Runs every season and writes the site's data files: `data.json`, `rank_{year}.json` and `sched_{year}.json`. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
-| `site/` | The website: the Rankings, Teams and About pages, their styles and scripts, and the data files the pipeline writes. |
+| `data/polls/` | Weekly AP and CFP rankings by season, as saved by `fetch_polls.py`. |
+| `site/` | The website: the Rankings, Teams, Conferences, How it works and About pages, their styles and scripts, and the data files the pipeline writes. |
 | `.github/workflows/refresh.yml` | The scheduled job that refreshes the numbers. |
 | `wrangler.jsonc` | Tells Cloudflare to serve `site/` as the website. |
 
@@ -136,7 +140,8 @@ The last step rewrites the files in `site/`. Open `site/index.html` through any 
 
 - Game results: [CollegeFootballData.com](https://collegefootballdata.com), through the `sportsdataverse/cfbfastR-data` files on GitHub.
 - Overtime flags, poll ranks at game time, some bowl and playoff games, and same-day finals: ESPN, through the `sportsdataverse/cfbfastR-cfb-raw` files on GitHub.
-- Final CFP rankings: Wikipedia season ranking pages, cross-checked against the ranks shown on bowl games.
+- Weekly AP and CFP rankings: the CollegeFootballData.com API.
+- Final CFP rankings, as a check: Wikipedia season ranking pages, cross-checked against the ranks shown on bowl games.
 
 TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.
 

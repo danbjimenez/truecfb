@@ -107,6 +107,8 @@ td.rt{font-weight:600}
 /* ---------- site additions ---------- */
 
 [hidden]{display:none !important}
+/* The name keeps its own capitals inside headings and labels that are set in capitals. */
+.nm{text-transform:none}
 .stack{display:flex;flex-direction:column;gap:var(--space-18)}
 
 /* Header: the same green band as the share card, so the site and the posts match. */
@@ -114,7 +116,7 @@ td.rt{font-weight:600}
 .site-head .in{max-width:var(--page-max);margin:0 auto;padding:var(--space-12) var(--space-16);display:flex;align-items:center;justify-content:space-between;gap:var(--space-16);flex-wrap:wrap}
 .site-head .home{display:inline-flex;text-decoration:none;border-radius:var(--radius-sm)}
 .site-head .wordmark{font-size:30px}
-.site-nav{display:flex;gap:var(--space-18)}
+.site-nav{display:flex;flex-wrap:wrap;gap:0 var(--space-18)}
 .site-nav a{font-family:var(--font-display);font-weight:600;font-size:17px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-ink);text-decoration:none;padding:var(--space-4) 0;border-bottom:2px solid transparent}
 .site-nav a:hover{border-bottom-color:var(--accent-ink)}
 .site-nav a[aria-current="page"]{border-bottom-color:var(--accent-ink)}
@@ -125,6 +127,18 @@ a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent)
 a:hover{text-decoration-thickness:2.5px}
 a.tm{text-decoration-color:var(--line);text-decoration-thickness:1px}
 a.tm:hover{text-decoration-color:var(--accent);text-decoration-thickness:1.5px}
+
+/* A segmented control used as a field in a controls row */
+.field .lab{font-size:15px}
+.field .seg button{flex:1 1 auto;padding:9px 12px}
+
+/* Poll comparison cells: the poll's rank, then how far TrueCFB is from it */
+.pr{display:inline-block;min-width:2ch}
+
+/* Rows that act as links (conference table) */
+button.link{font:inherit;color:var(--ink);background:none;border:0;padding:0;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--line);text-decoration-thickness:1px;text-underline-offset:3px}
+button.link:hover{text-decoration-color:var(--accent);text-decoration-thickness:1.5px}
+button.link:focus-visible{outline:2px solid var(--up);outline-offset:2px}
 
 /* Status line under a page title */
 .status{font-family:var(--font-display);font-weight:600;font-size:17px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:var(--space-8) 0 0}
@@ -149,7 +163,12 @@ svg.chart{width:100%;height:auto;display:block;max-width:560px}
   th,td{padding:7px 7px}
   .quick{grid-template-columns:repeat(2,1fr)}
   .calc{grid-template-columns:1fr}
+  .site-head .in{padding-bottom:var(--space-8);gap:var(--space-4) var(--space-16)}
   .site-head .wordmark{font-size:26px}
-  .site-nav{gap:var(--space-14)}
-  .site-nav a{font-size:16px}
+  .site-nav{width:100%;gap:0 var(--space-14)}
+  .site-nav a{font-size:15px;letter-spacing:.04em}
+  /* Six columns on a phone: the record drops under the name and the poll's own rank is left out. */
+  .t-rank.six .rec{display:block;margin-left:0}
+  .t-rank.six .pr{display:none}
+  .t-rank.six .gap{margin-left:0}
 }

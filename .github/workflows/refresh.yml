@@ -32,11 +32,16 @@ jobs:
       - name: Download game files
         run: python src/fetch_data.py data/schedules data/espn
 
+      - name: Download the AP and CFP rankings
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+        run: python src/fetch_polls.py data/polls
+
       - name: Build the games table
         run: python src/build_games.py data/schedules data/espn data/games.csv data/latest_poll.json
 
       - name: Run every season
-        run: python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_final.json
+        run: python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_final.json data/polls
 
       - name: Flag changes to finished seasons
         run: |
@@ -48,6 +53,7 @@ jobs:
       - name: Save the new numbers
         run: |
           git add site
+          if [ -d data/polls ]; then git add data/polls; fi
           if git diff --cached --quiet; then
             echo "No new results."
           else

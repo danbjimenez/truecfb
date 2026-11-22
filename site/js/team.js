@@ -109,8 +109,8 @@
     const teams = Object.keys(D.history).sort((a, b) => a.localeCompare(b));
     $("team").innerHTML = teams.map(t => '<option value="' + esc(t) + '">' + esc(t) + "</option>").join("");
     // With no team in the link, open on the current #1.
-    const cs = D.seasons[D.current.season], top = (cs.find(s => s.id === D.current.default) || cs[cs.length - 1]).rows[0][1];
-    $("team").value = top;
+    const cr = D.ratings[D.current.season], top = Object.keys(cr).find(t => cr[t][1] === 1);
+    if(top) $("team").value = top;
     pickFromHash(); render();
     $("team").addEventListener("change", render);
     $("season").addEventListener("change", render);

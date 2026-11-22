@@ -3,7 +3,7 @@ const TC = (() => {
   const $ = id => document.getElementById(id);
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   let dataPromise = null;
-  const sched = {};
+  const sched = {}, ranks = {};
 
   // The whole data file, fetched once per page.
   function load(){
@@ -15,6 +15,12 @@ const TC = (() => {
     if(!sched[y]) sched[y] = fetch("sched_" + y + ".json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
       .catch(e => { delete sched[y]; throw e; });
     return sched[y];
+  }
+  // One season's rankings at every point in the season, fetched when first needed.
+  function loadRank(y){
+    if(!ranks[y]) ranks[y] = fetch("rank_" + y + ".json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+      .catch(e => { delete ranks[y]; throw e; });
+    return ranks[y];
   }
   const esc = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
   // "2026-11-21" -> "21 Nov 2026"; "11-21" -> "21 Nov"
@@ -29,11 +35,11 @@ const TC = (() => {
     return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
   }
   const bonus = (D, rating) => signed(D.settings.b * (rating - 50));
-  // Poll rank with a chip for how far TrueCFB is from it.
+  // A poll's rank for a team, with a chip for how far TrueCFB is from it.
   function pollCell(ours, theirs){
     if(!theirs) return '<span class="nr">NR</span>';
     const d = theirs - ours, cls = d > 0 ? "up" : d < 0 ? "down" : "same";
-    return theirs + '<span class="gap ' + cls + '">' + (d > 0 ? "+" + d : d < 0 ? "−" + (-d) : "=") + "</span>";
+    return '<span class="pr">' + theirs + '</span><span class="gap ' + cls + '">' + (d > 0 ? "+" + d : d < 0 ? "−" + (-d) : "=") + "</span>";
   }
   function teamHref(team, season){
     return "team.html#team=" + encodeURIComponent(team) + (season ? "&season=" + encodeURIComponent(season) : "");
@@ -51,5 +57,5 @@ const TC = (() => {
     history.replaceState(null, "", q ? "#" + q : location.pathname + location.search);
   }
   const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
-  return {$, load, loadSched, esc, day, signed, bonus, pollCell, teamHref, teamLink, readHash, writeHash, ordinal};
+  return {$, load, loadSched, loadRank, esc, day, signed, bonus, pollCell, teamHref, teamLink, readHash, writeHash, ordinal};
 })();

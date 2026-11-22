@@ -4,11 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TrueCFB Rankings</title>
-<meta name="description" content="TrueCFB ranks every FBS team from game results alone. Blind to the jersey, every game counts, and the formula is open.">
+<meta name="description" content="TrueCFB rates every FBS team on game results alone. Every game counts, and the formula is open source.">
 <meta property="og:title" content="TrueCFB Rankings">
-<meta property="og:description" content="College football rankings from game results alone. Blind to the jersey. Every game counts. Open formula.">
+<meta property="og:description" content="TrueCFB rates every FBS team on game results alone. Every game counts, and the formula is open source.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://truecfb.com/">
 <meta property="og:image" content="https://truecfb.com/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -22,74 +21,57 @@
     <nav class="site-nav" aria-label="Main">
       <a href="./" aria-current="page">Rankings</a>
       <a href="team.html">Teams</a>
+      <a href="conferences.html">Conferences</a>
+      <a href="how-it-works.html">How it works</a>
       <a href="about.html">About</a>
     </nav>
   </div>
 </header>
 
 <main class="page">
-  <header>
+<header>
     <h1>TrueCFB Rankings</h1>
     <p class="status" id="status">&nbsp;</p>
-    <p class="sub">Every FBS team rated 0 to 100 from game results alone. Blind to the jersey. Every game counts. Open formula. <a href="about.html">How it works</a></p>
+    <p class="sub">Every FBS team rated on results alone. Every game counts. Open source formula. <a href="how-it-works.html">How it works</a></p>
   </header>
 
-  <section class="panel controls" aria-label="Season and point in the season">
+  <section class="panel controls" aria-label="Season, point in the season and how many teams to show">
     <div class="field"><label for="season">Season</label><select id="season"></select></div>
     <div class="field"><label for="snap">Point in the season</label><select id="snap"></select></div>
+    <div class="field"><span class="lab" id="show-l">Show</span>
+      <div class="seg" role="group" aria-labelledby="show-l" id="show">
+        <button type="button" data-v="25" aria-pressed="true">Top 25</button><button type="button" data-v="all" aria-pressed="false">All FBS</button>
+      </div>
+    </div>
   </section>
 
   <p class="note" id="progress-note" hidden></p>
   <p class="note" id="season-note" hidden>2020 is not reliable. Most conferences played only themselves that year, so nothing ties one conference's level to another's. Treat this season's ratings as a rough guide.</p>
 
   <div class="tablewrap">
-    <table class="t-rank">
-      <thead id="rank-head"></thead>
-      <tbody id="rows"><tr><td>Loading the ranking…</td></tr></tbody>
+    <table class="t-rank six">
+      <thead><tr><th>#</th><th>Team</th><th>Rating</th><th>Bonus</th><th>vs. CFP</th><th>vs. AP</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6">Loading the ranking…</td></tr></tbody>
     </table>
   </div>
 
-  <div class="legend" id="legend">
+  <p class="note" id="poll-note" hidden></p>
+
+  <div class="legend">
     <span><b>Rating</b> is the average of a team's game scores, 0 to 100</span>
     <span><b>Bonus</b> is what a team is worth to anyone who plays it, win or lose</span>
-    <span class="poll-only"><span class="gap up">+3</span> TrueCFB has the team 3 spots higher than the poll</span>
-    <span class="poll-only"><span class="gap down">−3</span> 3 spots lower</span>
-    <span class="poll-only"><span class="nr">NR</span> not ranked, or did not play that week</span>
+    <span><span class="gap up">+3</span> TrueCFB has the team 3 spots higher than that poll</span>
+    <span><span class="gap down">−3</span> 3 spots lower</span>
+    <span><span class="nr">NR</span> not in that poll's top 25</span>
+    <span>An empty cell means that poll was not published for this point in the season</span>
   </div>
-
-  <section class="panel">
-    <h2>Find a team</h2>
-    <p class="note">The table shows the top 25. Every FBS team has a page with its rating, its rank and every game.</p>
-    <div class="field"><label for="jump">Team</label><select id="jump"></select></div>
-  </section>
-
-  <section class="panel readouts" id="readouts" aria-label="Compared with the poll">
-    <div class="read"><b id="r-in">–</b><span id="r-in-l">poll teams in the TrueCFB top 25</span></div>
-    <div class="read"><b id="r-gap">–</b><span id="r-gap-l">average spots between the TrueCFB rank and the poll rank</span></div>
-  </section>
-
-  <section class="panel" id="others-box">
-    <h2>Poll teams outside the TrueCFB top 25</h2>
-    <div id="others"></div>
-  </section>
-
-  <section class="panel">
-    <h2>TrueCFB Conference Rating</h2>
-    <p class="note" id="conf-note"></p>
-    <div class="tablewrap">
-      <table class="t-left">
-        <thead><tr><th>Conference</th><th>Rating</th><th>Non-conf</th></tr></thead>
-        <tbody id="conf"></tbody>
-      </table>
-    </div>
-  </section>
 </main>
 
 <footer class="site-foot">
   <div class="in">
     <span class="wordmark">True<b>CFB</b></span>
-    <p>Blind to the jersey. Every game counts. Open formula.</p>
-    <p>TrueCFB version 1.1. <a href="about.html">How it works</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
+    <p>Every FBS team rated on results alone. Every game counts. Open source formula.</p>
+    <p>TrueCFB version 1.1. <a href="how-it-works.html">How it works</a> · <a href="about.html">About</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
     <p>Game data from CollegeFootballData.com and ESPN. TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.</p>
   </div>
 </footer>
