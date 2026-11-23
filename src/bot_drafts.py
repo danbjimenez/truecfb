@@ -63,7 +63,7 @@ def draft(games_csv, src_dir, season, bot_dir, site_dir, given):
         for gid in new:
             row = s[s.game_id == gid].iloc[0]
             res = GI.impact(s[s.day <= row.day], gid, F, V, prior, teams)
-            text = GI.short_post(res)
+            text = GI.short_post(res, GI.team_tags(res))
             # The card is drawn again from "impact" when it is posted, so the same image goes out.
             drafts[str(gid)] = {"post": text, "length": GI.weighted_length(text), "alt": GI.post_text(res),
                                 "day": res["day"], "matchup_rating": res["matchup_rating"],

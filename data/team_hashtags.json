@@ -1,0 +1,557 @@
+{
+ "_about": "One hashtag per FBS team, added to each result post. A rallying cry where it is well established and points to one team; otherwise the plain team name. Edit freely: tags never affect a rating.",
+ "teams": {
+  "Air Force": {
+   "tag": "#AirForceFalcons",
+   "kind": "team name"
+  },
+  "Akron": {
+   "tag": "#Zips",
+   "kind": "rallying cry"
+  },
+  "Alabama": {
+   "tag": "#RollTide",
+   "kind": "rallying cry"
+  },
+  "App State": {
+   "tag": "#GoApp",
+   "kind": "rallying cry"
+  },
+  "Arizona": {
+   "tag": "#BearDown",
+   "kind": "rallying cry"
+  },
+  "Arizona State": {
+   "tag": "#ForksUp",
+   "kind": "rallying cry"
+  },
+  "Arkansas": {
+   "tag": "#WPS",
+   "kind": "rallying cry"
+  },
+  "Arkansas State": {
+   "tag": "#AStateRedWolves",
+   "kind": "team name"
+  },
+  "Army": {
+   "tag": "#GoArmy",
+   "kind": "rallying cry"
+  },
+  "Auburn": {
+   "tag": "#WarEagle",
+   "kind": "rallying cry"
+  },
+  "BYU": {
+   "tag": "#GoCougs",
+   "kind": "rallying cry"
+  },
+  "Ball State": {
+   "tag": "#ChirpChirp",
+   "kind": "rallying cry"
+  },
+  "Baylor": {
+   "tag": "#SicEm",
+   "kind": "rallying cry"
+  },
+  "Boise State": {
+   "tag": "#BoiseState",
+   "kind": "team name"
+  },
+  "Boston College": {
+   "tag": "#WeAreBC",
+   "kind": "rallying cry"
+  },
+  "Bowling Green": {
+   "tag": "#BGSU",
+   "kind": "team name"
+  },
+  "Buffalo": {
+   "tag": "#UBBulls",
+   "kind": "team name"
+  },
+  "California": {
+   "tag": "#CalBears",
+   "kind": "team name"
+  },
+  "Central Michigan": {
+   "tag": "#FireUpChips",
+   "kind": "rallying cry"
+  },
+  "Charlotte": {
+   "tag": "#Charlotte49ers",
+   "kind": "team name"
+  },
+  "Cincinnati": {
+   "tag": "#Bearcats",
+   "kind": "rallying cry"
+  },
+  "Clemson": {
+   "tag": "#Clemson",
+   "kind": "team name"
+  },
+  "Coastal Carolina": {
+   "tag": "#ChantsUp",
+   "kind": "rallying cry"
+  },
+  "Colorado": {
+   "tag": "#GoBuffs",
+   "kind": "rallying cry"
+  },
+  "Colorado State": {
+   "tag": "#CSURams",
+   "kind": "team name"
+  },
+  "Delaware": {
+   "tag": "#BlueHens",
+   "kind": "team name"
+  },
+  "Duke": {
+   "tag": "#GoDuke",
+   "kind": "rallying cry"
+  },
+  "East Carolina": {
+   "tag": "#ECU",
+   "kind": "team name"
+  },
+  "Eastern Michigan": {
+   "tag": "#EMUEagles",
+   "kind": "team name"
+  },
+  "Florida": {
+   "tag": "#GoGators",
+   "kind": "rallying cry"
+  },
+  "Florida Atlantic": {
+   "tag": "#FAU",
+   "kind": "team name"
+  },
+  "Florida International": {
+   "tag": "#FIU",
+   "kind": "team name"
+  },
+  "Florida State": {
+   "tag": "#GoNoles",
+   "kind": "rallying cry"
+  },
+  "Fresno State": {
+   "tag": "#FresnoState",
+   "kind": "team name"
+  },
+  "Georgia": {
+   "tag": "#GoDawgs",
+   "kind": "rallying cry"
+  },
+  "Georgia Southern": {
+   "tag": "#HailSouthern",
+   "kind": "rallying cry"
+  },
+  "Georgia State": {
+   "tag": "#GeorgiaState",
+   "kind": "team name"
+  },
+  "Georgia Tech": {
+   "tag": "#TogetherWeSwarm",
+   "kind": "rallying cry"
+  },
+  "Hawai'i": {
+   "tag": "#GoBows",
+   "kind": "rallying cry"
+  },
+  "Houston": {
+   "tag": "#GoCoogs",
+   "kind": "rallying cry"
+  },
+  "Illinois": {
+   "tag": "#Illini",
+   "kind": "rallying cry"
+  },
+  "Indiana": {
+   "tag": "#IUFB",
+   "kind": "rallying cry"
+  },
+  "Iowa": {
+   "tag": "#Hawkeyes",
+   "kind": "rallying cry"
+  },
+  "Iowa State": {
+   "tag": "#Cyclones",
+   "kind": "rallying cry"
+  },
+  "Jacksonville State": {
+   "tag": "#JaxState",
+   "kind": "team name"
+  },
+  "James Madison": {
+   "tag": "#GoDukes",
+   "kind": "rallying cry"
+  },
+  "Kansas": {
+   "tag": "#RockChalk",
+   "kind": "rallying cry"
+  },
+  "Kansas State": {
+   "tag": "#EMAW",
+   "kind": "rallying cry"
+  },
+  "Kennesaw State": {
+   "tag": "#KennesawState",
+   "kind": "team name"
+  },
+  "Kent State": {
+   "tag": "#KentState",
+   "kind": "team name"
+  },
+  "Kentucky": {
+   "tag": "#BBN",
+   "kind": "rallying cry"
+  },
+  "LSU": {
+   "tag": "#GeauxTigers",
+   "kind": "rallying cry"
+  },
+  "Liberty": {
+   "tag": "#LibertyFlames",
+   "kind": "team name"
+  },
+  "Louisiana": {
+   "tag": "#GeauxCajuns",
+   "kind": "rallying cry"
+  },
+  "Louisiana Tech": {
+   "tag": "#LATech",
+   "kind": "team name"
+  },
+  "Louisville": {
+   "tag": "#GoCards",
+   "kind": "rallying cry"
+  },
+  "Marshall": {
+   "tag": "#HerdNation",
+   "kind": "rallying cry"
+  },
+  "Maryland": {
+   "tag": "#GoTerps",
+   "kind": "rallying cry"
+  },
+  "Massachusetts": {
+   "tag": "#UMass",
+   "kind": "team name"
+  },
+  "Memphis": {
+   "tag": "#GoTigersGo",
+   "kind": "rallying cry"
+  },
+  "Miami": {
+   "tag": "#GoCanes",
+   "kind": "rallying cry"
+  },
+  "Miami (OH)": {
+   "tag": "#MiamiOH",
+   "kind": "team name"
+  },
+  "Michigan": {
+   "tag": "#GoBlue",
+   "kind": "rallying cry"
+  },
+  "Michigan State": {
+   "tag": "#SpartyNation",
+   "kind": "rallying cry"
+  },
+  "Middle Tennessee": {
+   "tag": "#BlueRaiders",
+   "kind": "team name"
+  },
+  "Minnesota": {
+   "tag": "#Gophers",
+   "kind": "rallying cry"
+  },
+  "Mississippi State": {
+   "tag": "#HailState",
+   "kind": "rallying cry"
+  },
+  "Missouri": {
+   "tag": "#MIZ",
+   "kind": "rallying cry"
+  },
+  "Missouri State": {
+   "tag": "#MissouriState",
+   "kind": "team name"
+  },
+  "NC State": {
+   "tag": "#GoPack",
+   "kind": "rallying cry"
+  },
+  "Navy": {
+   "tag": "#GoNavy",
+   "kind": "rallying cry"
+  },
+  "Nebraska": {
+   "tag": "#Huskers",
+   "kind": "rallying cry"
+  },
+  "Nevada": {
+   "tag": "#NevadaWolfPack",
+   "kind": "team name"
+  },
+  "New Mexico": {
+   "tag": "#GoLobos",
+   "kind": "rallying cry"
+  },
+  "New Mexico State": {
+   "tag": "#NMSU",
+   "kind": "team name"
+  },
+  "North Carolina": {
+   "tag": "#GoHeels",
+   "kind": "rallying cry"
+  },
+  "North Dakota State": {
+   "tag": "#GoBison",
+   "kind": "rallying cry"
+  },
+  "North Texas": {
+   "tag": "#GMG",
+   "kind": "rallying cry"
+  },
+  "Northern Illinois": {
+   "tag": "#NIU",
+   "kind": "team name"
+  },
+  "Northwestern": {
+   "tag": "#Northwestern",
+   "kind": "team name"
+  },
+  "Notre Dame": {
+   "tag": "#GoIrish",
+   "kind": "rallying cry"
+  },
+  "Ohio": {
+   "tag": "#OhioBobcats",
+   "kind": "team name"
+  },
+  "Ohio State": {
+   "tag": "#GoBucks",
+   "kind": "rallying cry"
+  },
+  "Oklahoma": {
+   "tag": "#BoomerSooner",
+   "kind": "rallying cry"
+  },
+  "Oklahoma State": {
+   "tag": "#GoPokes",
+   "kind": "rallying cry"
+  },
+  "Old Dominion": {
+   "tag": "#ODU",
+   "kind": "team name"
+  },
+  "Ole Miss": {
+   "tag": "#HottyToddy",
+   "kind": "rallying cry"
+  },
+  "Oregon": {
+   "tag": "#GoDucks",
+   "kind": "rallying cry"
+  },
+  "Oregon State": {
+   "tag": "#GoBeavs",
+   "kind": "rallying cry"
+  },
+  "Penn State": {
+   "tag": "#WeAre",
+   "kind": "rallying cry"
+  },
+  "Pittsburgh": {
+   "tag": "#H2P",
+   "kind": "rallying cry"
+  },
+  "Purdue": {
+   "tag": "#BoilerUp",
+   "kind": "rallying cry"
+  },
+  "Rice": {
+   "tag": "#RiceOwls",
+   "kind": "team name"
+  },
+  "Rutgers": {
+   "tag": "#RutgersFB",
+   "kind": "rallying cry"
+  },
+  "SMU": {
+   "tag": "#PonyUp",
+   "kind": "rallying cry"
+  },
+  "Sacramento State": {
+   "tag": "#SacState",
+   "kind": "team name"
+  },
+  "Sam Houston": {
+   "tag": "#EatEmUpKats",
+   "kind": "rallying cry"
+  },
+  "San Diego State": {
+   "tag": "#GoAztecs",
+   "kind": "rallying cry"
+  },
+  "San José State": {
+   "tag": "#SpartanUp",
+   "kind": "rallying cry"
+  },
+  "South Alabama": {
+   "tag": "#SouthAlabama",
+   "kind": "team name"
+  },
+  "South Carolina": {
+   "tag": "#SouthCarolina",
+   "kind": "team name"
+  },
+  "South Florida": {
+   "tag": "#GoBulls",
+   "kind": "rallying cry"
+  },
+  "Southern Miss": {
+   "tag": "#SMTTT",
+   "kind": "rallying cry"
+  },
+  "Stanford": {
+   "tag": "#Stanford",
+   "kind": "team name"
+  },
+  "Syracuse": {
+   "tag": "#Syracuse",
+   "kind": "team name"
+  },
+  "TCU": {
+   "tag": "#GoFrogs",
+   "kind": "rallying cry"
+  },
+  "Temple": {
+   "tag": "#TempleOwls",
+   "kind": "team name"
+  },
+  "Tennessee": {
+   "tag": "#GoVols",
+   "kind": "rallying cry"
+  },
+  "Texas": {
+   "tag": "#HookEm",
+   "kind": "rallying cry"
+  },
+  "Texas A&M": {
+   "tag": "#GigEm",
+   "kind": "rallying cry"
+  },
+  "Texas State": {
+   "tag": "#TexasState",
+   "kind": "team name"
+  },
+  "Texas Tech": {
+   "tag": "#WreckEm",
+   "kind": "rallying cry"
+  },
+  "Toledo": {
+   "tag": "#ToledoRockets",
+   "kind": "team name"
+  },
+  "Troy": {
+   "tag": "#TroyTrojans",
+   "kind": "team name"
+  },
+  "Tulane": {
+   "tag": "#RollWave",
+   "kind": "rallying cry"
+  },
+  "Tulsa": {
+   "tag": "#Tulsa",
+   "kind": "team name"
+  },
+  "UAB": {
+   "tag": "#UAB",
+   "kind": "team name"
+  },
+  "UCF": {
+   "tag": "#ChargeOn",
+   "kind": "rallying cry"
+  },
+  "UCLA": {
+   "tag": "#GoBruins",
+   "kind": "rallying cry"
+  },
+  "UConn": {
+   "tag": "#UConn",
+   "kind": "team name"
+  },
+  "UL Monroe": {
+   "tag": "#ULM",
+   "kind": "team name"
+  },
+  "UNLV": {
+   "tag": "#UNLV",
+   "kind": "team name"
+  },
+  "USC": {
+   "tag": "#FightOn",
+   "kind": "rallying cry"
+  },
+  "UTEP": {
+   "tag": "#UTEP",
+   "kind": "team name"
+  },
+  "UTSA": {
+   "tag": "#BirdsUp",
+   "kind": "rallying cry"
+  },
+  "Utah": {
+   "tag": "#GoUtes",
+   "kind": "rallying cry"
+  },
+  "Utah State": {
+   "tag": "#USUAggies",
+   "kind": "team name"
+  },
+  "Vanderbilt": {
+   "tag": "#AnchorDown",
+   "kind": "rallying cry"
+  },
+  "Virginia": {
+   "tag": "#GoHoos",
+   "kind": "rallying cry"
+  },
+  "Virginia Tech": {
+   "tag": "#Hokies",
+   "kind": "rallying cry"
+  },
+  "Wake Forest": {
+   "tag": "#GoDeacs",
+   "kind": "rallying cry"
+  },
+  "Washington": {
+   "tag": "#UDub",
+   "kind": "rallying cry"
+  },
+  "Washington State": {
+   "tag": "#Wazzu",
+   "kind": "rallying cry"
+  },
+  "West Virginia": {
+   "tag": "#HailWV",
+   "kind": "rallying cry"
+  },
+  "Western Kentucky": {
+   "tag": "#GoTops",
+   "kind": "rallying cry"
+  },
+  "Western Michigan": {
+   "tag": "#WMU",
+   "kind": "team name"
+  },
+  "Wisconsin": {
+   "tag": "#OnWisconsin",
+   "kind": "rallying cry"
+  },
+  "Wyoming": {
+   "tag": "#Wyoming",
+   "kind": "team name"
+  }
+ }
+}

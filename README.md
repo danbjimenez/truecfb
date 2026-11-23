@@ -172,6 +172,7 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `worker/index.js` | The small Cloudflare script beside the site: checks the live scoreboard during game windows and handles the Telegram buttons. |
 | `src/fetch_colors.py` | Saves each team's main color to `data/team_colors.json`. Colors only color the lines of the Top 25 chart. They are never an input to a rating. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
+| `data/team_hashtags.json` | One hashtag per FBS team, added to each result post. Edit freely: tags never affect a rating. |
 | `data/polls/` | Weekly AP and CFP rankings by season, as saved by `fetch_polls.py`. |
 | `site/` | The website: the Rankings, Teams, Conferences, How it works and About pages, their styles and scripts, and the data files the pipeline writes. |
 | `.github/workflows/refresh.yml` | The scheduled job that refreshes the numbers. |
