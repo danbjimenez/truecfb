@@ -147,6 +147,15 @@ python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_fin
 
 The last step rewrites the data files in `site/`. Open `site/index.html` through any local web server to see the result.
 
+To see what a single game changed, run `game_impact.py` after `build_games.py`:
+
+```
+python src/game_impact.py data/games.csv src 2026 --text                # every game on the latest game day
+python src/game_impact.py data/games.csv src 2025 --game 401769076      # one game, by its id
+```
+
+For each game it prints the Matchup Rating, each team's Game Rating, how each Team Rating and rank moved, and the ripple: which of the two teams' past opponents gained or lost the most because of the result. "Before" and "after" differ by that one game only, with every other final through the end of its day counted in both. Add `--out impact.json` to save the full detail.
+
 The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `data/polls/`, so the commands above work as they are. To refresh those files yourself, get a free key from [CollegeFootballData.com](https://collegefootballdata.com/key) and run `CFBD_API_KEY=your-key python src/fetch_polls.py data/polls` before the last step. The polls are only shown for comparison. They are never an input to a rating.
 
 | Path | What it is |
@@ -156,6 +165,7 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `src/fetch_polls.py` | Saves the weekly AP and CFP rankings (needs a free CollegeFootballData key). |
 | `src/build_games.py` | Merges them into one games table and notes how complete each week of the current season is. |
 | `src/run_all.py` | Runs every season and writes the site's data files: `data.json`, `rank_{year}.json`, `sched_{year}.json` and `history.json`. |
+| `src/game_impact.py` | What one game changed: Matchup Rating, Game Ratings, Team Rating and rank moves, and the ripple to past opponents. Also writes the post for X from a fixed template, so every number in a post comes from the engine. |
 | `src/fetch_colors.py` | Saves each team's main color to `data/team_colors.json`. Colors only color the lines of the Top 25 chart. They are never an input to a rating. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
 | `data/polls/` | Weekly AP and CFP rankings by season, as saved by `fetch_polls.py`. |
