@@ -19,8 +19,9 @@ on:
 permissions:
   contents: write
 
+# Shares a queue with the game-finals job, so the two never save over each other.
 concurrency:
-  group: refresh
+  group: site-data
   cancel-in-progress: false
 
 jobs:
@@ -49,6 +50,11 @@ jobs:
       - name: Build the games table
         run: python src/build_games.py data/schedules data/espn data/games.csv data/latest_poll.json
 
+      - name: Add same-day finals from CollegeFootballData
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+        run: python src/fill_live_finals.py data/games.csv data/latest_poll.json "$(python -c 'import datetime as d; t=d.date.today(); print(t.year if t.month >= 7 else t.year - 1)')"
+
       - name: Run every season
         run: python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_final.json data/polls
 
@@ -69,5 +75,6 @@ jobs:
             git config user.name "truecfb-refresh"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "Refresh ratings with the latest results"
+            git pull -q --rebase origin main
             git push
           fi

@@ -1,0 +1,61 @@
+name: Post to X
+
+# Started by the Cloudflare Worker when Dan taps "Post to X" on a draft in Telegram.
+# Posts the saved draft for that game as @truecfb, exactly as the engine wrote it, and never posts
+# the same game twice.
+on:
+  workflow_dispatch:
+    inputs:
+      game:
+        description: "Game id of the approved draft"
+        required: true
+      message_id:
+        description: "Telegram message to reply to (optional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: post-to-x
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install -q requests requests-oauthlib
+
+      - name: Post
+        env:
+          GAME: ${{ inputs.game }}
+          MESSAGE_ID: ${{ inputs.message_id }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/bot_post.py data/bot "$GAME" "$MESSAGE_ID"
+
+      - name: Record it
+        run: |
+          git add data/bot/posted.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name "truecfb-refresh"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Posted game ${{ inputs.game }} to X"
+          for i in 1 2 3; do
+            git pull -q --rebase origin main && git push -q && exit 0
+            sleep 5
+          done
+          echo "::error::posted, but could not record it after three tries"; exit 1

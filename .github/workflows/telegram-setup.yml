@@ -1,0 +1,53 @@
+name: Set up Telegram
+
+# Run once by hand (Actions tab -> "Set up Telegram" -> Run workflow).
+# - Without TELEGRAM_CHAT_ID saved yet: replies, inside Telegram, to whoever has messaged the bot
+#   with their chat id, so it never appears in these public logs.
+# - With it saved: points the bot's button taps at truecfb.com/hooks/telegram and sends a test message.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Set up
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        shell: python
+        run: |
+          import hashlib, json, os, sys, urllib.request
+          token = os.environ.get("TELEGRAM_BOT_TOKEN")
+          if not token:
+              sys.exit("TELEGRAM_BOT_TOKEN is not saved in the repo secrets")
+          def call(method, payload=None):
+              req = urllib.request.Request(f"https://api.telegram.org/bot{token}/{method}",
+                                           data=json.dumps(payload or {}).encode(),
+                                           headers={"Content-Type": "application/json"})
+              return json.load(urllib.request.urlopen(req, timeout=30))
+          chat = os.environ.get("TELEGRAM_CHAT_ID")
+          if not chat:
+              call("deleteWebhook")   # getUpdates only works without a webhook
+              seen = set()
+              for u in call("getUpdates").get("result", []):
+                  c = (u.get("message") or {}).get("chat", {}).get("id")
+                  if c and c not in seen:
+                      seen.add(c)
+                      call("sendMessage", {"chat_id": c, "text": f"Your chat id is {c}. Save it as the secret TELEGRAM_CHAT_ID in GitHub and in Cloudflare, then run this setup again."})
+              print(f"sent the chat id to {len(seen)} chat(s) in Telegram" if seen else
+                    "no messages found: send the bot a message in Telegram, then run this again")
+              sys.exit(0)
+          # The webhook secret is derived from the bot token, so the Worker can check it without another secret.
+          secret = hashlib.sha256(token.encode()).hexdigest()[:40]
+          r = call("setWebhook", {"url": "https://truecfb.com/hooks/telegram", "secret_token": secret,
+                                  "allowed_updates": ["callback_query", "message"], "drop_pending_updates": True})
+          print("setWebhook:", r.get("ok"), r.get("description"))
+          info = call("getWebhookInfo")["result"]
+          print("webhook:", info.get("url"), "| pending:", info.get("pending_update_count"), "| last error:", info.get("last_error_message"))
+          call("sendMessage", {"chat_id": chat, "text": "TrueCFB drafts bot is connected. Drafts will arrive here with Post to X and Skip buttons."})
+          print("test message sent")

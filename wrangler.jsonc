@@ -1,9 +1,19 @@
-// Cloudflare settings: serve the files in site/ as a static website.
+// Cloudflare settings: serve the files in site/ as a static website, plus a small script
+// (worker/index.js) for the X bot: a scoreboard check every few minutes and the Telegram button hook.
+// Files in site/ are served first; the script only sees requests that match no file.
 {
   "name": "truecfb",
   "compatibility_date": "2026-11-22",
+  "main": "./worker/index.js",
   "assets": {
-    "directory": "./site"
+    "directory": "./site",
+    "binding": "ASSETS"
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "observability": {
+    "enabled": true
   },
   // Lets Cloudflare build a preview copy of the site for a branch before it goes live.
   "previews": {}

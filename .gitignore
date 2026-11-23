@@ -6,3 +6,5 @@ data/latest_poll.json
 __pycache__/
 *.pyc
 *.part
+.wrangler/
+data/bot/new.txt
