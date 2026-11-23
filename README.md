@@ -166,11 +166,15 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `src/build_games.py` | Merges them into one games table and notes how complete each week of the current season is. |
 | `src/run_all.py` | Runs every season and writes the site's data files: `data.json`, `rank_{year}.json`, `sched_{year}.json` and `history.json`. |
 | `src/game_impact.py` | What one game changed: Matchup Rating, Game Ratings, Team Rating and rank moves, and the ripple to past opponents. Also writes the post for X from a fixed template, so every number in a post comes from the engine. |
+| `src/fill_live_finals.py` | Adds same-day finals from the CollegeFootballData API that the public files do not have yet (needs a key). |
+| `src/bot_drafts.py`, `src/bot_post.py` | The X bot: drafts a post for each new final, sends it to Telegram for approval, and posts an approved draft as @truecfb. |
+| `worker/index.js` | The small Cloudflare script beside the site: checks the live scoreboard during game windows and handles the Telegram buttons. |
 | `src/fetch_colors.py` | Saves each team's main color to `data/team_colors.json`. Colors only color the lines of the Top 25 chart. They are never an input to a rating. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |
 | `data/polls/` | Weekly AP and CFP rankings by season, as saved by `fetch_polls.py`. |
 | `site/` | The website: the Rankings, Teams, Conferences, How it works and About pages, their styles and scripts, and the data files the pipeline writes. |
 | `.github/workflows/refresh.yml` | The scheduled job that refreshes the numbers. |
+| `.github/workflows/game-final.yml`, `post-to-x.yml`, `telegram-setup.yml` | The X bot's jobs: re-run and draft after a final, post an approved draft, and connect Telegram. |
 | `wrangler.jsonc` | Tells Cloudflare to serve `site/` as the website. |
 
 The words used throughout: a **Game Rating** is what one team earns for one game, a **Team Rating** is the average of a team's Game Ratings, a **Conference Rating** is the average of its members' Team Ratings, and a **Matchup Rating** is the pot two teams split. "Score" always means the points on the scoreboard.
