@@ -211,6 +211,20 @@ def post_text(res, hashtags=None):
     return text[:MAX_POST]   # only reached with absurdly long names or hashtags
 
 
+def short_post(res):
+    """The post that goes with the result card: the score, the Matchup Rating and the rank moves.
+    The card holds the rest; the long post_text() becomes the image's alt text."""
+    w = next(s for s in res["teams"] if s["won"]); l = next(s for s in res["teams"] if not s["won"])
+    tag = " (OT)" if res["overtime"] else ""
+    lines = [f"FINAL: {w['team']} {w['points']}, {l['team']} {l['points']}{tag}"]
+    if res["note"] and res["season_type"] == "postseason":
+        lines.insert(0, game_title(res["note"]))
+    lines.append(f"Matchup Rating {res['matchup_rating']}")
+    moves = [f"{s['team']} {_rank_move(s)}" for s in (w, l) if s["fbs"]]
+    lines.append(" \u00b7 ".join(moves))
+    return "\n".join(lines)
+
+
 # ---------- command line ----------
 
 def main():

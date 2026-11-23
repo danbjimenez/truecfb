@@ -168,6 +168,7 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `src/game_impact.py` | What one game changed: Matchup Rating, Game Ratings, Team Rating and rank moves, and the ripple to past opponents. Also writes the post for X from a fixed template, so every number in a post comes from the engine. |
 | `src/fill_live_finals.py` | Adds same-day finals from the CollegeFootballData API that the public files do not have yet (needs a key). |
 | `src/bot_drafts.py`, `src/bot_post.py` | The X bot: drafts a post for each new final, sends it to Telegram for approval, and posts an approved draft as @truecfb. |
+| `src/card.py`, `assets/fonts/` | Draws the 1200 × 675 result card for each post, in the TrueCFB brand, from the same numbers as the post. |
 | `worker/index.js` | The small Cloudflare script beside the site: checks the live scoreboard during game windows and handles the Telegram buttons. |
 | `src/fetch_colors.py` | Saves each team's main color to `data/team_colors.json`. Colors only color the lines of the Top 25 chart. They are never an input to a rating. |
 | `data/cfp_final.json` | Final CFP rankings, 2014 to 2025. |

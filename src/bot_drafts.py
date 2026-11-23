@@ -6,15 +6,15 @@
           handled games in <site_dir>/live.json, which the Cloudflare Worker reads so it stops asking.
           Writes the ids of the new drafts to <bot_dir>/new.txt for the send step.
   send:   TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... bot_drafts.py send <bot_dir>
-          Sends each new draft to Telegram with Post and Skip buttons. Run it after the drafts are
-          committed, because the post step reads drafts.json from the repo.
+          Sends each new draft to Telegram as its result card (card.py) with the short post as the
+          caption and Post and Skip buttons. Run it after the drafts are committed, because the post
+          step reads drafts.json from the repo.
 
 Every number in a draft comes from the engine through game_impact.py. Nothing here changes a rating.
 """
 import json
 import os
 import sys
-import urllib.request
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -22,6 +22,7 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import engine as E  # noqa: E402
 import game_impact as GI  # noqa: E402
+import card as CARD  # noqa: E402
 
 KEEP_DRAFTS = 400        # drafts kept in drafts.json (about five Saturdays)
 
@@ -62,10 +63,11 @@ def draft(games_csv, src_dir, season, bot_dir, site_dir, given):
         for gid in new:
             row = s[s.game_id == gid].iloc[0]
             res = GI.impact(s[s.day <= row.day], gid, F, V, prior, teams)
-            text = GI.post_text(res)
-            drafts[str(gid)] = {"post": text, "length": GI.weighted_length(text), "day": res["day"],
-                                "matchup_rating": res["matchup_rating"],
-                                "teams": [t["team"] for t in res["teams"]],
+            text = GI.short_post(res)
+            # The card is drawn again from "impact" when it is posted, so the same image goes out.
+            drafts[str(gid)] = {"post": text, "length": GI.weighted_length(text), "alt": GI.post_text(res),
+                                "day": res["day"], "matchup_rating": res["matchup_rating"],
+                                "teams": [t["team"] for t in res["teams"]], "impact": res,
                                 "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
             made.append(gid)
             print(f"--- draft {gid} ({drafts[str(gid)]['length']} of {GI.MAX_POST})\n{text}\n")
@@ -81,12 +83,20 @@ def draft(games_csv, src_dir, season, bot_dir, site_dir, given):
     print(f"new drafts: {len(made)} | handled this season: {len(live['handled'])}")
 
 
-def telegram(method, payload):
-    token = os.environ["TELEGRAM_BOT_TOKEN"]
-    req = urllib.request.Request(f"https://api.telegram.org/bot{token}/{method}", data=json.dumps(payload).encode(),
-                                 headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r)
+def send_card(gid, d):
+    """One draft to Telegram: the card as a photo, the short post as the caption, and the buttons."""
+    import io
+    import requests
+    png = io.BytesIO()
+    CARD.render(d["impact"]).save(png, format="PNG", optimize=True)
+    caption = f"{d['post']}\n\n[{d['length']}/280 \u00b7 game {gid}]"
+    buttons = {"inline_keyboard": [[{"text": "Post to X", "callback_data": f"post:{gid}"},
+                                    {"text": "Skip", "callback_data": f"skip:{gid}"}]]}
+    r = requests.post(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendPhoto",
+                      data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption,
+                            "reply_markup": json.dumps(buttons)},
+                      files={"photo": (f"{gid}.png", png.getvalue(), "image/png")}, timeout=60)
+    r.raise_for_status()
 
 
 def send(bot_dir):
@@ -104,12 +114,8 @@ def send(bot_dir):
         d = drafts.get(gid)
         if not d:
             continue
-        text = f"{d['post']}\n\n[{d['length']}/280 · game {gid}]"
-        buttons = {"inline_keyboard": [[{"text": "Post to X", "callback_data": f"post:{gid}"},
-                                        {"text": "Skip", "callback_data": f"skip:{gid}"}]]}
         try:
-            telegram("sendMessage", {"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": text,
-                                     "reply_markup": buttons, "disable_web_page_preview": True})
+            send_card(gid, d)
         except Exception as err:  # keep going; one bad send should not block the rest
             failed += 1
             print(f"::warning::could not send draft {gid} to Telegram: {err}")
