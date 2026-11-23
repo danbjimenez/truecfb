@@ -1,1 +1,13 @@
-{}
+{
+ "401856754": {
+  "post": "FINAL: Tennessee 27, LSU 13 · home win\nMatchup Rating 135\nTennessee: Game Rating 85.6 · Team Rating 71.7 (+1.5) · #8 → #7\nLSU: Game Rating 49.5 · Team Rating 63.4 (-1.4) · #18 → #21\nRipple: Kennesaw State +0.1 (lost to Tennessee) · Louisiana Tech -0.1 (lost to LSU)",
+  "length": 267,
+  "day": "2026-11-21",
+  "matchup_rating": 135,
+  "teams": [
+   "Tennessee",
+   "LSU"
+  ],
+  "created": "2026-11-23T06:44:15Z"
+ }
+}
