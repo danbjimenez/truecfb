@@ -122,24 +122,28 @@ async function telegramHook(request, env, ctx) {
     const m = /^(post|skip):(\d{1,12})$/.exec(cb.data || "");
     if (!m) return ok;
     const [, action, game] = m;
-    const original = msg.text || "";
+    // Drafts arrive as a photo with a caption; older text drafts have plain text.
+    const isPhoto = Array.isArray(msg.photo) && msg.photo.length > 0;
+    const original = (isPhoto ? msg.caption : msg.text) || "";
+    const setText = (text, extra = {}) =>
+      tg(isPhoto ? "editMessageCaption" : "editMessageText",
+        { chat_id: chat, message_id: msg.message_id, [isPhoto ? "caption" : "text"]: text, ...extra });
     if (action === "skip") {
       ctx.waitUntil(Promise.all([
         tg("answerCallbackQuery", { callback_query_id: cb.id, text: "Skipped" }),
-        tg("editMessageText", { chat_id: chat, message_id: msg.message_id, text: `${original}\n\nSkipped` }),
+        setText(`${original}\n\nSkipped`),
       ]));
       return ok;
     }
     // Take the buttons off first, so a second tap cannot post twice.
-    await tg("editMessageText", { chat_id: chat, message_id: msg.message_id, text: `${original}\n\nPosting...` });
+    await setText(`${original}\n\nPosting...`);
     const started = await dispatch(env, "post-to-x.yml", { game, message_id: String(msg.message_id) });
     ctx.waitUntil(tg("answerCallbackQuery", {
       callback_query_id: cb.id,
       text: started ? "Posting to X..." : "Could not start the post job. Check GitHub Actions.",
     }));
     if (!started) {
-      ctx.waitUntil(tg("editMessageText", {
-        chat_id: chat, message_id: msg.message_id, text: `${original}\n\nNot posted: the post job did not start.`,
+      ctx.waitUntil(setText(`${original}\n\nNot posted: the post job did not start.`, {
         reply_markup: { inline_keyboard: [[{ text: "Try again", callback_data: `post:${game}` }, { text: "Skip", callback_data: `skip:${game}` }]] },
       }));
     }
