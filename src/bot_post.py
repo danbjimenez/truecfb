@@ -59,9 +59,16 @@ def upload_card(auth, d):
     r = requests.post("https://api.x.com/2/media/upload", auth=auth, timeout=60,
                       data={"media_category": "tweet_image"},
                       files={"media": ("card.png", png.getvalue(), "image/png")})
-    if r.status_code not in (200, 201):
-        raise RuntimeError(f"card upload refused ({r.status_code}): {x_error(r)}")
-    media_id = r.json()["data"]["id"]
+    if r.status_code in (200, 201):
+        media_id = r.json()["data"]["id"]
+    else:
+        # X's docs leave open whether the v2 upload takes OAuth 1.0a keys; fall back to the older endpoint.
+        print(f"::warning::v2 media upload refused ({r.status_code}): {x_error(r)}; trying the v1.1 endpoint")
+        r = requests.post("https://upload.twitter.com/1.1/media/upload.json", auth=auth, timeout=60,
+                          files={"media": ("card.png", png.getvalue(), "image/png")})
+        if r.status_code not in (200, 201):
+            raise RuntimeError(f"card upload refused ({r.status_code}): {x_error(r)}")
+        media_id = r.json()["media_id_string"]
     alt = d.get("alt", d["post"])[:1000]
     m = requests.post("https://api.x.com/2/media/metadata", auth=auth, timeout=30,
                       json={"id": media_id, "metadata": {"alt_text": {"text": alt}}})
