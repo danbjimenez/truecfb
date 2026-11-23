@@ -1,13 +1,216 @@
 {
  "401856754": {
-  "post": "FINAL: Tennessee 27, LSU 13 · home win\nMatchup Rating 135\nTennessee: Game Rating 85.6 · Team Rating 71.7 (+1.5) · #8 → #7\nLSU: Game Rating 49.5 · Team Rating 63.4 (-1.4) · #18 → #21\nRipple: Kennesaw State +0.1 (lost to Tennessee) · Louisiana Tech -0.1 (lost to LSU)",
-  "length": 267,
+  "post": "FINAL: Tennessee 27, LSU 13\nMatchup Rating 135\nTennessee #8 → #7 · LSU #18 → #21\n#GoVols #GeauxTigers",
+  "length": 103,
+  "alt": "FINAL: Tennessee 27, LSU 13 · home win\nMatchup Rating 135\nTennessee: Game Rating 85.6 · Team Rating 71.7 (+1.5) · #8 → #7\nLSU: Game Rating 49.5 · Team Rating 63.4 (-1.4) · #18 → #21\nRipple: Kennesaw State +0.1 (lost to Tennessee) · Louisiana Tech -0.1 (lost to LSU)",
   "day": "2026-11-21",
   "matchup_rating": 135,
   "teams": [
    "Tennessee",
    "LSU"
   ],
-  "created": "2026-11-23T06:44:15Z"
+  "impact": {
+   "game_id": 401856754,
+   "season": 2026,
+   "week": 12,
+   "day": "2026-11-21",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 135,
+   "winner": "Tennessee",
+   "teams": [
+    {
+     "team": "Tennessee",
+     "fbs": true,
+     "points": 27,
+     "won": true,
+     "site": "home",
+     "game_rating": 85.6,
+     "rating_before": 70.2,
+     "rating_after": 71.7,
+     "change": 1.5,
+     "rank_before": 8,
+     "rank_after": 7,
+     "bonus": 21.7,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "LSU",
+     "fbs": true,
+     "points": 13,
+     "won": false,
+     "site": "road",
+     "game_rating": 49.5,
+     "rating_before": 64.9,
+     "rating_after": 63.4,
+     "change": -1.4,
+     "rank_before": 18,
+     "rank_after": 21,
+     "bonus": 13.4,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Kennesaw State",
+      "change": 0.15,
+      "rating_after": 38.5,
+      "rank_before": 109,
+      "rank_after": 109,
+      "link": [
+       {
+        "vs": "Tennessee",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Arkansas",
+      "change": 0.15,
+      "rating_after": 52.4,
+      "rank_before": 56,
+      "rank_after": 54,
+      "link": [
+       {
+        "vs": "Tennessee",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "South Carolina",
+      "change": 0.14,
+      "rating_after": 58.5,
+      "rank_before": 31,
+      "rank_after": 31,
+      "link": [
+       {
+        "vs": "Tennessee",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Louisiana Tech",
+      "change": -0.15,
+      "rating_after": 56.4,
+      "rank_before": 36,
+      "rank_after": 36,
+      "link": [
+       {
+        "vs": "LSU",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Ole Miss",
+      "change": -0.14,
+      "rating_after": 65.0,
+      "rank_before": 16,
+      "rank_after": 16,
+      "link": [
+       {
+        "vs": "LSU",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Mississippi State",
+      "change": -0.13,
+      "rating_after": 52.3,
+      "rank_before": 53,
+      "rank_after": 56,
+      "link": [
+       {
+        "vs": "LSU",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Louisiana Tech",
+      "change": -0.15,
+      "rating_after": 56.4,
+      "rank_before": 36,
+      "rank_after": 36,
+      "link": [
+       {
+        "vs": "LSU",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Kennesaw State",
+      "change": 0.15,
+      "rating_after": 38.5,
+      "rank_before": 109,
+      "rank_after": 109,
+      "link": [
+       {
+        "vs": "Tennessee",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Arkansas",
+      "change": 0.15,
+      "rating_after": 52.4,
+      "rank_before": 56,
+      "rank_after": 54,
+      "link": [
+       {
+        "vs": "Tennessee",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "South Carolina",
+      "change": 0.14,
+      "rating_after": 58.5,
+      "rank_before": 31,
+      "rank_after": 31,
+      "link": [
+       {
+        "vs": "Tennessee",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Ole Miss",
+      "change": -0.14,
+      "rating_after": 65.0,
+      "rank_before": 16,
+      "rank_after": 16,
+      "link": [
+       {
+        "vs": "LSU",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 8
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-23T06:56:42Z"
  }
 }
