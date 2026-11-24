@@ -9,9 +9,12 @@ names, so the worst a misleading post can do is pick the wrong team or intent, w
 draft before anything is posted.
 
 Provider, from the environment:
-  REPLY_PROVIDER  claude (default) or grok
-  REPLY_MODEL     defaults: claude-sonnet-5-5 (Anthropic), grok-4.3 (xAI)
-  ANTHROPIC_API_KEY or XAI_API_KEY
+  REPLY_PROVIDER  grok or claude; when not set, grok if XAI_API_KEY is set, otherwise claude
+  REPLY_MODEL     defaults: grok-4.3 (xAI), claude-sonnet-5-5 (Anthropic)
+  XAI_API_KEY or ANTHROPIC_API_KEY
+
+ask() is the one call both steps use: this file's read() (what is being asked) and reply_writer.py
+(the reply itself).
 """
 import json
 import os
@@ -20,11 +23,11 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from reply_templates import INTENTS  # noqa: E402
 
-DEFAULT_MODEL = {"claude": "claude-sonnet-5-5", "grok": "grok-4.3"}
+DEFAULT_MODEL = {"grok": "grok-4.3", "claude": "claude-sonnet-5-5"}
 
 SYSTEM = """You sort questions sent to @truecfb, the X account of TrueCFB, a college football ranking that rates every FBS team on results alone with a public, fixed formula (v1.0).
 
-Someone tagged @truecfb. You get their post and, if there is one, the post it replies to or quotes. Work out what they want TrueCFB to answer. You do not write the reply: fixed templates fill in every number from TrueCFB's own data. Your answer only picks the template and its inputs.
+Someone tagged @truecfb. You get their post and, if there is one, the post it replies to or quotes. Work out what they want TrueCFB to answer. You do not write the reply here: your answer picks which of TrueCFB's numbers the reply is built from.
 
 Intents:
 - team: where one team stands (rank, Team Rating, record). Use when one team is the subject.
@@ -80,7 +83,7 @@ def clean(out, teams, conferences, seasons):
 
 # ---------- providers ----------
 
-def ask_claude(model, system, text, fmt):
+def ask_claude(model, system, text, fmt, effort="low"):
     import anthropic
     client = anthropic.Anthropic()
     r = client.beta.messages.create(
@@ -88,7 +91,7 @@ def ask_claude(model, system, text, fmt):
         max_tokens=4000,
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",                      # a declined request is re-run on another model
-        output_config={"effort": "low", "format": {"type": "json_schema", "schema": fmt}},
+        output_config={"effort": effort, "format": {"type": "json_schema", "schema": fmt}},
         system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
         messages=[{"role": "user", "content": text}],
     )
@@ -100,7 +103,7 @@ def ask_claude(model, system, text, fmt):
     return json.loads(txt), usage
 
 
-def ask_grok(model, system, text, fmt):
+def ask_grok(model, system, text, fmt, effort="low"):   # effort: Claude only
     import requests
     r = requests.post(
         "https://api.x.ai/v1/chat/completions", timeout=60,
@@ -121,10 +124,23 @@ def ask_grok(model, system, text, fmt):
 PROVIDERS = {"claude": ask_claude, "grok": ask_grok}
 
 
+def pick(provider=None, model=None):
+    """(provider, model): what was asked for, else the environment, else Grok when its key is set."""
+    provider = provider or os.environ.get("REPLY_PROVIDER") or ("grok" if os.environ.get("XAI_API_KEY") else "claude")
+    if provider not in PROVIDERS:
+        raise ValueError(f"unknown provider {provider!r} (grok or claude)")
+    return provider, model or os.environ.get("REPLY_MODEL") or DEFAULT_MODEL[provider]
+
+
+def ask(system, text, fmt, provider=None, model=None, effort="low"):
+    """One structured call. Returns (the parsed JSON, info with the model and its token use)."""
+    provider, model = pick(provider, model)
+    raw, usage = PROVIDERS[provider](model, system, text, fmt, effort)
+    return raw, {"provider": provider, "model": model, **usage}
+
+
 def read(mention, parent, teams, conferences, seasons, current_season, provider=None, model=None):
     """What the tagged post asks. Returns (answer, info) where info names the model and its token use."""
-    provider = provider or os.environ.get("REPLY_PROVIDER", "claude")
-    model = model or os.environ.get("REPLY_MODEL") or DEFAULT_MODEL[provider]
-    raw, usage = PROVIDERS[provider](model, SYSTEM, user_text(mention, parent, current_season),
-                                     schema(teams, conferences, seasons))
-    return clean(raw, set(teams), set(conferences), set(seasons)), {"provider": provider, "model": model, **usage}
+    raw, info = ask(SYSTEM, user_text(mention, parent, current_season), schema(teams, conferences, seasons),
+                    provider, model)
+    return clean(raw, set(teams), set(conferences), set(seasons)), info
