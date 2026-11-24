@@ -1,0 +1,18 @@
+# Proposes updates (as pull requests, never merged on its own) for the pinned GitHub actions and
+# Python packages. A package update can move numbers: re-run every season before merging one.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      python:
+        patterns: ["*"]
