@@ -44,4 +44,4 @@ From final whistle to draft: about 5 to 10 minutes.
 
 - Automated informational posts are allowed; automated mentions of accounts that did not opt in are not.
 - Self-serve API replies are only accepted when the author tagged or quoted @truecfb (since 23 Feb 2026).
-- AI reply bots needed prior written approval from X. One tracker reported X dropped that on 17 Nov 2026; X's guidelines page still showed it. Check before building the reply bot.
+- AI reply bots: as of 23 Nov 2026 the Help Center automation rules still require X's prior written approval, while the developer docs dropped that on 17 Nov 2026. See `docs/REPLY-BOT.md` for the reply bot plan.
