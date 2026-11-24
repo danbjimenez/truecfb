@@ -1,6 +1,10 @@
-numpy
-pandas
-pyarrow
-pillow
-requests
-requests-oauthlib
+# Exact versions, so a new release of a package (or a hijacked one) never reaches the jobs that hold
+# the X and Telegram keys without a reviewed change here. These are the versions the jobs ran on
+# 23 Nov 2026. Dependabot proposes updates (.github/dependabot.yml); after one, re-run every season
+# and confirm the site's numbers are unchanged.
+numpy==2.5.5
+pandas==3.1.1
+pyarrow==26.0.1
+pillow==13.0.0
+requests==2.34.2
+requests-oauthlib==2.0.0

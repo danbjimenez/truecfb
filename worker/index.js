@@ -25,7 +25,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === "/hooks/telegram") {
-      if (request.method !== "POST") return new Response("Not found", { status: 404 });
+      if (request.method !== "POST") return reply("Not found", 404);
       return telegramHook(request, env, ctx);
     }
     return env.ASSETS.fetch(request);
@@ -126,6 +126,26 @@ async function pollMentions(env, now) {
 
 // ---------- 2. Telegram taps ----------
 
+// The script's own replies get the same safety headers the site's files get from site/_headers
+// (that file only covers files), and are never cached.
+const HOOK_HEADERS = {
+  "Content-Type": "text/plain; charset=utf-8",
+  "Cache-Control": "no-store",
+  "X-Content-Type-Options": "nosniff",
+  "Strict-Transport-Security": "max-age=31536000",
+  "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+};
+const reply = (text, status = 200) => new Response(text, { status, headers: HOOK_HEADERS });
+const MAX_UPDATE_BYTES = 64 * 1024; // a Telegram button tap is about 2 KB
+
+// Compares two strings in time that does not depend on where they first differ.
+export function sameSecret(a, b) {
+  const x = new TextEncoder().encode(a), y = new TextEncoder().encode(b);
+  let diff = x.length ^ y.length;
+  for (let i = 0; i < y.length; i++) diff |= (x[i] ?? 0) ^ y[i];
+  return diff === 0;
+}
+
 // The webhook secret is the first 40 hex characters of SHA-256(bot token); the setup job registers the
 // same value with Telegram, so no extra secret is needed.
 export async function webhookSecret(token) {
@@ -134,17 +154,20 @@ export async function webhookSecret(token) {
 }
 
 async function telegramHook(request, env, ctx) {
-  const ok = new Response("ok");
+  const ok = reply("ok");
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return ok;
   const header = request.headers.get("X-Telegram-Bot-Api-Secret-Token") || "";
-  if (header !== (await webhookSecret(env.TELEGRAM_BOT_TOKEN))) return new Response("Forbidden", { status: 403 });
+  if (!sameSecret(header, await webhookSecret(env.TELEGRAM_BOT_TOKEN))) return reply("Forbidden", 403);
 
   let update;
   try {
-    update = await request.json();
+    const body = await request.text();
+    if (body.length > MAX_UPDATE_BYTES) return reply("Too large", 413);
+    update = JSON.parse(body);
   } catch {
     return ok;
   }
+  if (!update || typeof update !== "object") return ok;
   const chat = String(env.TELEGRAM_CHAT_ID);
   const tg = (method, body) =>
     fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/${method}`, {

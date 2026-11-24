@@ -118,7 +118,9 @@ def send(bot_dir):
             send_card(gid, d)
         except Exception as err:  # keep going; one bad send should not block the rest
             failed += 1
-            print(f"::warning::could not send draft {gid} to Telegram: {err}")
+            # requests puts the URL, which holds the bot token, in its errors; never print it.
+            why = str(err).replace(os.environ["TELEGRAM_BOT_TOKEN"], "<token>")
+            print(f"::warning::could not send draft {gid} to Telegram: {why}")
     print(f"sent {len(ids) - failed} of {len(ids)} drafts to Telegram")
 
 
