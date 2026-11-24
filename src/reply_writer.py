@@ -44,6 +44,7 @@ Numbers. Code checks every one before anyone sees the reply:
 - Use only numbers written on the fact sheet or in the rules, copied exactly as written there: 74.2 (not 74 or 74.20), #3, 28-20, −2.9. A number that is not written there gets the reply thrown out.
 - Never calculate anything: no sums, differences, averages, percentages, projections or what-ifs of your own. The sheet already has the gaps and changes you need.
 - Never write a number as a word ("two losses"). If a count is not on the sheet, leave it out.
+- Every claim must be stated on the sheet, not only every number. Do not compare two numbers yourself (higher, lower, matches, about the same, above average, better than most) unless the sheet states that comparison, as it does for gaps, "highest Game Rating" and "Ranked around". A Team Rating is the average of the Game Ratings; do not describe any one game as matching or beating it.
 
 TrueCFB's words. Code checks these too:
 - The name is TrueCFB. The version is v1.0.
