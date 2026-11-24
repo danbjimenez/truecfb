@@ -103,15 +103,32 @@ def ask_claude(model, system, text, fmt, effort="low"):
     return json.loads(txt), usage
 
 
+GROK_TRIES = 4
+
+
 def ask_grok(model, system, text, fmt, effort="low"):   # effort: Claude only
+    import time
     import requests
-    r = requests.post(
-        "https://api.x.ai/v1/chat/completions", timeout=60,
-        headers={"Authorization": f"Bearer {os.environ['XAI_API_KEY']}"},
-        json={"model": model,
-              "messages": [{"role": "system", "content": system}, {"role": "user", "content": text}],
-              "response_format": {"type": "json_schema",
-                                  "json_schema": {"name": "reading", "strict": True, "schema": fmt}}})
+    for attempt in range(GROK_TRIES):
+        try:
+            r = requests.post(
+                "https://api.x.ai/v1/chat/completions", timeout=120,
+                headers={"Authorization": f"Bearer {os.environ['XAI_API_KEY']}"},
+                json={"model": model,
+                      "messages": [{"role": "system", "content": system}, {"role": "user", "content": text}],
+                      "response_format": {"type": "json_schema",
+                                          "json_schema": {"name": "reading", "strict": True, "schema": fmt}}})
+        except (requests.ConnectionError, requests.Timeout):
+            if attempt == GROK_TRIES - 1:
+                raise
+            time.sleep(2 ** (attempt + 1))
+            continue
+        # Slow down when xAI asks (429: the key allows 60 requests a minute) or has a passing error.
+        if (r.status_code == 429 or r.status_code >= 500) and attempt < GROK_TRIES - 1:
+            wait = r.headers.get("retry-after", "")
+            time.sleep(min(float(wait) if wait.replace(".", "", 1).isdigit() else 2 ** (attempt + 2), 60))
+            continue
+        break
     if r.status_code != 200:
         raise RuntimeError(f"xAI API {r.status_code}: {r.text[:200]}")
     j = r.json()
@@ -134,9 +151,11 @@ def pick(provider=None, model=None):
 
 def ask(system, text, fmt, provider=None, model=None, effort="low"):
     """One structured call. Returns (the parsed JSON, info with the model and its token use)."""
+    import time
     provider, model = pick(provider, model)
+    t0 = time.monotonic()
     raw, usage = PROVIDERS[provider](model, system, text, fmt, effort)
-    return raw, {"provider": provider, "model": model, **usage}
+    return raw, {"provider": provider, "model": model, **usage, "seconds": round(time.monotonic() - t0, 1)}
 
 
 def read(mention, parent, teams, conferences, seasons, current_season, provider=None, model=None):
