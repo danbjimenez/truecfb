@@ -1,6 +1,6 @@
-# Reply bot: plan (not built)
+# The @truecfb reply bot
 
-Status: **proposal, 23 Nov 2026.** Nothing here is built, and no secrets have been added. It waits on Dan's OK.
+Status: **built in draft mode, 23 Nov 2026 (plan approved by Dan the same day). Off until its secrets are added**; see "Turning it on" at the end. Posting stays off until the GitHub variable `REPLIES_LIVE` is `true`.
 
 When someone tags @truecfb (usually under another account's post, asking it to weigh in), a model reads the question and the engine supplies every number. It starts in draft mode: each draft goes to Telegram, and nothing posts until Dan taps.
 
@@ -116,29 +116,37 @@ Template rules, enforced in code like `game_impact.post_text`:
 
 ### Telegram draft
 
-Same bot and chat as the result posts. The message shows the asker's handle, their text, the parent post's text, a link to the mention, the detected intent and teams, and the drafted reply. Buttons: **Post reply** and **Skip**. The Worker's hook gets a second callback pattern, `reply:<tweet id>` (19 digits; the current pattern takes only game ids). Tap behavior is the same as today: buttons come off first, so a double tap can't post twice.
+Same bot and chat as the result posts. The message shows what they asked, the post above, a link to the mention (the handle is on X; looking it up through the API costs $0.010), what the model understood and why, and the drafted reply. Buttons: **Post reply** (only while `REPLIES_LIVE` is `true`) and **Skip**, as `rpost:<id>` / `rskip:<id>` taps beside the result posts' `post:` / `skip:`. Tap behavior is the same as today: buttons come off first, so a double tap can't post twice.
 
-### New pieces
+### The pieces
 
-- `src/reply_bot.py`: fetch, filter, model call, intent → template, Telegram draft.
-- `src/reply_templates.py`: the templates and their tests (run on every season's data; no model involved).
-- `.github/workflows/reply-draft.yml`, `post-reply.yml` (or a `kind` input on `post-to-x.yml`).
-- `worker/index.js`: `pollMentions()` and the `reply:` callback.
-- `data/bot/replies.json` (handled ids, drafts, posted replies) and `data/bot/optout.json`.
-- Secrets: GitHub `ANTHROPIC_API_KEY` (or `XAI_API_KEY`); Cloudflare `X_BEARER_TOKEN`. Only after Dan approves.
-- Bio: say it's automated, that tagging gets an answer, and that "stop" opts out; link to Dan's account.
+| File | What |
+|---|---|
+| `src/reply_templates.py` | Every reply's text, from `site/data.json`, `history.json`, `sched_*.json` and `data/bot/drafts.json`; `check()` holds the wording rules |
+| `src/reply_model.py` | The model step: one call, fixed JSON shape, team and conference names only from the engine's lists. Claude by default, Grok with `REPLY_PROVIDER=grok` |
+| `src/reply_bot.py` | `draft` (read mentions, filter, model, template, save), `send` (Telegram), `post` (one approved reply) |
+| `src/reply_eval.py`, `data/bot/reply_samples.json` | 50 made-up mentions to compare models |
+| `tests/test_reply_templates.py` | Every intent on every season: rules kept, every number one the engine published |
+| `.github/workflows/reply-draft.yml` | Started by the Worker; drafts and sends to Telegram |
+| `.github/workflows/post-reply.yml` | Started by a "Post reply" tap; posts only while `REPLIES_LIVE` is `true` |
+| `.github/workflows/reply-eval.yml` | "Reply bot: try the model", by hand |
+| `worker/index.js` | `pollMentions()` (only runs when `X_BEARER_TOKEN` and `X_USER_ID` are set) and the `rpost:` / `rskip:` taps |
+| `data/bot/replies.json`, `data/bot/optout.json`, `site/replies.json` | What was handled (ids, what the bot understood, the reply, what happened; never the text people wrote), opt-outs as hashes, and the newest handled id for the Worker |
+| `requirements-reply.txt` | `anthropic`, for the reply jobs only |
+
+Run the template tests with `python tests/test_reply_templates.py` (no keys needed).
 
 ### Cost per reply
 
 | | Posted reply | Skipped draft |
 |---|---|---|
-| Mention read (app-only token) | $0.005 | $0.005 |
+| Mention read: the Worker's check (app-only token) plus the draft job's read (own account) | $0.006 | $0.006 |
 | Parent post read (when there is one) | $0.005 | $0.005 |
 | Model (Sonnet 5.5 low effort; Haiku ≈$0.0003) | ≈$0.005 | ≈$0.005 |
 | Reply post ("summoned"; $0.015 if X bills it as a plain post) | $0.010 | none |
-| **Total** | **≈$0.025** | **≈$0.015** |
+| **Total** | **≈$0.026** | **≈$0.016** |
 
-Reading mentions with the user-context keys would cut the mention read to $0.001, but it would put the write keys on the Worker; not worth $0.004. At 100 replies a week, about $2.50 a week. GitHub Actions minutes are free on a public repo.
+The Worker only checks whether there is anything new (up to 5 posts); the draft job then reads them with the account's own keys at $0.001 each. Putting the write keys on the Worker would save $0.005 a mention; not worth it. At 100 replies a week, about $2.60 a week. GitHub Actions minutes are free on a public repo.
 
 ### Risks
 
@@ -152,10 +160,13 @@ Reading mentions with the user-context keys would cut the mention read to $0.001
 8. **Bowl games.** Until the 2026 selection date and CFP final are added, bowl results won't move ratings; replies about bowl games would be wrong. Ship after the bowls work, or skip postseason games until then.
 9. **Token expiry.** `GITHUB_DISPATCH_TOKEN` expires about Nov 2027; the reply bot depends on it too.
 
-### Order of work, once approved
+## Turning it on
 
-1. Templates and tests on past seasons (no model, no X).
-2. Model step with a ~50-mention sample set; compare Claude and Grok on it.
-3. Worker polling and Telegram drafts (draft only; Post reply disabled).
-4. Approval request to X; bio update.
-5. Turn on Post reply.
+1. **Model key:** add the GitHub secret `ANTHROPIC_API_KEY` (and `XAI_API_KEY` to compare with Grok).
+2. **Try the model:** Actions → "Reply bot: try the model" → Run. The run summary shows, per model, how many of the 50 samples it read right, each reply, and the cost. To use something other than Claude Sonnet 5.5, set the GitHub variables `REPLY_PROVIDER` (`claude` or `grok`) and `REPLY_MODEL`.
+3. **X read token and id:** in the X developer console (app `truecfb-bot`), copy the app's Bearer Token into the Cloudflare secret `X_BEARER_TOKEN`. Run Actions → "Reply drafts" once by hand: its log prints @truecfb's user id. Save it as the GitHub variable `X_USER_ID` and the Cloudflare variable `X_USER_ID`. The Worker starts checking mentions on its next run.
+4. **Drafts arrive in Telegram** with a Skip button only ("draft mode: posting is off"). Skipped mentions are listed in one message per run.
+5. **Before going live:** update the bio (automated account, tag it for a TrueCFB answer, reply "stop" to opt out, a link to Dan's account) and send X the approval request (section 1).
+6. **Go live:** set the GitHub variable `REPLIES_LIVE` to `true`. New drafts get a "Post reply" button.
+
+To pause: delete `REPLIES_LIVE` (stops posting) or the Cloudflare `X_BEARER_TOKEN` (stops checking mentions).
