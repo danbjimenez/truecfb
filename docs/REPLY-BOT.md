@@ -157,7 +157,7 @@ The Worker only checks whether there is anything new (up to 5 posts); the draft 
 5. **Wrong team.** "Miami", "USC", "the U", nicknames. Mitigation: names only from the 138-team list, `skip` when unsure, the draft shows the detected teams.
 6. **Pile-ups.** A popular post could bring dozens of tags. Mitigation: at most one reply per user per thread; cap drafts per hour; X spend limit.
 7. **Reading the question as a prediction.** TrueCFB describes, never predicts; the `predict` template says so plainly.
-8. **Bowl games.** Until the 2026 selection date and CFP final are added, bowl results won't move ratings; replies about bowl games would be wrong. Ship after the bowls work, or skip postseason games until then.
+8. **Bowl games.** Until the final 2026 CFP ranking is added on selection day (6 Dec), bowl results don't count. A question about a bowl game gets the two teams side by side instead (the templates only use games the engine has counted).
 9. **Token expiry.** `GITHUB_DISPATCH_TOKEN` expires about Nov 2027; the reply bot depends on it too.
 
 ## Turning it on
