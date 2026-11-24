@@ -54,7 +54,7 @@ A full re-run takes about 15 seconds. After changing anything in `src/`, re-run 
 
 ## Open work
 
-- **Before the 2026 bowls:** add the 2026 selection date and the final 2026 CFP ranking to `run_all.py` and `data/cfp_final.json`. Until then the current season counts regular-season games only, and bowl games will not move ratings.
+- **Selection day, Sun 6 Dec 2026:** add the final 2026 CFP ranking to `data/cfp_final.json` (key `"2026"`, 25 names in order, spelled as in `data/polls/2026.json`). The date is already in `run_all.py`; that one entry switches 2026 to count bowl and playoff games. Until then the current season counts regular-season games only.
 - **Reply bot:** when someone tags @truecfb, a model reads the question and the engine supplies every number; start in draft mode (Telegram). Check X's current rules on AI replies first (see `docs/X-BOT.md`).
 - **Readable by Grok and search engines:** plain HTML content, `llms.txt`, a public `rankings.json`; a page address per team (`/team/utah`) instead of `team.html#team=Utah`.
 - **Hashtags:** review the flagged teams in `data/team_hashtags.json`.

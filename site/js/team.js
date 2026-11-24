@@ -47,7 +47,7 @@
           }
           if(all.failed) return head + '<div class="hc-s">The game did not load.</div>';
           const games = ((all.games || {})[t] || []).filter(g => g[13] === p.id), rating = D.ratings[p.year][t][0];
-          if(!games.length) return head + '<div class="hc-s">' + (p.id === "final" ? "No bowl or playoff game" : p.id === "reg" ? "No new game" : "No game this week") + "</div>";
+          if(!games.length) return head + '<div class="hc-s">' + (p.id === "final" ? "No bowl or playoff game" : p.id === "post" ? "No bowl or playoff game yet" : p.id === "reg" ? "No new game" : "No game this week") + "</div>";
           return head + games.map(g => '<div class="hc-g"><div>' + resultText(g) + " " + where(g) + esc(g[1]) + '</div><div class="hc-s">' + day(g[0]) +
             " \u00b7 Game Rating " + g[6].toFixed(1) + " \u00b7 Matchup Rating " + matchup(D, rating, g) + "</div></div>").join("");
         }

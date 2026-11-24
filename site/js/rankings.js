@@ -79,6 +79,7 @@
       pn.textContent = isCurrent && id === "now" && cur.complete
         ? "A poll is only compared once it includes these games. The AP poll comes out on Sunday and the CFP ranking on Tuesday."
         : id === "final" ? "After the bowls and the playoff, only the AP publishes a final poll."
+        : id === "post" ? "Neither poll is published during the bowls and the playoff. The AP's final poll comes after the title game."
         : !s.cfp && !s.ap ? "No AP or CFP ranking is on file for this point in the season."
         : !s.cfp ? "The CFP committee had not published a ranking at this point in the season."
         : "No AP poll is on file for this point in the season.";
