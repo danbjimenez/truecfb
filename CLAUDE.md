@@ -48,6 +48,8 @@ python src/game_impact.py data/games.csv src 2026 --text      # latest game day'
 
 A full re-run takes about 15 seconds. After changing anything in `src/`, re-run and confirm the site's data files are unchanged (`git diff --stat site/`) unless a change was intended. Team pages and the generated parts of `index.html` and `team.html` are rewritten on every run: edit `src/templates/team.html` or `src/build_pages.py`, not the output.
 
+Known local difference: on an Apple Silicon Mac, the week-1 order of teams tied at exactly 25.0 (teams new to FBS) can differ from what the GitHub jobs publish, because `sort_values("rating")` uses numpy's default sort, which does not keep ties in a fixed order across CPUs. Ratings are identical. Only `rank_{year}.json` week 1, `sched_{year}.json` `start` and `history.json` show it; anything else in the diff is real.
+
 ## How we work
 
 - Branch, open a PR, and merge when Dan says "merge". Cloudflare deploys `main` automatically (branch previews build too).
@@ -58,6 +60,9 @@ A full re-run takes about 15 seconds. After changing anything in `src/`, re-run 
 
 - **Selection day, Sun 6 Dec 2026:** add the final 2026 CFP ranking to `data/cfp_final.json` (key `"2026"`, 25 names in order, spelled as in `data/polls/2026.json`). The date is already in `run_all.py`; that one entry switches 2026 to count bowl and playoff games. Until then the current season counts regular-season games only.
 - **Reply bot:** built in draft mode, off until its secrets are added; steps in `docs/REPLY-BOT.md` ("Turning it on"). Send X an approval request before setting `REPLIES_LIVE`.
+- **Security settings (Dan, from the 23 Nov 2026 review):** in GitHub, an `x-bot` environment limited to `main` holding the four `X_*` secrets (then add `environment: x-bot` to post-to-x.yml), a ruleset on `main` blocking force-push and deletion, GitHub-owned actions only with SHA pinning required, email privacy, Dependabot alerts on. In Cloudflare, a WAF rule allowing `/hooks/telegram` only from Telegram's IP ranges (`149.154.160.0/20`, `91.108.4.0/22`).
+- **Site content from the agent** (later): beyond X posts, Dan wants the agent to write content for the site and keep the data fresh. Setup stays Claude + Cloudflare + GitHub Actions; self-hosting on a Mac mini was considered and dropped.
+- **Preseason tie order:** fix the unstable sort above (`kind="stable"` or a name tiebreak) so local runs match the jobs. It changes the published order of tied teams once, so it needs Dan's OK.
 - **Hashtags:** review the flagged teams in `data/team_hashtags.json`.
 - **"Predict" page** (later epic): enter future results and see how the rankings would change.
 - **Design system:** add the site's header band, nav and footer as components.
