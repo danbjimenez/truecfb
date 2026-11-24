@@ -17,18 +17,24 @@ on:
 permissions:
   contents: write
 
+# One post at a time, in the order Dan tapped. `queue: max` keeps every waiting run (up to 100);
+# the default keeps only one and cancels the rest, which left drafts stuck at "Posting...".
 concurrency:
   group: post-to-x
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   post:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      # Newest main, not the commit from when the run was queued: a run that waited behind another
+      # must see the posted.json entry that run just saved, or a double tap could post twice.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
           cache: pip
@@ -49,12 +55,14 @@ jobs:
         run: python src/bot_post.py data/bot "$GAME" "$MESSAGE_ID"
 
       - name: Record it
+        env:
+          GAME: ${{ inputs.game }}
         run: |
           git add data/bot/posted.json
           if git diff --cached --quiet; then exit 0; fi
           git config user.name "truecfb-refresh"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -q -m "Posted game ${{ inputs.game }} to X"
+          git commit -q -m "Posted game $GAME to X"
           for i in 1 2 3; do
             git pull -q --rebase origin main && git push -q && exit 0
             sleep 5

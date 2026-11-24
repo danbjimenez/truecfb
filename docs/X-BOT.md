@@ -34,6 +34,7 @@ From final whistle to draft: about 5 to 10 minutes.
 - CollegeFootballData Patreon Tier 1 ($1/mo) on the same email as the API key (live scoreboard).
 - Telegram bot `truecfb_bot`.
 - **GitHub secrets:** `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET`, `CFBD_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+- **Reply bot** (`docs/REPLY-BOT.md`, off until set): GitHub secret `ANTHROPIC_API_KEY` (optional `XAI_API_KEY`), GitHub variables `X_USER_ID`, `REPLIES_LIVE` (posting on), `REPLY_PROVIDER` / `REPLY_MODEL` (optional); Cloudflare secret `X_BEARER_TOKEN` (read-only) and variable `X_USER_ID`.
 - **Cloudflare secrets** (Production only): `CFBD_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `GITHUB_DISPATCH_TOKEN` (fine-grained token `truecfb-worker-dispatch`: this repo only, Actions read/write; **expires in about a year**, then the Worker cannot start jobs).
 
 ## Hashtags
@@ -44,4 +45,4 @@ From final whistle to draft: about 5 to 10 minutes.
 
 - Automated informational posts are allowed; automated mentions of accounts that did not opt in are not.
 - Self-serve API replies are only accepted when the author tagged or quoted @truecfb (since 23 Feb 2026).
-- AI reply bots needed prior written approval from X. One tracker reported X dropped that on 17 Nov 2026; X's guidelines page still showed it. Check before building the reply bot.
+- AI reply bots: as of 23 Nov 2026 the Help Center automation rules still require X's prior written approval, while the developer docs dropped that on 17 Nov 2026. See `docs/REPLY-BOT.md` for the reply bot plan.

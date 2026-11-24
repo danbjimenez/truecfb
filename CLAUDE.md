@@ -24,13 +24,15 @@ Read before changing things:
 | `src/engine.py` | The formula (the only place ratings are computed) |
 | `src/build_games.py`, `src/fetch_data.py`, `src/fill_live_finals.py` | Game data: public files, plus same-day finals from the CFBD API |
 | `src/run_all.py` | Re-runs every season 2014 to now and writes the site's data files |
+| `src/build_pages.py`, `src/templates/team.html` | Called by `run_all.py`: team pages (`site/team/<slug>.html`), the parts of `index.html` and `team.html` between `<!--gen:...-->` markers, `rankings.json`, `llms.txt`, `sitemap.xml` |
 | `src/fetch_polls.py`, `src/fetch_colors.py` | AP/CFP polls and team colors (display only) |
 | `src/game_impact.py` | What one game changed; post text |
 | `src/card.py` | The 1200 × 675 result card |
 | `src/bot_drafts.py`, `src/bot_post.py` | X bot: drafts to Telegram, posting |
+| `src/reply_bot.py`, `reply_model.py`, `reply_templates.py` | Reply bot (`docs/REPLY-BOT.md`): the model reads the question, templates write the reply from the engine's files |
 | `site/` | The static site (Cloudflare serves it); `site/live.json` = finals the bot has handled |
 | `worker/index.js` | Cloudflare Worker: scoreboard check + Telegram hook |
-| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `telegram-setup.yml`, `release.yml` |
+| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `telegram-setup.yml`, `release.yml` |
 | `data/` | Polls, CFP finals, team colors, team hashtags, bot drafts and posted log (downloaded game files are not committed) |
 
 ## Running locally
@@ -44,7 +46,7 @@ python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_fin
 python src/game_impact.py data/games.csv src 2026 --text      # latest game day's posts
 ```
 
-A full re-run takes about 15 seconds. After changing anything in `src/`, re-run and confirm the site's data files are unchanged (`git diff --stat site/`) unless a change was intended.
+A full re-run takes about 15 seconds. After changing anything in `src/`, re-run and confirm the site's data files are unchanged (`git diff --stat site/`) unless a change was intended. Team pages and the generated parts of `index.html` and `team.html` are rewritten on every run: edit `src/templates/team.html` or `src/build_pages.py`, not the output.
 
 Known local difference: on an Apple Silicon Mac, the week-1 order of teams tied at exactly 25.0 (teams new to FBS) can differ from what the GitHub jobs publish, because `sort_values("rating")` uses numpy's default sort, which does not keep ties in a fixed order across CPUs. Ratings are identical. Only `rank_{year}.json` week 1, `sched_{year}.json` `start` and `history.json` show it; anything else in the diff is real.
 
@@ -56,10 +58,9 @@ Known local difference: on an Apple Silicon Mac, the week-1 order of teams tied 
 
 ## Open work
 
-- **Before the 2026 bowls:** add the 2026 selection date and the final 2026 CFP ranking to `run_all.py` and `data/cfp_final.json`. Until then the current season counts regular-season games only, and bowl games will not move ratings.
-- **Reply bot:** when someone tags @truecfb, a model reads the question and the engine supplies every number; start in draft mode (Telegram). Check X's current rules on AI replies first (see `docs/X-BOT.md`). The expected case is someone tagging @truecfb under another account's post and asking it to weigh in. Dan asked whether Grok could power it; still open.
-- **Readable by Grok and search engines:** plain HTML content, `llms.txt`, a public `rankings.json`; a page address per team (`/team/utah`) instead of `team.html#team=Utah`.
-- **Security pass:** Dan wanted the site's SEO and security strengthened at launch; SEO is the item above, security has not been reviewed (Worker endpoints, response headers, workflow permissions, secrets scope).
+- **Selection day, Sun 6 Dec 2026:** add the final 2026 CFP ranking to `data/cfp_final.json` (key `"2026"`, 25 names in order, spelled as in `data/polls/2026.json`). The date is already in `run_all.py`; that one entry switches 2026 to count bowl and playoff games. Until then the current season counts regular-season games only.
+- **Reply bot:** built in draft mode, off until its secrets are added; steps in `docs/REPLY-BOT.md` ("Turning it on"). Send X an approval request before setting `REPLIES_LIVE`.
+- **Security settings (Dan, from the 23 Nov 2026 review):** in GitHub, an `x-bot` environment limited to `main` holding the four `X_*` secrets (then add `environment: x-bot` to post-to-x.yml), a ruleset on `main` blocking force-push and deletion, GitHub-owned actions only with SHA pinning required, email privacy, Dependabot alerts on. In Cloudflare, a WAF rule allowing `/hooks/telegram` only from Telegram's IP ranges (`149.154.160.0/20`, `91.108.4.0/22`).
 - **Site content from the agent** (later): beyond X posts, Dan wants the agent to write content for the site and keep the data fresh. Setup stays Claude + Cloudflare + GitHub Actions; self-hosting on a Mac mini was considered and dropped.
 - **Preseason tie order:** fix the unstable sort above (`kind="stable"` or a name tiebreak) so local runs match the jobs. It changes the published order of tied teams once, so it needs Dan's OK.
 - **Hashtags:** review the flagged teams in `data/team_hashtags.json`.
