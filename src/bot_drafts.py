@@ -15,6 +15,7 @@ Every number in a draft comes from the engine through game_impact.py. Nothing he
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -25,6 +26,8 @@ import game_impact as GI  # noqa: E402
 import card as CARD  # noqa: E402
 
 KEEP_DRAFTS = 400        # drafts kept in drafts.json (about five Saturdays)
+SEND_TRIES = 4           # tries per draft when Telegram is busy (waits as asked, up to a minute each)
+SEND_GAP = 1.1           # seconds between drafts
 
 
 def load(path, default):
@@ -92,10 +95,29 @@ def send_card(gid, d):
     caption = f"{d['post']}\n\n[{d['length']}/280 \u00b7 game {gid}]"
     buttons = {"inline_keyboard": [[{"text": "Post to X", "callback_data": f"post:{gid}"},
                                     {"text": "Skip", "callback_data": f"skip:{gid}"}]]}
-    r = requests.post(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendPhoto",
-                      data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption,
-                            "reply_markup": json.dumps(buttons)},
-                      files={"photo": (f"{gid}.png", png.getvalue(), "image/png")}, timeout=60)
+    # The game is already marked handled, so a draft that never arrives is lost: retry when Telegram
+    # says to slow down (429, which a cluster of finals can trigger) or has a passing error (5xx).
+    for attempt in range(SEND_TRIES):
+        try:
+            r = requests.post(f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendPhoto",
+                              data={"chat_id": os.environ["TELEGRAM_CHAT_ID"], "caption": caption,
+                                    "reply_markup": json.dumps(buttons)},
+                              files={"photo": (f"{gid}.png", png.getvalue(), "image/png")}, timeout=60)
+        except requests.ConnectionError:
+            if attempt == SEND_TRIES - 1:
+                raise
+            time.sleep(2 ** (attempt + 1))
+            continue
+        if r.status_code == 429 or r.status_code >= 500:
+            if attempt == SEND_TRIES - 1:
+                break
+            try:
+                wait = int(r.json().get("parameters", {}).get("retry_after", 0))
+            except ValueError:
+                wait = 0
+            time.sleep(min(max(wait, 2 ** (attempt + 1)), 60))
+            continue
+        break
     r.raise_for_status()
 
 
@@ -109,19 +131,24 @@ def send(bot_dir):
         print("::warning::TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set: drafts saved but not sent")
         return
     drafts = load(os.path.join(bot_dir, "drafts.json"), {})
-    failed = 0
-    for gid in ids:
+    failed = []
+    for i, gid in enumerate(ids):
         d = drafts.get(gid)
         if not d:
             continue
+        if i:
+            time.sleep(SEND_GAP)  # Telegram asks bots for about one message a second per chat
         try:
             send_card(gid, d)
         except Exception as err:  # keep going; one bad send should not block the rest
-            failed += 1
+            failed.append(gid)
             # requests puts the URL, which holds the bot token, in its errors; never print it.
             why = str(err).replace(os.environ["TELEGRAM_BOT_TOKEN"], "<token>")
             print(f"::warning::could not send draft {gid} to Telegram: {why}")
-    print(f"sent {len(ids) - failed} of {len(ids)} drafts to Telegram")
+    print(f"sent {len(ids) - len(failed)} of {len(ids)} drafts to Telegram")
+    if failed:
+        # A red run, so GitHub emails Dan: these drafts are saved in drafts.json but never reached him.
+        sys.exit(f"drafts not delivered to Telegram: {','.join(failed)}")
 
 
 def main():
