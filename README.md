@@ -165,6 +165,7 @@ The weekly AP and CFP rankings shown beside the TrueCFB ranking are saved in `da
 | `src/fetch_polls.py` | Saves the weekly AP and CFP rankings (needs a free CollegeFootballData key). |
 | `src/build_games.py` | Merges them into one games table and notes how complete each week of the current season is. |
 | `src/run_all.py` | Runs every season and writes the site's data files: `data.json`, `rank_{year}.json`, `sched_{year}.json` and `history.json`. |
+| `src/build_pages.py`, `src/templates/` | Runs at the end of `run_all.py`. From those data files it writes the parts of the site that work without JavaScript: a page per team (`/team/utah`), the top 25 on the Rankings page, the team index, `rankings.json` (the current ranking for anyone to use), `llms.txt` (a summary for AI assistants) and `sitemap.xml`. It computes no rating. |
 | `src/game_impact.py` | What one game changed: Matchup Rating, Game Ratings, Team Rating and rank moves, and the ripple to past opponents. Also writes the post for X from a fixed template, so every number in a post comes from the engine. |
 | `src/fill_live_finals.py` | Adds same-day finals from the CollegeFootballData API that the public files do not have yet (needs a key). |
 | `src/bot_drafts.py`, `src/bot_post.py` | The X bot: drafts a post for each new final, sends it to Telegram for approval, and posts an approved draft as @truecfb. |
