@@ -46,6 +46,8 @@ python src/game_impact.py data/games.csv src 2026 --text      # latest game day'
 
 A full re-run takes about 15 seconds. After changing anything in `src/`, re-run and confirm the site's data files are unchanged (`git diff --stat site/`) unless a change was intended.
 
+Known local difference: on an Apple Silicon Mac, the week-1 order of teams tied at exactly 25.0 (teams new to FBS) can differ from what the GitHub jobs publish, because `sort_values("rating")` uses numpy's default sort, which does not keep ties in a fixed order across CPUs. Ratings are identical. Only `rank_{year}.json` week 1, `sched_{year}.json` `start` and `history.json` show it; anything else in the diff is real.
+
 ## How we work
 
 - Branch, open a PR, and merge when Dan says "merge". Cloudflare deploys `main` automatically (branch previews build too).
@@ -55,8 +57,11 @@ A full re-run takes about 15 seconds. After changing anything in `src/`, re-run 
 ## Open work
 
 - **Before the 2026 bowls:** add the 2026 selection date and the final 2026 CFP ranking to `run_all.py` and `data/cfp_final.json`. Until then the current season counts regular-season games only, and bowl games will not move ratings.
-- **Reply bot:** when someone tags @truecfb, a model reads the question and the engine supplies every number; start in draft mode (Telegram). Check X's current rules on AI replies first (see `docs/X-BOT.md`).
+- **Reply bot:** when someone tags @truecfb, a model reads the question and the engine supplies every number; start in draft mode (Telegram). Check X's current rules on AI replies first (see `docs/X-BOT.md`). The expected case is someone tagging @truecfb under another account's post and asking it to weigh in. Dan asked whether Grok could power it; still open.
 - **Readable by Grok and search engines:** plain HTML content, `llms.txt`, a public `rankings.json`; a page address per team (`/team/utah`) instead of `team.html#team=Utah`.
+- **Security pass:** Dan wanted the site's SEO and security strengthened at launch; SEO is the item above, security has not been reviewed (Worker endpoints, response headers, workflow permissions, secrets scope).
+- **Site content from the agent** (later): beyond X posts, Dan wants the agent to write content for the site and keep the data fresh. Setup stays Claude + Cloudflare + GitHub Actions; self-hosting on a Mac mini was considered and dropped.
+- **Preseason tie order:** fix the unstable sort above (`kind="stable"` or a name tiebreak) so local runs match the jobs. It changes the published order of tied teams once, so it needs Dan's OK.
 - **Hashtags:** review the flagged teams in `data/team_hashtags.json`.
 - **"Predict" page** (later epic): enter future results and see how the rankings would change.
 - **Design system:** add the site's header band, nav and footer as components.

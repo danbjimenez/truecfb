@@ -8,3 +8,4 @@ __pycache__/
 *.part
 .wrangler/
 data/bot/new.txt
+.venv/
