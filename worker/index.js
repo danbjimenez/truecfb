@@ -6,11 +6,16 @@
 // 2. /hooks/telegram: when Dan taps "Post to X" or "Skip" on a draft, start the "Post to X" job on
 //    GitHub (or mark it skipped). Only Dan's chat is accepted, and only with the bot's secret header.
 //
-// The Worker never holds the X keys and never computes a rating. Posting happens on GitHub,
-// from the draft the engine wrote.
+// 3. Reply bot (docs/REPLY-BOT.md): every few minutes, ask X whether anyone new has tagged @truecfb,
+//    and if so start the "Reply drafts" job on GitHub. "Post reply" taps start "Post a reply".
+//
+// The Worker never holds the X write keys and never computes a rating. Posting happens on GitHub,
+// from the draft the engine wrote. For the reply bot it holds only a read-only X token.
 //
 // Secrets (Cloudflare dashboard -> truecfb -> Settings -> Variables and Secrets):
 //   CFBD_API_KEY, GITHUB_DISPATCH_TOKEN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+//   X_BEARER_TOKEN (read-only app token) and X_USER_ID (@truecfb's numeric id): the reply bot stays
+//   off until both are set.
 
 const REPO = "danbjimenez/truecfb";
 const SCOREBOARD = "https://api.collegefootballdata.com/scoreboard?classification=fbs";
@@ -27,7 +32,8 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(pollScoreboard(env, new Date(event.scheduledTime)));
+    const now = new Date(event.scheduledTime);
+    ctx.waitUntil(Promise.all([pollScoreboard(env, now), pollMentions(env, now)]));
   },
 };
 
@@ -86,6 +92,38 @@ async function dispatch(env, workflow, inputs) {
   return r.status === 204;
 }
 
+// ---------- 3. mentions of @truecfb ----------
+
+// Every run on Saturdays (and early Sunday), every third run (15 minutes) the rest of the week, all day.
+export function shouldCheckMentions(d) {
+  const h = d.getUTCHours(), day = d.getUTCDay(), m = d.getUTCMinutes();
+  const saturday = (day === 6 && h >= 16) || (day === 0 && h < 9);
+  return saturday || m % 15 < 5;
+}
+
+async function pollMentions(env, now) {
+  if (!env.X_BEARER_TOKEN || !env.X_USER_ID || !env.GITHUB_DISPATCH_TOKEN) return; // reply bot not set up
+  if (!shouldCheckMentions(now)) return;
+  if (!/^\d{1,20}$/.test(String(env.X_USER_ID))) return;
+  // The newest mention the draft job has handled; it writes site/replies.json after each run.
+  const seen = await env.ASSETS.fetch(new Request("https://truecfb.com/replies.json"));
+  const newest = seen.ok ? String((await seen.json()).newest || "") : "";
+  const q = new URLSearchParams({ max_results: "5" });
+  if (/^\d{1,20}$/.test(newest)) q.set("since_id", newest);
+  else q.set("start_time", new Date(now.getTime() - 2 * 3600 * 1000).toISOString().replace(/\.\d+Z$/, "Z"));
+  const r = await fetch(`https://api.x.com/2/users/${env.X_USER_ID}/mentions?${q}`, {
+    headers: { Authorization: `Bearer ${env.X_BEARER_TOKEN}`, "User-Agent": "truecfb-worker" },
+  });
+  if (!r.ok) {
+    console.log(`bot: mentions returned ${r.status}`);
+    return;
+  }
+  const found = ((await r.json()).data || []).length;
+  if (!found) return;
+  const ok = await dispatch(env, "reply-draft.yml", { since_id: newest });
+  console.log(`bot: new mention(s) -> reply-draft ${ok ? "started" : "FAILED"}`);
+}
+
 // ---------- 2. Telegram taps ----------
 
 // The script's own replies get the same safety headers the site's files get from site/_headers
@@ -142,16 +180,18 @@ async function telegramHook(request, env, ctx) {
   if (cb) {
     const msg = cb.message || {};
     if (String(msg.chat?.id) !== chat || String(cb.from?.id) !== chat) return ok;
-    const m = /^(post|skip):(\d{1,12})$/.exec(cb.data || "");
+    // post/skip: a game's result post. rpost/rskip: a reply draft (the id of the post that tagged us).
+    const m = /^(post|skip):(\d{1,12})$/.exec(cb.data || "") || /^(rpost|rskip):(\d{1,20})$/.exec(cb.data || "");
     if (!m) return ok;
     const [, action, game] = m;
+    const isReply = action.startsWith("r");
     // Drafts arrive as a photo with a caption; older text drafts have plain text.
     const isPhoto = Array.isArray(msg.photo) && msg.photo.length > 0;
     const original = (isPhoto ? msg.caption : msg.text) || "";
     const setText = (text, extra = {}) =>
       tg(isPhoto ? "editMessageCaption" : "editMessageText",
         { chat_id: chat, message_id: msg.message_id, [isPhoto ? "caption" : "text"]: text, ...extra });
-    if (action === "skip") {
+    if (action === "skip" || action === "rskip") {
       ctx.waitUntil(Promise.all([
         tg("answerCallbackQuery", { callback_query_id: cb.id, text: "Skipped" }),
         setText(`${original}\n\nSkipped`),
@@ -160,14 +200,17 @@ async function telegramHook(request, env, ctx) {
     }
     // Take the buttons off first, so a second tap cannot post twice.
     await setText(`${original}\n\nPosting...`);
-    const started = await dispatch(env, "post-to-x.yml", { game, message_id: String(msg.message_id) });
+    const started = isReply
+      ? await dispatch(env, "post-reply.yml", { mention: game, message_id: String(msg.message_id) })
+      : await dispatch(env, "post-to-x.yml", { game, message_id: String(msg.message_id) });
     ctx.waitUntil(tg("answerCallbackQuery", {
       callback_query_id: cb.id,
       text: started ? "Posting to X..." : "Could not start the post job. Check GitHub Actions.",
     }));
     if (!started) {
       ctx.waitUntil(setText(`${original}\n\nNot posted: the post job did not start.`, {
-        reply_markup: { inline_keyboard: [[{ text: "Try again", callback_data: `post:${game}` }, { text: "Skip", callback_data: `skip:${game}` }]] },
+        reply_markup: { inline_keyboard: [[{ text: "Try again", callback_data: `${isReply ? "rpost" : "post"}:${game}` },
+                                           { text: "Skip", callback_data: `${isReply ? "rskip" : "skip"}:${game}` }]] },
       }));
     }
     return ok;

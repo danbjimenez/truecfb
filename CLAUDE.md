@@ -29,9 +29,10 @@ Read before changing things:
 | `src/game_impact.py` | What one game changed; post text |
 | `src/card.py` | The 1200 × 675 result card |
 | `src/bot_drafts.py`, `src/bot_post.py` | X bot: drafts to Telegram, posting |
+| `src/reply_bot.py`, `reply_model.py`, `reply_templates.py` | Reply bot (`docs/REPLY-BOT.md`): the model reads the question, templates write the reply from the engine's files |
 | `site/` | The static site (Cloudflare serves it); `site/live.json` = finals the bot has handled |
 | `worker/index.js` | Cloudflare Worker: scoreboard check + Telegram hook |
-| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `telegram-setup.yml`, `release.yml` |
+| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `telegram-setup.yml`, `release.yml` |
 | `data/` | Polls, CFP finals, team colors, team hashtags, bot drafts and posted log (downloaded game files are not committed) |
 
 ## Running locally
@@ -56,7 +57,7 @@ A full re-run takes about 15 seconds. After changing anything in `src/`, re-run 
 ## Open work
 
 - **Selection day, Sun 6 Dec 2026:** add the final 2026 CFP ranking to `data/cfp_final.json` (key `"2026"`, 25 names in order, spelled as in `data/polls/2026.json`). The date is already in `run_all.py`; that one entry switches 2026 to count bowl and playoff games. Until then the current season counts regular-season games only.
-- **Reply bot:** when someone tags @truecfb, a model reads the question and the engine supplies every number; start in draft mode (Telegram). Check X's current rules on AI replies first (see `docs/X-BOT.md`).
+- **Reply bot:** built in draft mode, off until its secrets are added; steps in `docs/REPLY-BOT.md` ("Turning it on"). Send X an approval request before setting `REPLIES_LIVE`.
 - **Hashtags:** review the flagged teams in `data/team_hashtags.json`.
 - **"Predict" page** (later epic): enter future results and see how the rankings would change.
 - **Design system:** add the site's header band, nav and footer as components.
