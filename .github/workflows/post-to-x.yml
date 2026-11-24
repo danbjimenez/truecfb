@@ -17,16 +17,22 @@ on:
 permissions:
   contents: write
 
+# One post at a time, in the order Dan tapped. `queue: max` keeps every waiting run (up to 100);
+# the default keeps only one and cancels the rest, which left drafts stuck at "Posting...".
 concurrency:
   group: post-to-x
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   post:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # Newest main, not the commit from when the run was queued: a run that waited behind another
+      # must see the posted.json entry that run just saved, or a double tap could post twice.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: main
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
