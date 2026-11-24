@@ -6,7 +6,8 @@ Writes to <out_dir>:
   data.json        settings, the list of snapshots per season, final ratings, conferences, team colours
   rank_{year}.json every snapshot's full ranking: [rank, team, rating, wins, losses, CFP rank, AP rank]
   sched_{year}.json every team's rating at the start of the season and every game, with the Team Rating after it
-  history.json     every team's and every conference's rating and rank at every snapshot of every season"""
+  history.json     every team's and every conference's rating and rank at every snapshot of every season
+and then, from those files, the team pages, rankings.json, llms.txt and sitemap.xml (see build_pages.py)"""
 import sys, json, os
 import numpy as np, pandas as pd
 sys.path.insert(0, sys.argv[2])
@@ -248,6 +249,9 @@ json.dump(data, open(f"{out_dir}/data.json", "w"), separators=(",", ":"), ensure
 # history.json: per team and per conference, per season, a flat list [rating, rank, rating, rank, ...] with one
 # pair for each of that season's snapshots, in the order data.json lists them.
 json.dump(history, open(f"{out_dir}/history.json", "w"), separators=(",", ":"), ensure_ascii=False)
+# The plain-HTML pages, rankings.json, llms.txt and sitemap.xml, written from the files above.
+import build_pages
+build_pages.build(out_dir)
 data["seasons"] = full_seasons
 print("max iterations in any snapshot:", max_iters)
 print("\nREGULAR SEASON FINAL vs FINAL CFP RANKING")

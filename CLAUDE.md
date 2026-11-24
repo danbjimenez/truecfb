@@ -24,6 +24,7 @@ Read before changing things:
 | `src/engine.py` | The formula (the only place ratings are computed) |
 | `src/build_games.py`, `src/fetch_data.py`, `src/fill_live_finals.py` | Game data: public files, plus same-day finals from the CFBD API |
 | `src/run_all.py` | Re-runs every season 2014 to now and writes the site's data files |
+| `src/build_pages.py`, `src/templates/team.html` | Called by `run_all.py`: team pages (`site/team/<slug>.html`), the parts of `index.html` and `team.html` between `<!--gen:...-->` markers, `rankings.json`, `llms.txt`, `sitemap.xml` |
 | `src/fetch_polls.py`, `src/fetch_colors.py` | AP/CFP polls and team colors (display only) |
 | `src/game_impact.py` | What one game changed; post text |
 | `src/card.py` | The 1200 × 675 result card |
@@ -44,7 +45,7 @@ python src/run_all.py data/games.csv src data/latest_poll.json site data/cfp_fin
 python src/game_impact.py data/games.csv src 2026 --text      # latest game day's posts
 ```
 
-A full re-run takes about 15 seconds. After changing anything in `src/`, re-run and confirm the site's data files are unchanged (`git diff --stat site/`) unless a change was intended.
+A full re-run takes about 15 seconds. After changing anything in `src/`, re-run and confirm the site's data files are unchanged (`git diff --stat site/`) unless a change was intended. Team pages and the generated parts of `index.html` and `team.html` are rewritten on every run: edit `src/templates/team.html` or `src/build_pages.py`, not the output.
 
 ## How we work
 
@@ -56,7 +57,6 @@ A full re-run takes about 15 seconds. After changing anything in `src/`, re-run 
 
 - **Before the 2026 bowls:** add the 2026 selection date and the final 2026 CFP ranking to `run_all.py` and `data/cfp_final.json`. Until then the current season counts regular-season games only, and bowl games will not move ratings.
 - **Reply bot:** when someone tags @truecfb, a model reads the question and the engine supplies every number; start in draft mode (Telegram). Check X's current rules on AI replies first (see `docs/X-BOT.md`).
-- **Readable by Grok and search engines:** plain HTML content, `llms.txt`, a public `rankings.json`; a page address per team (`/team/utah`) instead of `team.html#team=Utah`.
 - **Hashtags:** review the flagged teams in `data/team_hashtags.json`.
 - **"Predict" page** (later epic): enter future results and see how the rankings would change.
 - **Design system:** add the site's header band, nav and footer as components.
