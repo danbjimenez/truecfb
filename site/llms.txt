@@ -1,0 +1,55 @@
+# TrueCFB
+
+> TrueCFB is an open source college football ranking. Every FBS team is rated on game results alone, by a public, deterministic formula (TrueCFB v1.0, frozen 21 November 2026). Every game counts. It measures the season that was played; it does not predict games.
+
+TrueCFB numbers are ratings, not points. A score is points on the scoreboard (28-20); a rating is TrueCFB's measure.
+
+- Game Rating: what one team earns for one game, 0 to 100 (above 100 in the postseason). A win is worth 70 to 80 by margin and a loss 20 to 30; add the opponent's bonus, add 3 on the road or subtract 3 at home, and keep it within 0 to 100.
+- Team Rating: the average of a team's Game Ratings. Teams are ranked by it.
+- Bonus: what a team is worth to anyone who plays it, win or lose: its Team Rating minus 50.
+- Matchup Rating: the pot the two teams in a game split, 100 plus both teams' bonuses.
+- Conference Rating: the plain average of its members' Team Ratings. Published, not used in the formula.
+
+## Current ranking: 2026 season, through week 12 (games through 21 Nov 2026)
+
+1. [Georgia](https://truecfb.com/team/georgia): Team Rating 78.3, 10-1, SEC
+2. [Texas](https://truecfb.com/team/texas): Team Rating 77.2, 9-2, SEC
+3. [Utah](https://truecfb.com/team/utah): Team Rating 76.2, 11-0, Big 12
+4. [Notre Dame](https://truecfb.com/team/notre-dame): Team Rating 74.4, 10-1, FBS Independents
+5. [Miami](https://truecfb.com/team/miami): Team Rating 74.1, 10-1, ACC
+6. [Alabama](https://truecfb.com/team/alabama): Team Rating 73.0, 9-2, SEC
+7. [Tennessee](https://truecfb.com/team/tennessee): Team Rating 71.7, 9-2, SEC
+8. [UCLA](https://truecfb.com/team/ucla): Team Rating 71.1, 10-1, Big Ten
+9. [Wake Forest](https://truecfb.com/team/wake-forest): Team Rating 70.0, 10-1, ACC
+10. [Texas Tech](https://truecfb.com/team/texas-tech): Team Rating 69.3, 10-1, Big 12
+11. [BYU](https://truecfb.com/team/byu): Team Rating 68.5, 9-2, Big 12
+12. [Oregon](https://truecfb.com/team/oregon): Team Rating 67.7, 8-3, Big Ten
+13. [Indiana](https://truecfb.com/team/indiana): Team Rating 66.4, 9-2, Big Ten
+14. [Iowa](https://truecfb.com/team/iowa): Team Rating 65.3, 9-2, Big Ten
+15. [Florida](https://truecfb.com/team/florida): Team Rating 65.2, 7-4, SEC
+16. [Ole Miss](https://truecfb.com/team/ole-miss): Team Rating 65.0, 7-4, SEC
+17. [Oklahoma](https://truecfb.com/team/oklahoma): Team Rating 64.9, 7-4, SEC
+18. [Houston](https://truecfb.com/team/houston): Team Rating 64.1, 8-3, Big 12
+19. [Ohio State](https://truecfb.com/team/ohio-state): Team Rating 63.8, 7-4, Big Ten
+20. [Louisville](https://truecfb.com/team/louisville): Team Rating 63.4, 8-3, ACC
+21. [LSU](https://truecfb.com/team/lsu): Team Rating 63.4, 6-5, SEC
+22. [USC](https://truecfb.com/team/usc): Team Rating 63.2, 8-3, Big Ten
+23. [Kentucky](https://truecfb.com/team/kentucky): Team Rating 62.7, 7-4, SEC
+24. [Missouri](https://truecfb.com/team/missouri): Team Rating 62.6, 7-4, SEC
+25. [Boise State](https://truecfb.com/team/boise-state): Team Rating 62.5, 9-2, Pac-12
+
+All 138 FBS teams, with conference, record, bonus and the AP and CFP ranks: [rankings.json](https://truecfb.com/rankings.json)
+
+## Pages
+
+- [Rankings](https://truecfb.com/): the current ranking and every week of every season since 2014, beside the AP poll and CFP ranking
+- [Teams](https://truecfb.com/team): every FBS team by conference. Each team has a page at https://truecfb.com/team/<name>, for example https://truecfb.com/team/ohio-state, with every game and its Game Rating
+- [Conferences](https://truecfb.com/conferences): Conference Ratings and their history
+- [How it works](https://truecfb.com/how-it-works): the seven rules in plain English
+- [About](https://truecfb.com/about): why TrueCFB exists, and how to send a change
+
+## Source
+
+- [Code and exact rules](https://github.com/danbjimenez/truecfb): the README defines every rule and number; the formula is one file, src/engine.py. MIT License.
+- Game data from CollegeFootballData.com and ESPN. TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.
+- Updates: after each week's games, and on X at @truecfb.

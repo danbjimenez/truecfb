@@ -6,7 +6,8 @@ Writes to <out_dir>:
   data.json        settings, the list of snapshots per season, final ratings, conferences, team colours
   rank_{year}.json every snapshot's full ranking: [rank, team, rating, wins, losses, CFP rank, AP rank]
   sched_{year}.json every team's rating at the start of the season and every game, with the Team Rating after it
-  history.json     every team's and every conference's rating and rank at every snapshot of every season"""
+  history.json     every team's and every conference's rating and rank at every snapshot of every season
+and then, from those files, the team pages, rankings.json, llms.txt and sitemap.xml (see build_pages.py)"""
 import sys, json, os
 import numpy as np, pandas as pd
 sys.path.insert(0, sys.argv[2])
@@ -14,9 +15,14 @@ import engine as E
 
 SELECTION = {2014: "2014-12-07", 2015: "2015-12-06", 2016: "2016-12-04", 2017: "2017-12-03", 2018: "2018-12-02",
              2019: "2019-12-08", 2020: "2020-12-20", 2021: "2021-12-05", 2022: "2022-12-04", 2023: "2023-12-03",
-             2024: "2024-12-08", 2025: "2025-12-07"}
+             2024: "2024-12-08", 2025: "2025-12-07", 2026: "2026-12-06"}
 g = E.load_games(sys.argv[1]); latest = json.load(open(sys.argv[3])); out_dir = sys.argv[4]
 CFP_FINAL = json.load(open(sys.argv[5]))   # final committee rankings (Wikipedia season ranking pages)
+LAST = int(g.season.max())                 # the newest season in the games table
+# A season's regular season is closed once its selection date is above and its final CFP ranking is in
+# cfp_final.json. Until then it counts regular-season games only; after it, bowl and playoff games count
+# too, and the season stays the current one until its title game is played.
+closed = lambda y: y in SELECTION and str(y) in CFP_FINAL
 POLLS_DIR = sys.argv[6] if len(sys.argv) > 6 else None
 # Team colours for the Top 25 chart (saved by fetch_colors.py beside the CFP list). Display only.
 COLORS_FILE = os.path.join(os.path.dirname(os.path.abspath(sys.argv[5])), "team_colors.json")
@@ -150,15 +156,15 @@ data = {"name": E.NAME, "version": E.VERSION,
 t13, _ = E.rate(g[g.season == 2013], F, V); prior = t13.rating      # 2013 only seeds the 2014 carryover
 weekly_gaps = {}; max_iters = 0; report = []; finals = []
 history = {"teams": {}, "conf": {}}
-for y in range(2014, 2027):
+for y in range(2014, LAST + 1):
     s = g[g.season == y]; reg = s[s.season_type == "regular"]
     teams = sorted(set(s.home[s.home_fbs]) | set(s.away[s.away_fbs]))
     weeks = sorted(int(w) for w in reg.week.unique())
     snaps = []; after = {}; start = {}
-    conf_of = team_conf(s if y in SELECTION else reg)
+    conf_of = team_conf(s if closed(y) else reg)
     P = POLLS.get(y, {"regular": {}, "postseason": {}})
     for i, w in enumerate(weeks):
-        poll = latest["ranks"] if (y == 2026 and w == max(weeks)) else poll_from(reg[reg.week == w])
+        poll = latest["ranks"] if (y == LAST and w == max(weeks)) else poll_from(reg[reg.week == w])
         label = "Preseason" if i == 0 else f"Through week {weeks[i - 1]}"
         pw = P["regular"].get(w, {})    # the polls published going into week w
         cfp_w = pw.get("cfp")
@@ -171,8 +177,9 @@ for y in range(2014, 2027):
         if i == 0: start = {t: [round(float(tab.rating[t]), 1), int(rank[t])] for t in teams}   # the season's starting point
         else: note_after(after, reg[reg.week == weeks[i - 1]], tab, rank, sn["id"])   # this snapshot is the first to hold last week's games
         if sn["gap"] is not None and sn["n"] >= 10: weekly_gaps.setdefault(w, []).append(sn["gap"])
-    if y in SELECTION:
+    if closed(y):
         rs = reg[reg.date <= SELECTION[y]]
+        late = s[~s.game_id.isin(rs.game_id)]   # bowl and playoff games, and any regular-season game after selection day
         cfp = {t: i + 1 for i, t in enumerate(CFP_FINAL[str(y)])}
         # The polls of selection day are the last regular-season entry. The saved final CFP list is the
         # check: if the entry's CFP ranking is not that list (2020, where the last entry is a week
@@ -183,25 +190,35 @@ for y in range(2014, 2027):
                                         ap=last.get("ap") if on_time else None, cfp=cfp); snaps.append(sn)
         report.append((y, sn, rank, cfp, tab)); note_history(history, y, conf_of, tab, rank)
         note_after(after, rs[rs.week == weeks[-1]], tab, rank, "reg")
-        post = P["postseason"].get(min(P["postseason"]), {}) if P["postseason"] else {}   # the AP poll after the bowls
-        sn2, tabf, rankf, it, detf = snapshot("final", "Season final (after bowls and playoff)", s, teams, prior, {}, None, True,
-                                              ap=post.get("ap")); snaps.append(sn2)
-        note_history(history, y, conf_of, tabf, rankf)
-        fin = detf[detf["round"] == "final"]
-        champ, runner = fin[fin.margin > 0].team.iloc[0], fin[fin.margin < 0].team.iloc[0]
-        finals.append((y, champ, rankf[champ], runner, rankf[runner], [f"{r[1]} {r[2]}" for r in sn2["rows"][:5]], rank, rankf))
-        prior_next = tabf.rating
+        done = (late.season_type == "postseason").any() and any(
+            E.playoff_round(n, y) == "final" for n in late.note[late.season_type == "postseason"])
+        if done:   # the title game is in: the season is finished
+            post = P["postseason"].get(min(P["postseason"]), {}) if P["postseason"] else {}   # the AP poll after the bowls
+            sid, sn2, tabf, rankf, it, detf = ("final",) + snapshot("final", "Season final (after bowls and playoff)", s, teams,
+                                                                     prior, {}, None, True, ap=post.get("ap"))
+        else:      # bowls and playoff still being played: the season stays the current one
+            sid, sn2, tabf, rankf, it, detf = ("post",) + snapshot("post", "Postseason so far", s, teams, prior, {}, None, True)
+        if done or len(late):   # with no game after selection day yet, the regular-season final is the latest point
+            snaps.append(sn2); note_history(history, y, conf_of, tabf, rankf)
+        if done:
+            fin = detf[detf["round"] == "final"]
+            champ, runner = fin[fin.margin > 0].team.iloc[0], fin[fin.margin < 0].team.iloc[0]
+            finals.append((y, champ, rankf[champ], runner, rankf[runner], [f"{r[1]} {r[2]}" for r in sn2["rows"][:5]], rank, rankf))
+        else:
+            now_label = "Through the postseason so far" if len(late) else "Through the regular season"
+            data["current"] = {"season": str(y), "default": sid if len(late) else "reg", "week": None, "complete": True,
+                               "through": s.day.max(), "now_through": s.day.max(), "now_label": now_label}
+        prior_next = tabf.rating; cur = None
         # Bowl and playoff games (and any regular-season game after selection day): the Team Rating
         # after each one, from a ranking run through that day.
-        late = s[~s.game_id.isin(rs.game_id)]
         days = sorted(late.day.unique())
         for d in days:
             if d == days[-1]:
-                note_after(after, late[late.day == d], tabf, rankf, "final")
+                note_after(after, late[late.day == d], tabf, rankf, sid)
                 continue
             td, _ = E.rate(pd.concat([rs, late[late.day <= d]]), F, V, prior=prior, teams=teams)
             rd = {t: k + 1 for k, t in enumerate(td.sort_values("rating", ascending=False).index)}
-            note_after(after, late[late.day == d], td, rd, "final")
+            note_after(after, late[late.day == d], td, rd, sid)
     else:
         # The current season. The page opens on the last fully completed week; if the newest week is
         # still being played, "now" holds every final so far and is labelled as in progress.
@@ -248,6 +265,9 @@ json.dump(data, open(f"{out_dir}/data.json", "w"), separators=(",", ":"), ensure
 # history.json: per team and per conference, per season, a flat list [rating, rank, rating, rank, ...] with one
 # pair for each of that season's snapshots, in the order data.json lists them.
 json.dump(history, open(f"{out_dir}/history.json", "w"), separators=(",", ":"), ensure_ascii=False)
+# The plain-HTML pages, rankings.json, llms.txt and sitemap.xml, written from the files above.
+import build_pages
+build_pages.build(out_dir)
 data["seasons"] = full_seasons
 print("max iterations in any snapshot:", max_iters)
 print("\nREGULAR SEASON FINAL vs FINAL CFP RANKING")
@@ -262,8 +282,9 @@ for y, champ, kc, runner, kr, top5, rank, rankf in finals:
     print(f"{y}: champion {champ} #{kc}, runner-up {runner} #{kr} | top 5: {', '.join(top5)}")
 print("champion 1st:", sum(f[2] == 1 for f in finals), "of", len(finals), "| runner-up 2nd:", sum(f[4] == 2 for f in finals))
 print("\nAVERAGE GAP TO THE POLL BY WEEK:", {w: round(float(np.mean(v)), 1) for w, v in sorted(weekly_gaps.items())})
-print("\n2026 preseason top 8:", [f"{r[1]} {r[2]}" for r in data["seasons"]["2026"][0]["rows"][:8]])
-print("2026 latest weekly snapshot vs latest CFP: gap", cur["gap"], "| in our 25:", sum(1 for r in cur["rows"] if r[5]))
-for r in cur["rows"][:10]: print(f"{r[0]:>2}. {r[1]} ({r[3]}-{r[4]}) {r[2]}  CFP {r[5] or 'NR'}")
+print(f"\n{LAST} preseason top 8:", [f"{r[1]} {r[2]}" for r in data["seasons"][str(LAST)][0]["rows"][:8]])
+if cur is not None:   # the newest season is still in its regular season
+    print(f"{LAST} latest weekly snapshot vs latest CFP: gap", cur["gap"], "| in our 25:", sum(1 for r in cur["rows"] if r[5]))
+    for r in cur["rows"][:10]: print(f"{r[0]:>2}. {r[1]} ({r[3]}-{r[4]}) {r[2]}  CFP {r[5] or 'NR'}")
 print("rating range 2025 final:", min(v[0] for v in data["ratings"]["2025"].values()), max(v[0] for v in data["ratings"]["2025"].values()))
 print("files:", {f: os.path.getsize(f"{out_dir}/{f}") for f in sorted(os.listdir(out_dir)) if f.endswith(".json")})

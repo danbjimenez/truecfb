@@ -8,24 +8,24 @@ const TC = (() => {
 
   // The whole data file, fetched once per page.
   function load(){
-    if(!dataPromise) dataPromise = fetch("data.json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); });
+    if(!dataPromise) dataPromise = fetch("/data.json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); });
     return dataPromise;
   }
   // One season's schedules, fetched when first needed.
   function loadSched(y){
-    if(!sched[y]) sched[y] = fetch("sched_" + y + ".json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+    if(!sched[y]) sched[y] = fetch("/sched_" + y + ".json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
       .catch(e => { delete sched[y]; throw e; });
     return sched[y];
   }
   // One season's rankings at every point in the season, fetched when first needed.
   function loadRank(y){
-    if(!ranks[y]) ranks[y] = fetch("rank_" + y + ".json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+    if(!ranks[y]) ranks[y] = fetch("/rank_" + y + ".json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
       .catch(e => { delete ranks[y]; throw e; });
     return ranks[y];
   }
   // Every team's and conference's rating and rank at every point of every season, fetched when first needed.
   function loadHistory(){
-    if(!historyPromise) historyPromise = fetch("history.json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+    if(!historyPromise) historyPromise = fetch("/history.json").then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
       .catch(e => { historyPromise = null; throw e; });
     return historyPromise;
   }
@@ -56,8 +56,11 @@ const TC = (() => {
     const d = theirs - ours, cls = d > 0 ? "up" : d < 0 ? "down" : "same";
     return '<span class="pr">' + theirs + '</span><span class="gap ' + cls + '">' + (d > 0 ? "+" + d : d < 0 ? "−" + (-d) : "=") + "</span>";
   }
+  // A team's page address: "Texas A&M" -> "texas-am", "Hawai'i" -> "hawaii". Same as slug() in src/build_pages.py.
+  const slug = team => String(team).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+    .replace(/['&]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   function teamHref(team, season){
-    return "team.html#team=" + encodeURIComponent(team) + (season ? "&season=" + encodeURIComponent(season) : "");
+    return "/team/" + slug(team) + (season ? "#season=" + encodeURIComponent(season) : "");
   }
   const teamLink = (team, season) => '<a class="tm" href="' + teamHref(team, season) + '">' + esc(team) + "</a>";
   // Read and write "#a=1&b=2" so a view can be shared as a link.
@@ -72,5 +75,5 @@ const TC = (() => {
     history.replaceState(null, "", q ? "#" + q : location.pathname + location.search);
   }
   const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
-  return {$, load, loadSched, loadRank, loadHistory, esc, day, signed, bonus, matchup, moveChip, pollCell, teamHref, teamLink, readHash, writeHash, ordinal};
+  return {$, slug, load, loadSched, loadRank, loadHistory, esc, day, signed, bonus, matchup, moveChip, pollCell, teamHref, teamLink, readHash, writeHash, ordinal};
 })();

@@ -1,6 +1,6 @@
 /* TrueCFB: one team's page. */
 (() => {
-  const {$, load, loadSched, loadHistory, esc, day, bonus, matchup, moveChip, teamLink, readHash, writeHash, ordinal} = TC;
+  const {$, slug, load, loadSched, loadHistory, esc, day, bonus, matchup, moveChip, teamLink, teamHref, readHash, ordinal} = TC;
   let D = null;
   const got = {};   // seasons whose game files have arrived, for the chart's data labels
 
@@ -47,7 +47,7 @@
           }
           if(all.failed) return head + '<div class="hc-s">The game did not load.</div>';
           const games = ((all.games || {})[t] || []).filter(g => g[13] === p.id), rating = D.ratings[p.year][t][0];
-          if(!games.length) return head + '<div class="hc-s">' + (p.id === "final" ? "No bowl or playoff game" : p.id === "reg" ? "No new game" : "No game this week") + "</div>";
+          if(!games.length) return head + '<div class="hc-s">' + (p.id === "final" ? "No bowl or playoff game" : p.id === "post" ? "No bowl or playoff game yet" : p.id === "reg" ? "No new game" : "No game this week") + "</div>";
           return head + games.map(g => '<div class="hc-g"><div>' + resultText(g) + " " + where(g) + esc(g[1]) + '</div><div class="hc-s">' + day(g[0]) +
             " \u00b7 Game Rating " + g[6].toFixed(1) + " \u00b7 Matchup Rating " + matchup(D, rating, g) + "</div></div>").join("");
         }
@@ -62,7 +62,7 @@
     const cur = D.current, isCurrent = y === cur.season;
     document.title = t + " · TrueCFB";
     $("t-name").textContent = t;
-    writeHash({team: t, season: isCurrent ? null : y});
+    history.replaceState(null, "", teamHref(t, isCurrent ? null : y));   // /team/utah, or /team/utah#season=2019
 
     if(!info){
       $("t-status").textContent = y + " season";
@@ -107,8 +107,13 @@
     } else $("t-conf-box").hidden = true;
 
     // Schedule and tiles need this season's game file.
-    $("t-tiles").innerHTML = "";
-    $("t-sched").innerHTML = '<tr><td colspan="4">Loading the games…</td></tr>';
+    // The page arrives with this team's latest season already written in (src/build_pages.py); keep it on screen until the file loads.
+    const sch = $("t-sched"), built = sch.dataset.built === t + "|" + y;
+    delete sch.dataset.built;
+    if(!built){
+      $("t-tiles").innerHTML = "";
+      sch.innerHTML = '<tr><td colspan="4">Loading the games…</td></tr>';
+    }
     loadSched(y).then(all => {
       if($("team").value !== t || $("season").value !== y) return;
       got[y] = all;
@@ -144,10 +149,18 @@
     });
   }
 
-  function pickFromHash(){
+  // The team comes from the address (/team/utah); the season from "#season=2019", else the current one,
+  // or the team's last FBS season if it is not in FBS now.
+  function pickFromAddress(){
     const h = readHash(), ys = Object.keys(D.seasons);
-    $("season").value = h.season && ys.includes(h.season) ? h.season : D.current.season;
-    if(h.team && D.history[h.team]) $("team").value = h.team;
+    const bySlug = {};
+    Object.keys(D.history).forEach(x => { bySlug[slug(x)] = x; });
+    const t = bySlug[decodeURIComponent(location.pathname.replace(/\/+$/, "").split("/").pop())] ||
+      (h.team && D.history[h.team] ? h.team : null) || document.body.dataset.team;
+    if(t && D.history[t]) $("team").value = t;
+    const mine = ys.filter(y => D.ratings[y][$("team").value]).sort();
+    $("season").value = h.season && ys.includes(h.season) ? h.season
+      : D.ratings[D.current.season][$("team").value] || !mine.length ? D.current.season : mine[mine.length - 1];
   }
 
   load().then(d => {
@@ -160,10 +173,10 @@
     // With no team in the link, open on the current #1.
     const cr = D.ratings[D.current.season], top = Object.keys(cr).find(t => cr[t][1] === 1);
     if(top) $("team").value = top;
-    pickFromHash(); render();
+    pickFromAddress(); render();
     $("team").addEventListener("change", render);
     $("season").addEventListener("change", render);
-    window.addEventListener("hashchange", () => { pickFromHash(); render(); window.scrollTo(0, 0); });
+    window.addEventListener("hashchange", () => { pickFromAddress(); render(); window.scrollTo(0, 0); });
   }).catch(() => {
     $("t-missing").hidden = false;
     $("t-missing").textContent = "The team data did not load. Reload the page to try again.";
