@@ -122,6 +122,10 @@ class Site:
         cur = self.D["current"]
         if cur["default"] == "final":
             return f"at the end of the {self.year} season"
+        if cur["default"] == "reg":
+            return f"at the end of the {self.year} regular season"
+        if cur["default"] == "post":
+            return f"during the {self.year} bowls and playoff"
         return self.snap["label"][0].lower() + self.snap["label"][1:] + f" of {self.year}"
 
     def status(self):
