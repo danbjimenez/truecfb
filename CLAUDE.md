@@ -14,7 +14,7 @@ Read before changing things:
 - **Write the name TrueCFB** (never all capitals) and the version **v1.0**.
 - **Rating, never score.** Game Rating (one team, one game), Team Rating, Conference Rating, Matchup Rating (the pot two teams split). "Score" means points on the scoreboard only.
 - **Blind to the jersey:** no team logos, mascots or team colors, except each team's line on the Top 25 chart. Blue = higher, orange = lower; never red/green as a verdict.
-- **Every number in a post or card comes from the engine.** The X bot uses fixed templates; no model writes numbers.
+- **Every number in a post or card comes from the engine.** Result posts and cards use fixed templates. Replies (since 24 Nov 2026, Dan's call) are written by a model from the engine's fact sheet, and code rejects any reply with a number the engine did not publish; the template is the fallback. No model ever decides a number.
 - 2020 is a throwaway year: flagged unreliable, never special-cased.
 
 ## Map
@@ -29,7 +29,7 @@ Read before changing things:
 | `src/game_impact.py` | What one game changed; post text |
 | `src/card.py` | The 1200 × 675 result card |
 | `src/bot_drafts.py`, `src/bot_post.py` | X bot: drafts to Telegram, posting |
-| `src/reply_bot.py`, `reply_model.py`, `reply_templates.py` | Reply bot (`docs/REPLY-BOT.md`): the model reads the question, templates write the reply from the engine's files |
+| `src/reply_bot.py`, `reply_model.py`, `reply_facts.py`, `reply_writer.py`, `reply_templates.py` | Reply bot (`docs/REPLY-BOT.md`): the model (Grok by default) reads the question and writes the reply from a fact sheet of the engine's numbers; code checks every number; templates are the fallback |
 | `site/` | The static site (Cloudflare serves it); `site/live.json` = finals the bot has handled |
 | `worker/index.js` | Cloudflare Worker: scoreboard check + Telegram hook |
 | `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `telegram-setup.yml`, `release.yml` |
@@ -59,7 +59,7 @@ Known local difference: on an Apple Silicon Mac, the week-1 order of teams tied 
 ## Open work
 
 - **Selection day, Sun 6 Dec 2026:** add the final 2026 CFP ranking to `data/cfp_final.json` (key `"2026"`, 25 names in order, spelled as in `data/polls/2026.json`). The date is already in `run_all.py`; that one entry switches 2026 to count bowl and playoff games. Until then the current season counts regular-season games only.
-- **Reply bot:** built in draft mode, off until its secrets are added; steps in `docs/REPLY-BOT.md` ("Turning it on"). Send X an approval request before setting `REPLIES_LIVE`.
+- **Reply bot:** built in draft mode, off until its secrets are added (`XAI_API_KEY` first); steps in `docs/REPLY-BOT.md` ("Turning it on"). Read the model test's replies before going live, and send X an approval request before setting `REPLIES_LIVE`.
 - **Security settings (Dan, from the 23 Nov 2026 review):** in GitHub, an `x-bot` environment limited to `main` holding the four `X_*` secrets (then add `environment: x-bot` to post-to-x.yml), a ruleset on `main` blocking force-push and deletion, GitHub-owned actions only with SHA pinning required, email privacy, Dependabot alerts on. In Cloudflare, a WAF rule allowing `/hooks/telegram` only from Telegram's IP ranges (`149.154.160.0/20`, `91.108.4.0/22`).
 - **Site content from the agent** (later): beyond X posts, Dan wants the agent to write content for the site and keep the data fresh. Setup stays Claude + Cloudflare + GitHub Actions; self-hosting on a Mac mini was considered and dropped.
 - **Preseason tie order:** fix the unstable sort above (`kind="stable"` or a name tiebreak) so local runs match the jobs. It changes the published order of tied teams once, so it needs Dan's OK.
