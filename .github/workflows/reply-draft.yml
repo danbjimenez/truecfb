@@ -16,6 +16,8 @@ on:
 permissions:
   contents: write
 
+# One run at a time. A waiting run that GitHub cancels loses nothing: the next run reads every
+# mention newer than the last one handled.
 concurrency:
   group: replies
   cancel-in-progress: false

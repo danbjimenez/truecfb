@@ -17,9 +17,11 @@ on:
 permissions:
   contents: write
 
+# One reply at a time, in the order Dan tapped. `queue: max` keeps every waiting run (the default keeps
+# one and cancels the rest, as post-to-x.yml found).
 concurrency:
   group: post-reply
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   post:
