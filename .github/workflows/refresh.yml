@@ -1,7 +1,8 @@
 name: Refresh ratings
 
 # Pulls the latest game results, re-runs every season with the frozen formula,
-# and saves the new numbers to site/. The site republishes whenever site/ changes.
+# and saves the new numbers to site/. The site republishes whenever site/ changes. When a new CFP
+# ranking is in, it also drafts the "TrueCFB vs the CFP ranking" post and sends it to Telegram.
 #
 # Three updates a week, each with a backup run in case the first is early or GitHub skips it.
 # A run that finds nothing new saves nothing. Times are UTC; US Eastern is 4 or 5 hours behind.
@@ -69,9 +70,12 @@ jobs:
             echo "::warning::Source data for a finished season changed, so its published numbers moved: $changed"
           fi
 
+      - name: Draft the "TrueCFB vs the CFP ranking" post
+        run: python src/bot_drafts.py cfp site data data/polls data/bot
+
       - name: Save the new numbers
         run: |
-          git add site
+          git add site data/bot/drafts.json
           if [ -d data/polls ]; then git add data/polls; fi
           if git diff --cached --quiet; then
             echo "No new results."
@@ -82,3 +86,9 @@ jobs:
             git pull -q --rebase origin main
             git push
           fi
+
+      - name: Send the CFP draft to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/bot_drafts.py send data/bot
