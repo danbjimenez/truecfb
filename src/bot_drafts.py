@@ -9,6 +9,11 @@
           Sends each new draft to Telegram as its result card (card.py) with the short post as the
           caption and Post and Skip buttons. Run it after the drafts are committed, because the post
           step reads drafts.json from the repo.
+  cfp:    bot_drafts.py cfp <site_dir> <data_dir> <polls_dir> <bot_dir>
+          When the current point on the site carries a CFP ranking that has no draft yet, drafts the
+          "TrueCFB vs the CFP ranking" post (cfp_card.py) and writes its id to <bot_dir>/new.txt. The
+          id is season * 100 + the ranking's week (202613), which can never be a game id, so the same
+          Telegram buttons and post-to-x.yml handle it.
 
 Every number in a draft comes from the engine through game_impact.py. Nothing here changes a rating.
 """
@@ -24,6 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import engine as E  # noqa: E402
 import game_impact as GI  # noqa: E402
 import card as CARD  # noqa: E402
+import cfp_card as CFP  # noqa: E402
 
 KEEP_DRAFTS = 400        # drafts kept in drafts.json (about five Saturdays)
 SEND_TRIES = 4           # tries per draft when Telegram is busy (waits as asked, up to a minute each)
@@ -86,13 +92,54 @@ def draft(games_csv, src_dir, season, bot_dir, site_dir, given):
     print(f"new drafts: {len(made)} | handled this season: {len(live['handled'])}")
 
 
+def image(d):
+    """The draft's card, drawn again from the numbers saved in the draft."""
+    return CFP.render(d["cfp"]) if d.get("kind") == "cfp" else CARD.render(d["impact"])
+
+
+def cfp_week(snap, polls_dir):
+    """The week of the saved CFP ranking the snapshot shows, or None when it matches none of them."""
+    path = os.path.join(polls_dir, f"{snap['season']}.json")
+    regular = load(path, {}).get("regular", {})
+    shown = sorted((t["cfp_rank"], t["team"]) for t in snap["teams"] if t["cfp_rank"])
+    for w in sorted(regular, key=int, reverse=True):
+        if sorted((int(rk), team) for rk, team in regular[w].get("cfp", [])) == shown:
+            return int(w)
+    return None
+
+
+def draft_cfp(site_dir, data_dir, polls_dir, bot_dir):
+    open(os.path.join(bot_dir, "new.txt"), "w").close()
+    snap = CFP.snapshot(site_dir, data_dir)
+    if snap is None:
+        print("no CFP ranking at the current point: no CFP draft")
+        return
+    week = cfp_week(snap, polls_dir)
+    if week is None:
+        print("the CFP ranking on the site matches no saved week: no CFP draft")
+        return
+    key = str(snap["season"] * 100 + week)
+    drafts = load(os.path.join(bot_dir, "drafts.json"), {})
+    if key in drafts or key in load(os.path.join(bot_dir, "posted.json"), {}):
+        print(f"CFP draft {key} already made")
+        return
+    text = CFP.post_text(snap)
+    drafts[key] = {"kind": "cfp", "post": text, "length": GI.weighted_length(text), "alt": CFP.alt_text(snap),
+                   "label": f"CFP ranking, week {week}", "cfp": snap,
+                   "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+    save(os.path.join(bot_dir, "drafts.json"), drafts)
+    with open(os.path.join(bot_dir, "new.txt"), "w") as f:
+        f.write(key)
+    print(f"--- CFP draft {key} ({drafts[key]['length']} of {GI.MAX_POST})\n{text}\n")
+
+
 def send_card(gid, d):
     """One draft to Telegram: the card as a photo, the short post as the caption, and the buttons."""
     import io
     import requests
     png = io.BytesIO()
-    CARD.render(d["impact"]).save(png, format="PNG", optimize=True)
-    caption = f"{d['post']}\n\n[{d['length']}/280 \u00b7 game {gid}]"
+    image(d).save(png, format="PNG", optimize=True)
+    caption = f"{d['post']}\n\n[{d['length']}/280 \u00b7 {d.get('label', f'game {gid}')}]"
     buttons = {"inline_keyboard": [[{"text": "Post to X", "callback_data": f"post:{gid}"},
                                     {"text": "Skip", "callback_data": f"skip:{gid}"}]]}
     # The game is already marked handled, so a draft that never arrives is lost: retry when Telegram
@@ -157,6 +204,8 @@ def main():
         games_csv, src_dir, season, bot_dir, site_dir = sys.argv[2:7]
         given = set(int(x) for x in (sys.argv[7] if len(sys.argv) > 7 else "").replace(" ", "").split(",") if x)
         draft(games_csv, src_dir, int(season), bot_dir, site_dir, given)
+    elif cmd == "cfp":
+        draft_cfp(*sys.argv[2:6])
     elif cmd == "send":
         send(sys.argv[2])
     else:

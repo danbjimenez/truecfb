@@ -28,6 +28,8 @@ No links (a link raises the X fee to $0.20) and no account mentions (X's automat
 
 From final whistle to draft: about 5 to 10 minutes.
 
+5. **CFP ranking post** (`.github/workflows/refresh.yml`): after each refresh, `bot_drafts.py cfp` checks whether the site's current point carries a CFP ranking with no draft yet. If so it drafts "TrueCFB vs the CFP ranking" (`src/cfp_card.py`: a 2400 × 1350 slopegraph of the TrueCFB top 25 beside the committee's 25, and a fixed-template post), commits it with the new numbers, and sends it to Telegram. The draft id is season × 100 + the ranking's week (202613), never a game id, so the same buttons, Worker and `post-to-x.yml` post it. The Tuesday-night refresh picks up each ranking; selection day's final ranking comes in on the Sunday afternoon run.
+
 ## Accounts and secrets
 
 - X developer app `truecfb-bot` under @truecfb: pay-per-use credits, OAuth 1.0a Read and write. The account carries X's automated label.
