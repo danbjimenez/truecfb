@@ -25,10 +25,19 @@ The full design system (colors, type, components, wordmark files) lives in a Cla
 
 - Barlow Condensed (display) and IBM Plex Sans (body). Field green (#1f6b45) header band; light theme by default.
 - **Blind to the jersey, visually:** no team logos, helmets or mascots anywhere; team names are plain text and bars are the same green.
-  - One exception: on the Rankings page's "Top 25 through the season" chart, each team's line is in its main color (from `data/team_colors.json`). Names stay in the text color. Colors are never an input to a rating.
+  - Two exceptions, both charts where a line follows a team: the Rankings page's "Top 25 through the season" chart, and the lines on the CFP comparison card. Each team's line is in its main color (from `data/team_colors.json`), darkened to at least 3:1 against the background. Names stay in the text color. Colors are never an input to a rating.
 - **Blue means higher than the comparison, orange means lower.** Never red or green as a verdict.
 - Text runs the full width of its panel or column (no 65-character cap).
 
 ## Result card (X posts)
 
 1200 × 675, drawn by `src/card.py`: green header band with the score and the Matchup Rating, one panel per team (Game Rating, Team Rating before → after with the change, rank before → after), the ripple to past opponents, and the wordmark, tagline and truecfb.com in the footer.
+
+## CFP comparison card (X posts)
+
+2400 × 1350 (the 1200 × 675 layout at 2×), drawn by `src/cfp_card.py` each week the committee publishes a ranking.
+- **TrueCFB is the base, on the left:** rank, team, Team Rating, record. The committee is on the right, titled "CFP committee": rank, team, and, right-aligned in its own column headed "vs TrueCFB" (mirroring Team Rating), how many spots higher (+, blue) or lower (−, orange) the committee has the team than TrueCFB, in brackets.
+- A smooth line joins each team, in the team's main color. Every line is the same width (no bold); the top 12 are in full color on a shaded panel, the rest faded.
+- Teams on only one list start or end at a note under that list ("Outside top 25", "Not ranked by CFP").
+- No key: the brackets and lines explain themselves. Footer as on the result card: wordmark, tagline, truecfb.com.
+- "TrueCFB" without the version on the card and in the post.

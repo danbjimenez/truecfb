@@ -5,7 +5,7 @@ Needs X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET (OAuth 1.0a, the 
 and, for the confirmation, TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.
 
 The text posted is the draft saved in <bot_dir>/drafts.json, exactly as the engine wrote it, and the
-card is drawn again from the same saved result (card.py), so it is the image Dan approved; its alt
+card is drawn again from the same saved numbers (card.py, or cfp_card.py for a CFP draft), so it is the image Dan approved; its alt
 text carries every number in words. Nothing typed into Telegram can change either. A game that is already in <bot_dir>/posted.json is never posted again.
 """
 import json
@@ -20,7 +20,7 @@ import requests
 from requests_oauthlib import OAuth1
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import card as CARD  # noqa: E402
+import bot_drafts as BD  # noqa: E402
 
 HANDLE = "truecfb"
 
@@ -55,7 +55,7 @@ def x_error(r):
 def upload_card(auth, d):
     """Upload the result card and set its alt text. Returns the media id."""
     png = io.BytesIO()
-    CARD.render(d["impact"]).save(png, format="PNG", optimize=True)
+    BD.image(d).save(png, format="PNG", optimize=True)
     r = requests.post("https://api.x.com/2/media/upload", auth=auth, timeout=60,
                       data={"media_category": "tweet_image"},
                       files={"media": ("card.png", png.getvalue(), "image/png")})
@@ -95,7 +95,7 @@ def main():
     auth = OAuth1(os.environ["X_API_KEY"], os.environ["X_API_SECRET"],
                   os.environ["X_ACCESS_TOKEN"], os.environ["X_ACCESS_SECRET"])
     body = {"text": d["post"]}
-    if d.get("impact"):
+    if d.get("impact") or d.get("cfp"):
         try:
             body["media"] = {"media_ids": [upload_card(auth, d)]}
         except Exception as err:
