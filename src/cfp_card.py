@@ -175,6 +175,7 @@ def render(snap):
     XL, XR = 410, 790                    # where the lines start and end
     L_RANK = 82                          # TrueCFB rank, right-aligned
     R_RANK = XR + 78                     # CFP rank, right-aligned
+    R_GAP = W - 62                       # (+#)/(−#), right-aligned at the panel's edge
     y = lambda i: TOP + (i - 1) * ROW
     y_off = y(26) + 6
 
@@ -221,9 +222,9 @@ def render(snap):
         d.text(P(R_RANK, yy), str(t["cfp_rank"]), font=RANK, fill=INK, anchor="rm")
         d.text(P(R_RANK + 12, yy), t["team"], font=NAME, fill=INK, anchor="lm")
         g = cfp_gap(t)
-        if g:
-            d.text(P(R_RANK + 12 + tl(t["team"], NAME) + 7, yy), f"({signed(g)})", font=GAP,
-                   fill=UP if g > 0 else DOWN, anchor="lm")
+        if g:   # its own right-aligned column, like Team Rating on the TrueCFB side
+            d.text(P(R_GAP, yy), f"({signed(g)})", font=GAP, fill=UP if g > 0 else DOWN, anchor="rm")
+    d.text(P(R_GAP, TOP - 31), "vs TrueCFB", font=font("body", 600, 13), fill=MUTED, anchor="rm")
 
     # Teams on one list only
     note = font("display", 600, 17)
