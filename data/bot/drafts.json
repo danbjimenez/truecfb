@@ -640,5 +640,271 @@
    }
   },
   "created": "2026-11-25T03:31:18Z"
+ },
+ "202613": {
+  "kind": "cfp",
+  "post": "TrueCFB vs the new CFP ranking: same top 12, different order.\n\n22 of the TrueCFB top 25 are in the CFP's.\nCFP higher (TrueCFB/CFP): Washington 41/24, Arizona 27/16\nCFP lower: Ole Miss 16/22, Florida 15/20\nNot ranked by CFP: LSU, Kentucky, Boise State\n\ntruecfb.com",
+  "length": 263,
+  "alt": "TrueCFB top 25 beside the CFP committee's 25, 2026, games through week 12. Same top 12 as the committee. Different order. Ranks as TrueCFB/CFP, Team Rating in brackets: Georgia 1/1 (78.3); Texas 2/3 (77.2); Utah 3/2 (76.2); Notre Dame 4/4 (74.4); Miami 5/7 (74.1); Alabama 6/6 (73.0); Tennessee 7/5 (71.7); UCLA 8/9 (71.1); Wake Forest 9/8 (70.0); Texas Tech 10/11 (69.3); BYU 11/10 (68.5); Oregon 12/12 (67.7); Indiana 13/14 (66.4); Iowa 14/13 (65.3); Florida 15/20 (65.2); Ole Miss 16/22 (65.0); Oklahoma 17/17 (64.9); Houston 18/18 (64.1); Ohio State 19/21 (63.8); Louisville 20/19 (63.4); LSU 21/NR (63.4); USC 22/15 (63.2); Kentucky 23/NR (62.7); Missouri 24/23 (62.6); Boise State 25/NR (62.5); Arizona 27/16 (60.9); Nebraska 34/25 (57.2); Washington 41/24 (55.6).",
+  "label": "CFP ranking, week 13",
+  "cfp": {
+   "season": 2026,
+   "point": "Through week 12",
+   "teams": [
+    {
+     "rank": 1,
+     "team": "Georgia",
+     "rating": 78.3,
+     "wins": 10,
+     "losses": 1,
+     "cfp_rank": 1,
+     "color": "#cc0000"
+    },
+    {
+     "rank": 2,
+     "team": "Texas",
+     "rating": 77.2,
+     "wins": 9,
+     "losses": 2,
+     "cfp_rank": 3,
+     "color": "#ee7524"
+    },
+    {
+     "rank": 3,
+     "team": "Utah",
+     "rating": 76.2,
+     "wins": 11,
+     "losses": 0,
+     "cfp_rank": 2,
+     "color": "#890012"
+    },
+    {
+     "rank": 4,
+     "team": "Notre Dame",
+     "rating": 74.4,
+     "wins": 10,
+     "losses": 1,
+     "cfp_rank": 4,
+     "color": "#00122b"
+    },
+    {
+     "rank": 5,
+     "team": "Miami",
+     "rating": 74.1,
+     "wins": 10,
+     "losses": 1,
+     "cfp_rank": 7,
+     "color": "#004325"
+    },
+    {
+     "rank": 6,
+     "team": "Alabama",
+     "rating": 73.0,
+     "wins": 9,
+     "losses": 2,
+     "cfp_rank": 6,
+     "color": "#690014"
+    },
+    {
+     "rank": 7,
+     "team": "Tennessee",
+     "rating": 71.7,
+     "wins": 9,
+     "losses": 2,
+     "cfp_rank": 5,
+     "color": "#ee9627"
+    },
+    {
+     "rank": 8,
+     "team": "UCLA",
+     "rating": 71.1,
+     "wins": 10,
+     "losses": 1,
+     "cfp_rank": 9,
+     "color": "#005c8e"
+    },
+    {
+     "rank": 9,
+     "team": "Wake Forest",
+     "rating": 70.0,
+     "wins": 10,
+     "losses": 1,
+     "cfp_rank": 8,
+     "color": "#9e7e38"
+    },
+    {
+     "rank": 10,
+     "team": "Texas Tech",
+     "rating": 69.3,
+     "wins": 10,
+     "losses": 1,
+     "cfp_rank": 11,
+     "color": "#c80025"
+    },
+    {
+     "rank": 11,
+     "team": "BYU",
+     "rating": 68.5,
+     "wins": 9,
+     "losses": 2,
+     "cfp_rank": 10,
+     "color": "#001e4c"
+    },
+    {
+     "rank": 12,
+     "team": "Oregon",
+     "rating": 67.7,
+     "wins": 8,
+     "losses": 3,
+     "cfp_rank": 12,
+     "color": "#044520"
+    },
+    {
+     "rank": 13,
+     "team": "Indiana",
+     "rating": 66.4,
+     "wins": 9,
+     "losses": 2,
+     "cfp_rank": 14,
+     "color": "#7d110c"
+    },
+    {
+     "rank": 14,
+     "team": "Iowa",
+     "rating": 65.3,
+     "wins": 9,
+     "losses": 2,
+     "cfp_rank": 13,
+     "color": "#000000"
+    },
+    {
+     "rank": 15,
+     "team": "Florida",
+     "rating": 65.2,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": 20,
+     "color": "#0021a5"
+    },
+    {
+     "rank": 16,
+     "team": "Ole Miss",
+     "rating": 65.0,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": 22,
+     "color": "#001148"
+    },
+    {
+     "rank": 17,
+     "team": "Oklahoma",
+     "rating": 64.9,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": 17,
+     "color": "#7b0000"
+    },
+    {
+     "rank": 18,
+     "team": "Houston",
+     "rating": 64.1,
+     "wins": 8,
+     "losses": 3,
+     "cfp_rank": 18,
+     "color": "#c90822"
+    },
+    {
+     "rank": 19,
+     "team": "Ohio State",
+     "rating": 63.8,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": 21,
+     "color": "#de3121"
+    },
+    {
+     "rank": 20,
+     "team": "Louisville",
+     "rating": 63.4,
+     "wins": 8,
+     "losses": 3,
+     "cfp_rank": 19,
+     "color": "#ad000a"
+    },
+    {
+     "rank": 21,
+     "team": "LSU",
+     "rating": 63.4,
+     "wins": 6,
+     "losses": 5,
+     "cfp_rank": null,
+     "color": "#22005c"
+    },
+    {
+     "rank": 22,
+     "team": "USC",
+     "rating": 63.2,
+     "wins": 8,
+     "losses": 3,
+     "cfp_rank": 15,
+     "color": "#ae2531"
+    },
+    {
+     "rank": 23,
+     "team": "Kentucky",
+     "rating": 62.7,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": null,
+     "color": "#005daa"
+    },
+    {
+     "rank": 24,
+     "team": "Missouri",
+     "rating": 62.6,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": 23,
+     "color": "#000000"
+    },
+    {
+     "rank": 25,
+     "team": "Boise State",
+     "rating": 62.5,
+     "wins": 9,
+     "losses": 2,
+     "cfp_rank": null,
+     "color": "#09347a"
+    },
+    {
+     "rank": 27,
+     "team": "Arizona",
+     "rating": 60.9,
+     "wins": 8,
+     "losses": 3,
+     "cfp_rank": 16,
+     "color": "#002449"
+    },
+    {
+     "rank": 34,
+     "team": "Nebraska",
+     "rating": 57.2,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": 25,
+     "color": "#f20017"
+    },
+    {
+     "rank": 41,
+     "team": "Washington",
+     "rating": 55.6,
+     "wins": 7,
+     "losses": 4,
+     "cfp_rank": 24,
+     "color": "#2b2f64"
+    }
+   ]
+  },
+  "created": "2026-11-25T05:20:30Z"
  }
 }
