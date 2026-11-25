@@ -92,7 +92,8 @@ def post_text(snap):
         lines.append(("CFP lower: " if higher else "CFP lower (TrueCFB/CFP): ") + ", ".join(pair(t) for t in lower))
     if not_ranked:
         lines.append("Not ranked by CFP: " + ", ".join(t["team"] for t in not_ranked))
-    lines += ["", "truecfb.com"]
+    # No link, not even a bare "truecfb.com": X turns it into a link and charges $0.20 a post.
+    # The address is on the card.
     return "\n".join(lines)
 
 

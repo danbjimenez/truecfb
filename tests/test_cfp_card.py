@@ -2,7 +2,7 @@
 
   python tests/test_cfp_card.py        (or: python -m pytest tests)
 
-Checks the post fits X, the alt text fits X, every number in the post and alt text is one the engine
+Checks the post fits X and has no link (X charges $0.20 for a post with one), the alt text fits X, every number in the post and alt text is one the engine
 published in site/rankings.json, the brand words hold, and the same snapshot always draws the same card.
 """
 import json
@@ -42,6 +42,9 @@ def test_post_and_alt():
         return
     post, alt = C.post_text(s), C.alt_text(s)
     assert GI.weighted_length(post) <= GI.MAX_POST, GI.weighted_length(post)
+    # The same pattern as reply_templates.check: a bare domain is a link to X too.
+    assert not re.search(r"https?://|www\.|\.(com|org|net|io)\b", post, re.I), "the post has a link"
+    assert "@" not in post
     assert len(alt) <= 1000, len(alt)
     ok = published(s)
     for text in (post, alt):
