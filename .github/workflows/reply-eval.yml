@@ -11,7 +11,11 @@ on:
       models:
         description: "Models to try, space-separated: claude, grok, or provider:model"
         required: false
-        default: "grok grok:grok-4.7 claude"
+        default: "grok grok:grok-4.3 claude"
+      limit:
+        description: "Only the first N sample mentions (optional; all 64 when empty)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -19,7 +23,7 @@ permissions:
 jobs:
   eval:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
@@ -34,6 +38,7 @@ jobs:
       - name: Try the model
         env:
           MODELS: ${{ inputs.models }}
+          SAMPLE_LIMIT: ${{ inputs.limit }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |

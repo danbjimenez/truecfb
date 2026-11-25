@@ -147,15 +147,25 @@ def test_unanswerable_never_reaches_the_model():
         raise AssertionError("should be unanswerable")
 
 
+def test_top_question_naming_a_conference_gets_the_conference():
+    """'Best team in the Sun Belt' read as top: answered from the Sun Belt's own members, not the national top."""
+    teams = {t for y in BOOK.seasons for t in BOOK.teams(y)}
+    confs = {c for y in BOOK.seasons for c in BOOK.conferences(y)}
+    got = M.clean({"intent": "top", "teams": [], "conferences": ["Sun Belt"], "season": "current"}, teams, confs, set(BOOK.seasons))
+    assert got["intent"] == "conference"
+    assert "Sun Belt members:" in X.sheet(BOOK, got["intent"], got["teams"], got["conferences"], got["season"])
+    assert M.clean({"intent": "top", "teams": [], "conferences": [], "season": "current"}, teams, confs, set(BOOK.seasons))["intent"] == "top"
+
+
 def test_provider_choice():
     keep = {k: os.environ.pop(k, None) for k in ("REPLY_PROVIDER", "REPLY_MODEL", "XAI_API_KEY", "ANTHROPIC_API_KEY")}
     try:
         os.environ["XAI_API_KEY"] = "x"
-        assert M.pick() == ("grok", "grok-4.3")
+        assert M.pick() == ("grok", "grok-4.7")
         del os.environ["XAI_API_KEY"]
         assert M.pick() == ("claude", "claude-sonnet-5-5")
-        os.environ["REPLY_PROVIDER"], os.environ["REPLY_MODEL"] = "grok", "grok-4.7"
-        assert M.pick() == ("grok", "grok-4.7")
+        os.environ["REPLY_PROVIDER"], os.environ["REPLY_MODEL"] = "grok", "grok-4.3"
+        assert M.pick() == ("grok", "grok-4.3")
     finally:
         for k, v in keep.items():
             os.environ.pop(k, None)
