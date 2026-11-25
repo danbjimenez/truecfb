@@ -3,8 +3,8 @@ committee publishes a ranking.
 
 The left column is the TrueCFB top 25 (rank, team, Team Rating, record), the right column is the
 committee's 25 (rank, team, and in a right-aligned column how many spots higher (+) or lower (−) the
-committee has the team than TrueCFB). A line joins each team; the top 12 lines are bold. Teams on only one list
-start or end at a note under that list.
+committee has the team than TrueCFB). A line joins each team, all the same width; the top 12 in full
+color, the rest faded. Teams on only one list start or end at a note under that list.
 
 Brand: TrueCFB is always the base, on the left. Lines are in each team's main color
 (data/team_colors.json), the one other place besides the Top 25 chart where team colors appear
@@ -25,7 +25,7 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from card import W, H, BG, LINE, INK, MUTED, ACCENT, ON_ACCENT, UP, DOWN, TAGLINE, font as _font  # noqa: E402
 
-S = 4      # drawn at 4x the 1200 x 675 layout...
+S = 6      # drawn at 6x the 1200 x 675 layout (smooth line edges)...
 OUT = 2    # ...and saved at 2x (2400 x 1350), so it stays sharp on phones and when zoomed
 BAND_FILL = "#e6ede7"
 
@@ -199,7 +199,7 @@ def render(snap):
     top12 = lambda t: t["rank"] <= 12 or (t["cfp_rank"] or 99) <= 12
     for t, y0, y1 in sorted(segs, key=lambda s: top12(s[0])):
         c = line_color(t["color"])
-        w, r = (5, 4.6) if top12(t) else (2.5, 3.2)
+        w, r = 3, 3.6   # one width for every line: thick lines show the edge fuzz more
         if not top12(t):
             c = fade(c)
         curve(d, XL, y0, XR, y1, w, c)

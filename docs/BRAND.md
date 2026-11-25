@@ -37,7 +37,7 @@ The full design system (colors, type, components, wordmark files) lives in a Cla
 
 2400 × 1350 (the 1200 × 675 layout at 2×), drawn by `src/cfp_card.py` each week the committee publishes a ranking.
 - **TrueCFB is the base, on the left:** rank, team, Team Rating, record. The committee is on the right, titled "CFP committee": rank, team, and, right-aligned in its own column headed "vs TrueCFB" (mirroring Team Rating), how many spots higher (+, blue) or lower (−, orange) the committee has the team than TrueCFB, in brackets.
-- A smooth line joins each team, in the team's main color. The top 12 lines are bold, on a shaded panel; the rest are thin and faded.
+- A smooth line joins each team, in the team's main color. Every line is the same width (no bold); the top 12 are in full color on a shaded panel, the rest faded.
 - Teams on only one list start or end at a note under that list ("Outside top 25", "Not ranked by CFP").
 - No key: the brackets and lines explain themselves. Footer as on the result card: wordmark, tagline, truecfb.com.
 - "TrueCFB" without the version on the card and in the post.
