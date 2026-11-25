@@ -10,7 +10,7 @@ draft before anything is posted.
 
 Provider, from the environment:
   REPLY_PROVIDER  grok or claude; when not set, grok if XAI_API_KEY is set, otherwise claude
-  REPLY_MODEL     defaults: grok-4.3 (xAI), claude-sonnet-5-5 (Anthropic)
+  REPLY_MODEL     defaults: grok-4.7 (xAI), claude-sonnet-5-5 (Anthropic)
   XAI_API_KEY or ANTHROPIC_API_KEY
 
 ask() is the one call both steps use: this file's read() (what is being asked) and reply_writer.py
@@ -23,7 +23,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from reply_templates import INTENTS  # noqa: E402
 
-DEFAULT_MODEL = {"grok": "grok-4.3", "claude": "claude-sonnet-5-5"}
+DEFAULT_MODEL = {"grok": "grok-4.7", "claude": "claude-sonnet-5-5"}
 
 SYSTEM = """You sort questions sent to @truecfb, the X account of TrueCFB, a college football ranking that rates every FBS team on results alone with a public, fixed formula (v1.0).
 

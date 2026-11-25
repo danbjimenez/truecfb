@@ -3,7 +3,7 @@ how often it reads them right, the reply it writes for each (and whether that re
 fell back to the template), and what it costs.
 
   reply_eval.py <site_dir> <samples.json> <provider[:model]> [<provider[:model]> ...]
-  e.g. reply_eval.py site data/bot/reply_samples.json grok grok:grok-4.7 claude
+  e.g. reply_eval.py site data/bot/reply_samples.json grok grok:grok-4.3 claude
 
 Needs XAI_API_KEY for grok and ANTHROPIC_API_KEY for claude (run it from the "Reply bot: try the
 model" job, which has them). A provider whose key is missing is left out. Writes a table to the job

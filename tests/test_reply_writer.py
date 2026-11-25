@@ -151,11 +151,11 @@ def test_provider_choice():
     keep = {k: os.environ.pop(k, None) for k in ("REPLY_PROVIDER", "REPLY_MODEL", "XAI_API_KEY", "ANTHROPIC_API_KEY")}
     try:
         os.environ["XAI_API_KEY"] = "x"
-        assert M.pick() == ("grok", "grok-4.3")
+        assert M.pick() == ("grok", "grok-4.7")
         del os.environ["XAI_API_KEY"]
         assert M.pick() == ("claude", "claude-sonnet-5-5")
-        os.environ["REPLY_PROVIDER"], os.environ["REPLY_MODEL"] = "grok", "grok-4.7"
-        assert M.pick() == ("grok", "grok-4.7")
+        os.environ["REPLY_PROVIDER"], os.environ["REPLY_MODEL"] = "grok", "grok-4.3"
+        assert M.pick() == ("grok", "grok-4.3")
     finally:
         for k, v in keep.items():
             os.environ.pop(k, None)

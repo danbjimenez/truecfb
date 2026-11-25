@@ -46,7 +46,7 @@ Prices: [xAI models page](https://docs.x.ai/docs/models) (read 23 Nov 2026); Ant
 
 - **"Grok powers it" can't mean @grok answers with TrueCFB numbers.** @grok is xAI's own account, and we can't feed it the engine. The way to get Grok quoting TrueCFB is the separate open item "Readable by Grok and search engines" (`rankings.json`, `llms.txt`, a page per team).
 - Using Grok gives no known edge with X's rules or approval.
-- **Pick (24 Nov 2026): Grok.** Dan's Anthropic account is a work account and he wants this project's spend kept on the X / xAI side. Grok 4.3 is the default; the model test compares it with Grok 4.7 (and Claude, if a key is ever added) on the same sample mentions, for cents. The provider is chosen automatically: Grok when `XAI_API_KEY` is set, unless `REPLY_PROVIDER` says otherwise.
+- **Pick (24 Nov 2026): Grok.** Dan's Anthropic account is a work account and he wants this project's spend kept on the X / xAI side. Grok 4.7 is the default since the model test of 24 Nov 2026 (64 samples): it read 62 right against Grok 4.3's 59, and all 55 of its replies passed the checks on the first try, with none of the false claims 4.3 made, for about $0.009 a question against $0.004. The model test can still compare models (and Claude, if a key is ever added) on the same sample mentions, for cents. The provider is chosen automatically: Grok when `XAI_API_KEY` is set, unless `REPLY_PROVIDER` says otherwise.
 - **Billing:** the xAI API account (console.x.ai) is separate from the X developer account and bills separately, prepaid by default. Sign up with @truecfb's X account to keep it apart from work accounts. Linking the xAI team to the X developer account earns xAI credits (up to 20% back) on X API credit purchases ([X API pricing](https://docs.x.com/x-api/getting-started/pricing), [xAI billing](https://docs.x.ai/console/billing)).
 
 ## 3. Plan
@@ -146,11 +146,11 @@ Run the tests with `python tests/test_reply_templates.py` and `python tests/test
 |---|---|---|
 | Mention read: the Worker's check (app-only token) plus the draft job's read (own account) | $0.006 | $0.006 |
 | Parent post read (when there is one) | $0.005 | $0.005 |
-| Model: read + write (Grok 4.3; a rewrite adds ≈$0.003) | ≈$0.005 | ≈$0.005 |
+| Model: read + write (Grok 4.7; a rewrite adds ≈$0.005) | ≈$0.009 | ≈$0.009 |
 | Reply post ("summoned"; $0.015 if X bills it as a plain post) | $0.010 | none |
-| **Total** | **≈$0.026** | **≈$0.016** |
+| **Total** | **≈$0.030** | **≈$0.020** |
 
-The Worker only checks whether there is anything new (up to 5 posts); the draft job then reads them with the account's own keys at $0.001 each. Putting the write keys on the Worker would save $0.005 a mention; not worth it. At 100 replies a week, about $2.60 a week. GitHub Actions minutes are free on a public repo.
+The Worker only checks whether there is anything new (up to 5 posts); the draft job then reads them with the account's own keys at $0.001 each. Putting the write keys on the Worker would save $0.005 a mention; not worth it. At 100 replies a week, about $3 a week. GitHub Actions minutes are free on a public repo.
 
 ### Risks
 
@@ -168,7 +168,7 @@ The Worker only checks whether there is anything new (up to 5 posts); the draft 
 ## Turning it on
 
 1. **Model key:** sign in at console.x.ai with @truecfb's X account, add credits (or link the X developer account for bonus credits), create an API key, and save it as the GitHub secret `XAI_API_KEY` (`gh secret set XAI_API_KEY` asks for it).
-2. **Try the model:** Actions → "Reply bot: try the model" → Run. The run summary shows, per model, how many of the 64 samples it read right, the reply it wrote for each (or why the template was used), what each reply rests on, and the cost. To use something other than Grok 4.3, set the GitHub variable `REPLY_MODEL` (and `REPLY_PROVIDER` for Claude).
+2. **Try the model:** Actions → "Reply bot: try the model" → Run. The run summary shows, per model, how many of the 64 samples it read right, the reply it wrote for each (or why the template was used), what each reply rests on, and the cost. To use something other than Grok 4.7, set the GitHub variable `REPLY_MODEL` (and `REPLY_PROVIDER` for Claude).
 3. **X read token and id:** in the X developer console (app `truecfb-bot`), copy the app's Bearer Token into the Cloudflare secret `X_BEARER_TOKEN`. Run Actions → "Reply drafts" once by hand: its log prints @truecfb's user id. Save it as the GitHub variable `X_USER_ID` and the Cloudflare variable `X_USER_ID`. The Worker starts checking mentions on its next run.
 4. **Drafts arrive in Telegram** with a Skip button only ("draft mode: posting is off"). Skipped mentions are listed in one message per run.
 5. **Before going live:** update the bio (automated account, tag it for a TrueCFB answer, reply "stop" to opt out, a link to Dan's account) and send X the approval request (section 1).
