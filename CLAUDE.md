@@ -14,7 +14,7 @@ Read before changing things:
 - **Write the name TrueCFB** (never all capitals) and the version **v1.0**.
 - **Rating, never score.** Game Rating (one team, one game), Team Rating, Conference Rating, Matchup Rating (the pot two teams split). "Score" means points on the scoreboard only.
 - **Blind to the jersey:** no team logos, mascots or team colors, except each team's line on the Top 25 chart and on the CFP comparison card. Blue = higher, orange = lower; never red/green as a verdict.
-- **Every number in a post or card comes from the engine.** Result posts and cards use fixed templates. Replies (since 24 Nov 2026, Dan's call) are written by a model from the engine's fact sheet, and code rejects any reply with a number the engine did not publish; the template is the fallback. No model ever decides a number.
+- **Every number in a post or card comes from the engine.** Result posts and cards use fixed templates. Replies (since 24 Nov 2026, Dan's call) are written by a model that looks up the engine's published numbers (any college football question since 25 Nov), and code rejects any reply with a number those lookups did not return. No model ever decides a number.
 - 2020 is a throwaway year: flagged unreliable, never special-cased.
 
 ## Map
@@ -30,7 +30,7 @@ Read before changing things:
 | `src/card.py` | The 1200 × 675 result card |
 | `src/cfp_card.py` | The weekly "TrueCFB vs the CFP ranking" card and post |
 | `src/bot_drafts.py`, `src/bot_post.py` | X bot: drafts to Telegram, posting |
-| `src/reply_bot.py`, `reply_model.py`, `reply_facts.py`, `reply_writer.py`, `reply_templates.py` | Reply bot (`docs/REPLY-BOT.md`): the model (Grok by default) reads the question and writes the reply from a fact sheet of the engine's numbers; code checks every number; templates are the fallback |
+| `src/reply_bot.py`, `reply_agent.py`, `reply_facts.py`, `reply_book.py`, `reply_model.py` | Reply bot (`docs/REPLY-BOT.md`): the model (Grok by default) answers any college football question, looking up the engine's numbers as it needs them; code checks every number |
 | `site/` | The static site (Cloudflare serves it); `site/live.json` = finals the bot has handled |
 | `worker/index.js` | Cloudflare Worker: scoreboard check + Telegram hook |
 | `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `telegram-setup.yml`, `release.yml` |

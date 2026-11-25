@@ -1,10 +1,9 @@
 name: Reply drafts
 
 # Started by the Cloudflare Worker when someone new has tagged @truecfb (it can also be started by hand
-# from the Actions tab). Reads the new mentions, asks the model what each one asks, has it write each
-# reply from a fact sheet of the engine's published numbers and checks every number in it
-# (src/reply_writer.py; the fixed templates are the fallback), saves the drafts, and sends them to
-# Telegram. Nothing is posted here: a reply goes out only after Dan taps "Post reply" (post-reply.yml),
+# from the Actions tab). Reads the new mentions and has the model answer each one, looking up the
+# engine's published numbers as it needs them; code checks every number in the reply
+# (src/reply_agent.py). Saves the drafts and sends them to Telegram. Nothing is posted here: a reply goes out only after Dan taps "Post reply" (post-reply.yml),
 # and only while the repo variable REPLIES_LIVE is "true". Plan: docs/REPLY-BOT.md.
 on:
   workflow_dispatch:
@@ -52,7 +51,6 @@ jobs:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           REPLY_PROVIDER: ${{ vars.REPLY_PROVIDER }}
           REPLY_MODEL: ${{ vars.REPLY_MODEL }}
-          REPLY_WRITER: ${{ vars.REPLY_WRITER }}
           REPLIES_LIVE: ${{ vars.REPLIES_LIVE }}
         run: python src/reply_bot.py draft site data/bot "$RUNNER_TEMP/outbox.json"
 

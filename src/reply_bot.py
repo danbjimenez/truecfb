@@ -2,11 +2,11 @@
 
   draft:  reply_bot.py draft <site_dir> <bot_dir> <outbox.json>
           Reads new mentions of @truecfb (newer than the last one handled), skips what should not get a
-          reply, asks the model what each one asks (reply_model.py), has the model write the reply from a
-          fact sheet of the engine's numbers and checks every number in it (reply_writer.py), falling
-          back to the fixed template (reply_templates.py), and saves the drafts in <bot_dir>/replies.json. Writes the newest
-          handled mention to <site_dir>/replies.json, which the Cloudflare Worker reads so it stops
-          asking, and the Telegram messages to send to <outbox.json> (not committed).
+          reply, and has the model answer each one (reply_agent.py): it looks up TrueCFB's numbers as it
+          needs them and writes the reply, and code checks every number and rule. Saves the drafts in
+          <bot_dir>/replies.json, the newest handled mention in <site_dir>/replies.json (the Cloudflare
+          Worker reads it so it stops asking), and the Telegram messages to send in <outbox.json>
+          (not committed).
   send:   reply_bot.py send <outbox.json>
           Sends each draft to Telegram with Post reply and Skip buttons (Skip only while posting is
           off). Run it after replies.json is committed: the post job reads the draft from the repo.
@@ -16,10 +16,9 @@
 
 Environment: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET (OAuth 1.0a, @truecfb);
 X_USER_ID (optional; looked up once if missing); TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID;
-XAI_API_KEY or ANTHROPIC_API_KEY with REPLY_PROVIDER / REPLY_MODEL (reply_model.py); REPLY_WRITER=template
-turns the model writer off (reply_writer.py); REPLIES_LIVE.
+XAI_API_KEY or ANTHROPIC_API_KEY with REPLY_PROVIDER / REPLY_MODEL (reply_model.py); REPLIES_LIVE.
 
-The repo is public, so replies.json keeps only post ids, what the bot understood, the reply text and
+The repo is public, so replies.json keeps only post ids, what the bot looked up, the reply text and
 what happened; never the text people wrote. Opt-outs are kept as hashes of the user id.
 """
 import hashlib
@@ -33,9 +32,8 @@ import requests
 from requests_oauthlib import OAuth1
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import reply_model as M  # noqa: E402
-import reply_templates as R  # noqa: E402
-import reply_writer as W  # noqa: E402
+import reply_agent as A  # noqa: E402
+import reply_book as R  # noqa: E402
 
 HANDLE = "truecfb"
 API = "https://api.x.com/2"
@@ -178,8 +176,6 @@ def draft(site_dir, bot_dir, outbox_path):
     posts, above = mentions(a, uid, state.get("newest"))
     print(f"{len(posts)} new mention(s)")
     book = R.Book(site_dir, bot_dir)
-    teams = sorted({t for y in book.seasons for t in book.teams(y)})
-    confs = sorted({c for y in book.seasons for c in book.conferences(y)})
     seen_threads = {(i.get("user"), i.get("thread")) for i in state["items"].values() if i.get("status") in ("drafted", "posted")}
     outbox, skipped, drafted = [], [], 0
 
@@ -215,57 +211,29 @@ def draft(site_dir, bot_dir, outbox_path):
             continue
         par = parent_of(p, above)
         par_text = question_text(par.get("text", "")) if par else ""
-        try:
-            got, info = M.read(text, par_text, teams, confs, book.seasons, book.current)
-        except Exception as err:
-            item["status"] = "failed"; item["why"] = f"model: {str(err)[:150]}"
-            skipped.append(f"model error ({str(err)[:80]}): {link}")
+        res = A.answer(book, text, par_text)
+        # Only the lookup names go in the public file: their fields are the model's words, shaped by the post.
+        item.update({"model": res["by"], "lookups": [x.split("(")[0] for x in res["lookups"]][:12]})
+        top = ["Reply draft" + ("" if live() else " (draft mode: posting is off)"), "",
+               f"Asked: {text[:500]}", *([f"Above: {par_text[:500]}"] if par_text else []), link]
+        looked = "Looked up: " + (", ".join(res["lookups"]) or "nothing")
+        if res["status"] == "declined":
+            item["status"] = "skipped"; item["why"] = "model: nothing to answer"   # its note goes to Telegram only
+            skipped.append(f"{res['note'] or 'nothing to answer'}: {link}")
             continue
-        item.update({"intent": got["intent"], "teams": got["teams"], "conferences": got["conferences"],
-                     "season": got["season"], "model": info["model"]})
-        if got["intent"] == "skip":
-            item["status"] = "skipped"; item["why"] = "model: nothing to answer"   # its reason goes to Telegram only
-            skipped.append(f"{got['reason'] or 'nothing to answer'}: {link}")
+        if res["status"] != "drafted":
+            item["status"] = "failed"; item["why"] = "; ".join(res["problems"])[:300]
+            outbox.append({"id": None, "text": "\n".join(["No reply draft for this mention"] + top[1:] + [
+                "", f"Why: {'; '.join(res['problems'])[:400]}",
+                *(["", "The model's reply (not used):", res["rejected"]] if res["rejected"] else []),
+                "", looked])})
             continue
-        try:
-            c = W.compose(book, got, text, par_text)
-        except R.Unanswerable as why:
-            item["status"] = "skipped"; item["why"] = str(why)
-            skipped.append(f"{why}: {link}")
-            continue
-        reply = c["reply"]
-        problems = R.check(reply)
-        if problems:
-            item["status"] = "failed"; item["why"] = "; ".join(problems)
-            skipped.append(f"template broke a rule ({'; '.join(problems)}): {link}")
-            continue
-        item.update({"status": "drafted", "reply": reply, "by": c["by"]})
-        if c["problems"]:
-            item["writer_problems"] = "; ".join(c["problems"])[:300]
+        item.update({"status": "drafted", "reply": res["reply"], "by": res["by"]})
         seen_threads.add((user, item["thread"]))
         drafted += 1
-        read_as = f"{got['intent']} · {', '.join(got['teams'] + got['conferences']) or '-'}"
-        if got["season"]:
-            read_as += f" · {got['season']}"
-        if c["by"] == "template":
-            head = "Reply (fixed template" + (f"; the model's reply failed: {'; '.join(c['problems'])[:300]}" if c["problems"] else "") + "):"
-        else:
-            head = f"Reply (written by {c['by']}, every number checked against the engine):"
-        outbox.append({"id": pid, "text": "\n".join([
-            "Reply draft" + ("" if live() else " (draft mode: posting is off)"),
-            "",
-            f"Asked: {text[:500]}",
-            *([f"Above: {par_text[:500]}"] if par_text else []),
-            link,
-            f"Read as: {read_as} ({info['model']})",
-            f"Why: {got['reason']}" if got["reason"] else "",
-            "",
-            head,
-            reply,
-            *([f"Based on: {c['note']}"] if c["note"] else []),
-            *(["", "Template version:", c["template"]] if c["by"] != "template" else []),
-            *(["", "Model's reply (not used):", c["rejected"]] if c.get("rejected") else []),
-        ]).replace("\n\n\n", "\n\n")})
+        outbox.append({"id": pid, "text": "\n".join(top + [
+            "", f"Reply (written by {res['by']}, every number checked against the engine):", res["reply"],
+            "", *([f"Based on: {res['note']}"] if res["note"] else []), looked])})
 
     if skipped:
         outbox.append({"id": None, "text": "Mentions not drafted:\n" + "\n".join(f"- {s}" for s in skipped)})

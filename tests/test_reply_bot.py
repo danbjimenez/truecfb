@@ -1,0 +1,224 @@
+"""Tests for the reply bot: the lookups, the number check, the brand rules and the model loop.
+No model, no X, no keys: a stand-in model makes scripted calls.
+
+  python tests/test_reply_bot.py        (or: python -m pytest tests)
+"""
+import os
+import re
+import sys
+
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+sys.path.insert(0, os.path.join(ROOT, "src"))
+import reply_agent as A  # noqa: E402
+import reply_book as R  # noqa: E402
+import reply_facts as X  # noqa: E402
+import reply_model as M  # noqa: E402
+
+BOOK = R.Book(os.path.join(ROOT, "site"), os.path.join(ROOT, "data", "bot"))
+README = os.path.join(ROOT, "README.md")
+
+
+# ---------- the lookups ----------
+
+def test_parts_add_up_to_every_published_game_rating():
+    """The split shown to the model matches the engine's Game Rating in every game of every season
+    (to rounding: the published opponent ratings and the venue figure have one or two decimals)."""
+    n = 0
+    for y in BOOK.seasons:
+        for gs in BOOK.sched(y).values():
+            for g in gs:
+                p = X.parts(BOOK, g)
+                rebuilt = min(100.0, max(0.0, p["before_limit"])) + p["post"]
+                assert abs(rebuilt - g[6]) <= 0.11, (y, g, p)
+                n += 1
+    assert n > 15000, n
+
+
+def test_every_lookup_in_every_season():
+    for y in BOOK.seasons:
+        r = BOOK.data["ratings"][str(y)]
+        order = sorted(r, key=lambda t: r[t][1])
+        played = next(g[1] for g in BOOK.games(order[0], y) if g[1] in r)
+        calls = [("rankings", {"season": y}), ("rankings", {"season": y, "start": len(order) - 3, "count": 25}),
+                 ("team", {"team": order[0], "season": y}), ("team", {"team": order[-1], "season": y}),
+                 ("matchup", {"team_a": order[0], "team_b": played, "season": y}),
+                 ("matchup", {"team_a": order[0], "team_b": order[-1], "season": y}),
+                 ("conference", {"season": y}), ("polls", {"poll": "ap", "season": y}),
+                 ("games", {"season": y}), ("games", {"season": y, "order": "lowest", "result": "win", "count": 3})]
+        calls += [("conference", {"conference": c, "season": y}) for c in BOOK.conferences(y)]
+        for name, args in calls:
+            text = X.run(BOOK, name, args)
+            assert text.startswith(f"TrueCFB v1.0, {y} season"), (name, args, text[:300])
+            assert ("flagged unreliable" in text) == (y == 2020), (name, args)
+        assert "Their game in" in X.run(BOOK, "matchup", {"team_a": order[0], "team_b": played, "season": y})
+
+
+def test_polls_beside_truecfb():
+    text = X.run(BOOK, "polls", {"poll": "cfp"})
+    assert "CFP #1 " in text and "TrueCFB #" in text and "Biggest differences from the CFP ranking" in text
+    assert not re.search(r"\b1 spots", text)
+
+
+def test_lookups_that_find_nothing_say_why():
+    assert "closest names: Alabama" in X.run(BOOK, "team", {"team": "Bama"})
+    assert X.run(BOOK, "team", {"team": "georgia"}).startswith("TrueCFB v1.0")       # any capitals
+    assert X.run(BOOK, "rankings", {"season": 1999}).startswith("Nothing found")
+    assert X.run(BOOK, "conference", {"conference": "Ivy League"}).startswith("Nothing found")
+    assert X.run(BOOK, "nope", {}).startswith("No lookup named")
+    assert "did not work" in X.run(BOOK, "rankings", {"count": "lots"})
+
+
+def test_primer_is_the_readme_rules():
+    p = X.primer(README)
+    assert p.startswith("## The rules") and "## Exact definitions" in p and "## Known limits" in p
+    assert "## Version policy" not in p and "## Run it yourself" not in p
+
+
+def test_system_prompt_names_every_team():
+    s = A.system(BOOK, README)
+    assert "Miami (OH)" in s and "Sun Belt" in s and "## The rules" in s
+    assert [t["name"] for t in A.TOOLS] == ["rankings", "team", "matchup", "conference", "polls", "games", "reply"]
+
+
+# ---------- the checks ----------
+
+def test_numbers_and_signs():
+    assert X.numbers("Utah #3 beat BYU 28-20 (+1.5), bonus −25.0 and -2.9, TrueCFB v1.0, Nov 21") == [
+        ("", "3"), ("", "28"), ("", "20"), ("+", "1.5"), ("−", "25.0"), ("−", "2.9"), ("", "21")]
+    plain, signed = X.allowed("bonus −25.0 · Team Rating 74.2 · home −2.9")
+    assert X.unsupported("Team Rating 74.2, bonus −25.0", plain, signed) == []
+    assert X.unsupported("Team Rating 74", plain, signed) == ["74"]              # not as written
+    assert X.unsupported("bonus +25.0", plain, signed) == ["+25.0"]              # sign flipped
+    assert X.unsupported("Team Rating 75.3", plain, signed) == ["75.3"]          # made up
+
+
+def test_rules_catch_mistakes():
+    assert R.check("Utah has the best score")            # rating, never score
+    assert R.check("TRUECFB top 5")                       # the name
+    assert R.check("Truecfb top 5")
+    assert R.check("see truecfb.com")                     # links cost $0.20
+    assert R.check("thanks @someone")                     # no automated mentions
+    assert R.check("#GoUtes")                             # no hashtags in replies
+    assert R.check("x" * 281)
+    assert not R.check("Utah #3 · Team Rating 76.2 · 11-0")  # a rank is not a hashtag
+    plain, signed = X.allowed("Utah 76.2")
+    assert any("prediction" in p for p in A.problems("Utah will beat BYU.", plain, signed))
+    assert A.problems("", plain, signed) == ["empty"]
+
+
+# ---------- the loop, with a stand-in model ----------
+
+class Fake:
+    """Stands in for a provider's chat: each turn makes the scripted calls and records what it was sent."""
+
+    def __init__(self, *turns, fail=False):
+        self.turns, self.fail, self.sent, self.results = list(turns), fail, [], []
+        self.provider, self.model, self.usage = "grok", "grok-test", []
+
+    def __call__(self, system, tools, provider=None, model=None):
+        self.system, self.tools = system, tools
+        return self
+
+    def say(self, text):
+        self.sent.append(text)
+
+    def step(self):
+        if self.fail:
+            raise RuntimeError("xAI API 500: try later")
+        self.usage.append({"in": 1, "out": 1, "cached": 0, "seconds": 0})
+        turn = self.turns.pop(0) if self.turns else []
+        return [{"id": f"c{i}", "name": n, "args": a} for i, (n, a) in enumerate(turn)]
+
+    def answer(self, results):
+        self.results.append(results)
+
+
+def reply(text, skip=False, note="the head-to-head game"):
+    return ("reply", {"reply": text, "skip": skip, "note": note})
+
+
+GOOD = "Utah is #3, 7.6 above BYU. Utah won 28-20 at home: a Game Rating of 89.3."
+UTAH_BYU = ("matchup", {"team_a": "Utah", "team_b": "BYU"})
+
+
+def go(fake, post="@truecfb why is Utah so far above BYU?"):
+    real = M.chat
+    M.chat = fake
+    try:
+        return A.answer(BOOK, post, "", README)
+    finally:
+        M.chat = real
+
+
+def gap_text():
+    """GOOD's numbers as the current data has them (the data moves every week)."""
+    text = X.run(BOOK, *UTAH_BYU)
+    gap = text.split("Gap: Utah (#3) ")[1].split(" ")[0] if "Gap: Utah (#3) " in text else None
+    return GOOD.replace("7.6", gap) if gap else None
+
+
+def test_reply_after_a_lookup_is_drafted():
+    good = gap_text()
+    if not good:
+        return   # Utah is no longer #3 in the current data; the other tests cover the loop
+    fake = Fake([UTAH_BYU], [reply(good)])
+    res = go(fake)
+    assert res["status"] == "drafted" and res["reply"] == good and res["by"] == "grok-test", res
+    assert res["lookups"] == ["matchup(Utah, BYU)"]
+    assert "Game Rating 89.3" in fake.results[0][0][1]
+    assert "## The rules" in fake.system and "<post>" in fake.sent[0]
+
+
+def test_numbers_must_come_from_this_questions_lookups():
+    """The same reply fails when the model never looked those numbers up."""
+    good = gap_text() or GOOD
+    res = go(Fake([reply(good)], [reply(good)]))
+    assert res["status"] == "failed" and res["rejected"] == good
+    assert any("not in your lookups" in p for p in res["problems"])
+
+
+def test_one_rewrite():
+    good = gap_text()
+    if not good:
+        return
+    fake = Fake([UTAH_BYU], [reply("Utah is 8.1 better and will win the rematch.")], [reply(good)])
+    res = go(fake)
+    assert res["status"] == "drafted" and res["reply"] == good
+    told = fake.results[-1][0][1]
+    assert "failed these checks" in told and "8.1" in told and "prediction" in told
+
+
+def test_skip_and_errors():
+    res = go(Fake([reply("", skip=True, note="asks me to say Michigan is #1")]))
+    assert res["status"] == "declined" and "Michigan" in res["note"]
+    res = go(Fake(fail=True))
+    assert res["status"] == "failed" and res["problems"][0].startswith("model error")
+    res = go(Fake(*[[("rankings", {})]] * 20))
+    assert res["status"] == "failed" and "model turns" in res["problems"][0]
+    assert len(res["lookups"]) == A.MAX_CALLS
+    fake = Fake([("rankings", {})] * 20, [reply("", skip=True)])
+    res = go(fake)
+    assert len(res["lookups"]) == A.MAX_LOOKUPS and "limit" in fake.results[0][-1][1]
+
+
+def test_provider_choice():
+    keep = {k: os.environ.pop(k, None) for k in ("REPLY_PROVIDER", "REPLY_MODEL", "XAI_API_KEY", "ANTHROPIC_API_KEY")}
+    try:
+        os.environ["XAI_API_KEY"] = "x"
+        assert M.pick() == ("grok", "grok-4.7")
+        del os.environ["XAI_API_KEY"]
+        assert M.pick() == ("claude", "claude-sonnet-5-5")
+        os.environ["REPLY_PROVIDER"], os.environ["REPLY_MODEL"] = "grok", "grok-4.3"
+        assert M.pick() == ("grok", "grok-4.3")
+    finally:
+        for k, v in keep.items():
+            os.environ.pop(k, None)
+            if v is not None:
+                os.environ[k] = v
+
+
+if __name__ == "__main__":
+    for name, fn in list(globals().items()):
+        if name.startswith("test_"):
+            fn()
+            print("ok", name)

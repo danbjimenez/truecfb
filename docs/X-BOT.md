@@ -36,7 +36,7 @@ From final whistle to draft: about 5 to 10 minutes.
 - CollegeFootballData Patreon Tier 1 ($1/mo) on the same email as the API key (live scoreboard).
 - Telegram bot `truecfb_bot`.
 - **GitHub secrets:** `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET`, `CFBD_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
-- **Reply bot** (`docs/REPLY-BOT.md`, off until set): GitHub secret `XAI_API_KEY` (Grok; `ANTHROPIC_API_KEY` only if Claude is ever used), GitHub variables `X_USER_ID`, `REPLIES_LIVE` (posting on), `REPLY_PROVIDER` / `REPLY_MODEL` / `REPLY_WRITER` (optional); Cloudflare secret `X_BEARER_TOKEN` (read-only) and variable `X_USER_ID`.
+- **Reply bot** (`docs/REPLY-BOT.md`, off until set): GitHub secret `XAI_API_KEY` (Grok; `ANTHROPIC_API_KEY` only if Claude is ever used), GitHub variables `X_USER_ID`, `REPLIES_LIVE` (posting on), `REPLY_PROVIDER` / `REPLY_MODEL` (optional); Cloudflare secret `X_BEARER_TOKEN` (read-only) and variable `X_USER_ID`.
 - **Cloudflare secrets** (Production only): `CFBD_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `GITHUB_DISPATCH_TOKEN` (fine-grained token `truecfb-worker-dispatch`: this repo only, Actions read/write; **expires in about a year**, then the Worker cannot start jobs).
 
 ## Hashtags

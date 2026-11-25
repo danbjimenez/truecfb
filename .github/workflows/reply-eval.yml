@@ -1,8 +1,9 @@
 name: "Reply bot: try the model"
 
 # Run by hand (Actions tab -> "Reply bot: try the model" -> Run workflow). Sends the made-up mentions in
-# data/bot/reply_samples.json through the model (reading the question, then writing the checked reply)
-# and shows, in the run's summary, how many it read right, the reply each would get, and the cost.
+# data/bot/reply_samples.json through the model (it looks up what it needs and writes the checked reply)
+# and shows, in the run's summary, whether each was answered or skipped as expected, the reply each would
+# get, what it looked up, and the cost.
 # Posts nothing, saves nothing. Uses the XAI_API_KEY and ANTHROPIC_API_KEY secrets; a model whose key
 # is not saved is left out.
 on:
@@ -11,7 +12,7 @@ on:
       models:
         description: "Models to try, space-separated: claude, grok, or provider:model"
         required: false
-        default: "grok grok:grok-4.3 claude"
+        default: "grok"
       limit:
         description: "Only the first N sample mentions (optional; all 64 when empty)"
         required: false

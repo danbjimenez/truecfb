@@ -1,8 +1,8 @@
 # The @truecfb reply bot
 
-Status: **built in draft mode, 23 Nov 2026 (plan approved by Dan the same day). Off until its secrets are added**; see "Turning it on" at the end. Posting stays off until the GitHub variable `REPLIES_LIVE` is `true`. **24 Nov 2026 (Dan's call): the model now writes the reply** from a fact sheet of the engine's numbers and the README's rules, and code checks every number before Dan sees it; the fixed templates are the fallback. Grok is the default model.
+Status: **built in draft mode, 23 Nov 2026 (plan approved by Dan the same day). Off until its secrets are added**; see "Turning it on" at the end. Posting stays off until the GitHub variable `REPLIES_LIVE` is `true`. **24 Nov 2026 (Dan's call): the model writes the reply**, and code checks every number before Dan sees it. **25 Nov 2026 (Dan's call): any college football question**, not a fixed list of question types: the model looks up the engine's numbers it needs (rankings, a team's season, two teams, conferences, the CFP and AP beside TrueCFB, the season's best and worst Game Ratings) and answers from them. Grok 4.7 is the default model.
 
-When someone tags @truecfb (usually under another account's post, asking it to weigh in), a model reads the question, then writes the reply from the engine's numbers. Code checks that every number in the reply is one the engine published. It starts in draft mode: each draft goes to Telegram, and nothing posts until Dan taps.
+When someone tags @truecfb (usually under another account's post, asking it to weigh in), a model works out what TrueCFB's numbers say about it, looking them up as it goes, and writes the reply. Code checks that every number in the reply is one a lookup returned for that question. It starts in draft mode: each draft goes to Telegram, and nothing posts until Dan taps.
 
 ## 1. X's rules (checked 23 Nov 2026)
 
@@ -61,14 +61,14 @@ X mention ─► Worker cron (every 5 min in game windows, 15 otherwise)
 reply-draft.yml (Actions) ◄───┘
   1. fetch the mention + the post it replies to or quotes
   2. skip filters: opted out, already handled, sensitive, our own posts
-  3. model reads: tweet text ─► {intent, teams, season}   (no numbers)
-  4. engine: fact sheet of every number for it (site/*.json, game_impact.py)
-  5. model writes the reply from the fact sheet + the README's rules
-     code checks it: every number on the sheet or in the rules, brand
-     and X rules, no predictions, ≤280. Fails ─► one rewrite ─► template
-  6. Telegram draft: who asked, their text, the parent post, the reply,
-     the template version beside it   [Post reply] [Skip]
-  7. commit data/bot/replies.json (handled ids, newest id)
+  3. model: reads the post, calls lookups (engine files, site/*.json),
+     as many as it needs, then calls reply (or skip)
+  4. code checks the reply: every number in this question's lookups or
+     the rules, brand and X rules, no predictions, ≤280.
+     Fails ─► one rewrite ─► still failing: no draft
+  5. Telegram draft: what they asked, the post above, the reply, what it
+     rests on, what was looked up   [Post reply] [Skip]
+  6. commit data/bot/replies.json (handled ids, newest id)
                               │
 Dan taps Post reply ─► Worker /hooks/telegram ─► post-reply.yml
   re-check: post still exists, not replied before, not opted out
@@ -85,30 +85,17 @@ Dan taps Post reply ─► Worker /hooks/telegram ─► post-reply.yml
 
 ### What the model does and what the engine does
 
-| Model (two calls, structured output) | Engine and code |
+| Model (Grok 4.7 by default; tool calls) | Engine and code |
 |---|---|
-| **Reads** the mention and the parent post: `intent` from a fixed list, `teams` (names from the 138-team list only), optional `season`, `conference`, or `skip` with a reason | Every number: rank, Team Rating, Game Rating and its parts, Matchup Rating, Conference Rating, record, gaps and changes (`reply_facts.sheet`) |
-| **Writes** the reply from the fact sheet, with the README's rules word for word as its knowledge of v1.0 (`reply_facts.primer`, read from the README on every run, so it always knows the version the engine runs) | **Checks** the reply (`reply_writer.problems`): every number must be written on the sheet or in the rules, sign included; brand and X rules; no prediction wording. One rewrite, then the fixed template |
-| Never calculates: the sheet already has each Game Rating split into its parts (result, venue, opponent's bonus, postseason, the 0 to 100 limit) and every gap the reply might need | Splits each Game Rating the way the site's How it works page does, from the engine's published settings and margin curve; the split matches every published Game Rating of every season to rounding (`tests/test_reply_writer.py`) |
+| **Reads** the post and the post above it, decides what TrueCFB's numbers can say about it, and **looks them up** (`reply_facts.LOOKUPS`): `rankings`, `team` (a season game by game, each Game Rating split into its parts), `matchup` (two teams, the gap, their game), `conference`, `polls` (the CFP ranking or AP poll beside TrueCFB's ranking at the same point, and the biggest differences), `games` (a season's highest or lowest Game Ratings, in wins, losses or all games) | Every number, from the engine's files only (`reply_book.Book`): rank, Team Rating, Game Rating and its parts, Matchup Rating, Conference Rating, record, the CFP and AP ranks the engine published beside its own (`site/rank_*.json`), gaps and changes |
+| **Writes** the reply, with the README's rules word for word as its knowledge of v1.0 (`reply_facts.primer`, read from the README on every run). May use general football knowledge in words; may not add a number of its own | **Checks** the reply (`reply_agent.problems`): every number must be written in something a lookup returned for this question, or in the rules, sign included; brand and X rules; no prediction wording. One rewrite, then no draft (Telegram shows the attempt and why) |
+| Never calculates: the lookups already split each Game Rating into its parts (result, venue, opponent's bonus, postseason, the 0 to 100 limit) and give every gap | Splits each Game Rating the way the site's How it works page does, from the engine's published settings and margin curve; the split matches every published Game Rating of every season to rounding (`tests/test_reply_bot.py`) |
 
-What the check cannot catch: a number used for the wrong thing (calling a Game Rating the Team Rating, or quoting a real 8-point margin as "8 points better"), and wording that predicts without the usual words. Dan reads every draft; the template version sits under it for comparison.
+What the check cannot catch: a number used for the wrong thing (calling a Game Rating the Team Rating, or quoting a real 8-point margin as "8 points better"), a claim made from general knowledge in words, and wording that predicts without the usual words. Dan reads every draft, with what the model looked up and what it says the reply rests on.
 
-### Intents and templates (the fallback)
+**Why lookups instead of fixed question types (25 Nov 2026):** the first live test, "where does the CFP committee diverge the most from your rankings, and why?", fit none of the eight types and got no draft. Adding a type for each new kind of question doesn't scale; giving the model lookups does, and the number check works the same on whatever it looked up. The fixed templates went with the types.
 
-The templates write the reply when the model's reply fails the checks twice, when the model declines, errors or is turned off (`REPLY_WRITER=template`), and they appear under every model reply in the draft. `{…}` slots are filled by the engine.
-
-| Intent | Example ask | Reply template |
-|---|---|---|
-| `team` | "where's Utah in this?" | `Utah: #{rank} in TrueCFB v1.0, Team Rating {rating} ({record}).` + last game line |
-| `compare` | "Utah or BYU?" | One line per team (rank, Team Rating, record); if they played this season: `{winner} won {score}: Game Ratings {a} and {b}.` |
-| `game` | tagged under a game result | The existing result text for that game (`game_impact`), without hashtags |
-| `top` | "who's #1?" | `TrueCFB v1.0 top 5: 1 {team} {rating} · 2 …` |
-| `conference` | "is the Big 12 better than the ACC?" | Conference Rating and rank for each |
-| `how` | "how does this work?" | Fixed text, no numbers: results only, open formula, How it works page on the TrueCFB site (no link) |
-| `predict` | "who wins Saturday?" | `TrueCFB rates results, not predictions.` + the `compare` lines |
-| `skip` | abusive, off topic, unclear | No draft; one line in Telegram ("skipped @handle: off topic") so Dan can see what was left out |
-
-Rules for every reply, model-written or template, enforced in code like `game_impact.post_text`:
+Rules for every reply, enforced in code like `game_impact.post_text`:
 - **TrueCFB** spelling, **v1.0**, **Rating** (never "score" for a TrueCFB number; "score" only for points, as in 28-20).
 - One decimal on ratings; signed changes with a real minus sign (−); "NR" for unranked.
 - Describes, never predicts; no hype, no emoji; fan terms.
@@ -118,27 +105,27 @@ Rules for every reply, model-written or template, enforced in code like `game_im
 
 ### Telegram draft
 
-Same bot and chat as the result posts. The message shows what they asked, the post above, a link to the mention (the handle is on X; looking it up through the API costs $0.010), what the model understood and why, the drafted reply (and who wrote it: the model, or the template and why), what the reply rests on, the template version, and any model reply the checks turned down. Buttons: **Post reply** (only while `REPLIES_LIVE` is `true`) and **Skip**, as `rpost:<id>` / `rskip:<id>` taps beside the result posts' `post:` / `skip:`. Tap behavior is the same as today: buttons come off first, so a double tap can't post twice.
+Same bot and chat as the result posts. The message shows what they asked, the post above, a link to the mention (the handle is on X; looking it up through the API costs $0.010), the drafted reply and the model that wrote it, what the reply rests on, and what it looked up. A mention whose reply failed the checks twice gets its own message with the model's attempt and why, and no buttons; mentions the model chose to skip are listed in one message per run, with its reason. Buttons: **Post reply** (only while `REPLIES_LIVE` is `true`) and **Skip**, as `rpost:<id>` / `rskip:<id>` taps beside the result posts' `post:` / `skip:`. Tap behavior is the same as today: buttons come off first, so a double tap can't post twice.
 
 ### The pieces
 
 | File | What |
 |---|---|
-| `src/reply_facts.py` | The fact sheet (every number a reply may use, from the engine's files), each Game Rating split into its parts, the README primer, and the number check |
-| `src/reply_writer.py` | The writer: prompt, the checks, one rewrite, the template fallback |
-| `src/reply_templates.py` | The fixed template replies (the fallback), from `site/data.json`, `history.json`, `sched_*.json` and `data/bot/drafts.json`; `check()` holds the wording rules |
-| `src/reply_model.py` | The model calls: fixed JSON shapes; the reading step's team and conference names only from the engine's lists. Grok when `XAI_API_KEY` is set, Claude with `REPLY_PROVIDER=claude` |
-| `src/reply_bot.py` | `draft` (read mentions, filter, model reads, model writes, checks, save), `send` (Telegram), `post` (one approved reply) |
-| `src/reply_eval.py`, `data/bot/reply_samples.json` | 64 made-up mentions (including how-it-works and why-is-X-ranked-there questions, and a prompt injection) to compare models on reading and writing |
-| `tests/test_reply_templates.py`, `tests/test_reply_writer.py` | Every template intent on every season; the Game Rating split against every published game; the number and wording checks; the rewrite and fallback with a stand-in model |
+| `src/reply_agent.py` | The prompt, the loop (lookups, then `reply`), the checks and the one rewrite |
+| `src/reply_facts.py` | The lookups the model can call (every number from the engine's files), each Game Rating split into its parts, the README primer, and the number check |
+| `src/reply_book.py` | The engine's files, read once (`site/data.json`, `history.json`, `sched_*.json`, `rank_*.json`, `data/bot/drafts.json`); `check()` holds the wording rules |
+| `src/reply_model.py` | The conversation with the model, with tool calls, for Grok (xAI) and Claude. Grok when `XAI_API_KEY` is set, Claude with `REPLY_PROVIDER=claude` |
+| `src/reply_bot.py` | `draft` (read mentions, filter, the model answers, save), `send` (Telegram), `post` (one approved reply) |
+| `src/reply_eval.py`, `data/bot/reply_samples.json` | 78 made-up mentions, each marked reply, skip or either (how-it-works, why-is-X-ranked-there, the CFP, best losses, a player question, prompt injections), to try a model on |
+| `tests/test_reply_bot.py` | Every lookup on every season; the Game Rating split against every published game; the number and wording checks; the loop, the rewrite and skips with a stand-in model |
 | `.github/workflows/reply-draft.yml` | Started by the Worker; drafts and sends to Telegram |
 | `.github/workflows/post-reply.yml` | Started by a "Post reply" tap; posts only while `REPLIES_LIVE` is `true` |
 | `.github/workflows/reply-eval.yml` | "Reply bot: try the model", by hand |
 | `worker/index.js` | `pollMentions()` (only runs when `X_BEARER_TOKEN` and `X_USER_ID` are set) and the `rpost:` / `rskip:` taps |
-| `data/bot/replies.json`, `data/bot/optout.json`, `site/replies.json` | What was handled (ids, what the bot understood, the reply, what happened; never the text people wrote), opt-outs as hashes, and the newest handled id for the Worker |
+| `data/bot/replies.json`, `data/bot/optout.json`, `site/replies.json` | What was handled (ids, which lookups were used, the reply, what happened; never the text people wrote), opt-outs as hashes, and the newest handled id for the Worker |
 | `requirements-reply.txt` | `anthropic`, for the reply jobs only (Grok is called with `requests`) |
 
-Run the tests with `python tests/test_reply_templates.py` and `python tests/test_reply_writer.py` (no keys needed).
+Run the tests with `python tests/test_reply_bot.py` (no keys needed). Try one question by hand with `python src/reply_agent.py "<post>"` (needs `XAI_API_KEY`).
 
 ### Cost per reply
 
@@ -146,29 +133,29 @@ Run the tests with `python tests/test_reply_templates.py` and `python tests/test
 |---|---|---|
 | Mention read: the Worker's check (app-only token) plus the draft job's read (own account) | $0.006 | $0.006 |
 | Parent post read (when there is one) | $0.005 | $0.005 |
-| Model: read + write (Grok 4.7; a rewrite adds ≈$0.005) | ≈$0.009 | ≈$0.009 |
+| Model: lookups and the reply (Grok 4.7, 2 to 3 turns; 78-question test, 25 Nov 2026) | ≈$0.014 | ≈$0.014 |
 | Reply post ("summoned"; $0.015 if X bills it as a plain post) | $0.010 | none |
-| **Total** | **≈$0.030** | **≈$0.020** |
+| **Total** | **≈$0.035** | **≈$0.025** |
 
-The Worker only checks whether there is anything new (up to 5 posts); the draft job then reads them with the account's own keys at $0.001 each. Putting the write keys on the Worker would save $0.005 a mention; not worth it. At 100 replies a week, about $3 a week. GitHub Actions minutes are free on a public repo.
+The Worker only checks whether there is anything new (up to 5 posts); the draft job then reads them with the account's own keys at $0.001 each. Putting the write keys on the Worker would save $0.005 a mention; not worth it. At 100 replies a week, about $3.50 a week. GitHub Actions minutes are free on a public repo.
 
 ### Risks
 
 1. **X approval, unclear.** Help Center says approval is required; developer docs say it isn't. Mitigation: draft mode first; ask X before going live.
 2. **Account limits.** Replies outside the "summoned" rule return 403, and a forum thread reports accounts getting temporarily limited after such errors. Mitigation: only reply to the mention itself, check before posting, stop on the first 403.
 3. **Mentioning people who didn't opt in.** A reply in someone else's thread can auto-mention the original poster. Mitigation: `exclude_reply_user_ids`, no handles in text.
-4. **Prompt injection and trolling.** The model's words now reach the draft. Mitigations: posts are passed as data and the writer is told to skip anything that tells it what to say (it falls back to the template); no number can get past the check unless the engine published it; Dan taps every reply.
-5. **Wrong team.** "Miami", "USC", "the U", nicknames. Mitigation: names only from the 138-team list, `skip` when unsure, the draft shows the detected teams.
+4. **Prompt injection and trolling.** The model's words now reach the draft. Mitigations: posts are passed as data and the model is told to skip anything that tells it what to say; the lookups only read the engine's files, and their fields only take team, conference, season and poll names; no number can get past the check unless a lookup returned it; Dan taps every reply.
+5. **Wrong team.** "Miami", "USC", "the U", nicknames. Mitigation: the lookups only take names from the team list (anything else gets the closest names back), the model is told to skip when a name could mean two teams, and the draft shows what it looked up.
 6. **Pile-ups.** A popular post could bring dozens of tags. Mitigation: at most one reply per user per thread; cap drafts per hour; X spend limit.
-7. **Predictions.** TrueCFB describes, never predicts. The writer is told so, the check rejects common prediction wording ("will beat", "favored", "odds"), and the `predict` template says so plainly. Wording that predicts without those words is on Dan's review.
-8. **Bowl games.** Until the final 2026 CFP ranking is added on selection day (6 Dec), bowl results don't count. A question about a bowl game gets the two teams side by side instead (the templates only use games the engine has counted).
+7. **Predictions.** TrueCFB describes, never predicts. The model is told so, and the check rejects common prediction wording ("will beat", "favored", "odds"). Wording that predicts without those words is on Dan's review.
+8. **Bowl games.** Until the final 2026 CFP ranking is added on selection day (6 Dec), bowl results don't count. The lookups only hold games the engine has counted, so a question about a bowl game gets the two teams side by side, not that game.
 9. **Token expiry.** `GITHUB_DISPATCH_TOKEN` expires about Nov 2027; the reply bot depends on it too.
 10. **A wrong explanation of the formula in public.** The writer learns v1.0 from the README's own text, not a summary, and the model test includes how-it-works questions to read before going live.
 
 ## Turning it on
 
 1. **Model key:** sign in at console.x.ai with @truecfb's X account, add credits (or link the X developer account for bonus credits), create an API key, and save it as the GitHub secret `XAI_API_KEY` (`gh secret set XAI_API_KEY` asks for it).
-2. **Try the model:** Actions → "Reply bot: try the model" → Run. The run summary shows, per model, how many of the 64 samples it read right, the reply it wrote for each (or why the template was used), what each reply rests on, and the cost. To use something other than Grok 4.7, set the GitHub variable `REPLY_MODEL` (and `REPLY_PROVIDER` for Claude).
+2. **Try the model:** Actions → "Reply bot: try the model" → Run. The run summary shows, per model, how many of the 78 samples it answered or skipped as expected, the reply it wrote for each (or why there is none), what it looked up, what each reply rests on, and the cost. To use something other than Grok 4.7, set the GitHub variable `REPLY_MODEL` (and `REPLY_PROVIDER` for Claude).
 3. **X read token and id:** in the X developer console (app `truecfb-bot`), copy the app's Bearer Token into the Cloudflare secret `X_BEARER_TOKEN`. Run Actions → "Reply drafts" once by hand: its log prints @truecfb's user id. Save it as the GitHub variable `X_USER_ID` and the Cloudflare variable `X_USER_ID`. The Worker starts checking mentions on its next run.
 4. **Drafts arrive in Telegram** with a Skip button only ("draft mode: posting is off"). Skipped mentions are listed in one message per run.
 5. **Before going live:** update the bio (automated account, tag it for a TrueCFB answer, reply "stop" to opt out, a link to Dan's account) and send X the approval request (section 1).
