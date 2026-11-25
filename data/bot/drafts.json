@@ -426,5 +426,219 @@
    }
   },
   "created": "2026-11-25T03:16:30Z"
+ },
+ "401866471": {
+  "post": "FINAL: Miami (OH) 28, Western Michigan 24\nMatchup Rating 97\nMiami (OH) #89 → #79 · Western Michigan #61 → #73\n#WMU #MiamiOH",
+  "length": 125,
+  "alt": "FINAL: Miami (OH) 28, Western Michigan 24 · road win\nMatchup Rating 97\nMiami (OH): Game Rating 73.8 · Team Rating 47.9 (+2.5)\nWestern Michigan: Game Rating 23.0 · Team Rating 49.0 (-2.5)\nRipple: Pittsburgh +0.3 (beat Miami (OH)) · Boise State -0.3 (beat Western Michigan)",
+  "day": "2026-11-24",
+  "matchup_rating": 97,
+  "teams": [
+   "Western Michigan",
+   "Miami (OH)"
+  ],
+  "impact": {
+   "game_id": 401866471,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-24",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 97,
+   "winner": "Miami (OH)",
+   "teams": [
+    {
+     "team": "Western Michigan",
+     "fbs": true,
+     "points": 24,
+     "won": false,
+     "site": "home",
+     "game_rating": 23.0,
+     "rating_before": 51.5,
+     "rating_after": 49.0,
+     "change": -2.5,
+     "rank_before": 61,
+     "rank_after": 73,
+     "bonus": -1.0,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Miami (OH)",
+     "fbs": true,
+     "points": 28,
+     "won": true,
+     "site": "road",
+     "game_rating": 73.8,
+     "rating_before": 45.4,
+     "rating_after": 47.9,
+     "change": 2.5,
+     "rank_before": 89,
+     "rank_after": 79,
+     "bonus": -2.1,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Pittsburgh",
+      "change": 0.28,
+      "rating_after": 52.0,
+      "rank_before": 58,
+      "rank_after": 58,
+      "link": [
+       {
+        "vs": "Miami (OH)",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "UConn",
+      "change": 0.26,
+      "rating_after": 43.6,
+      "rank_before": 97,
+      "rank_after": 96,
+      "link": [
+       {
+        "vs": "Miami (OH)",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Cincinnati",
+      "change": 0.26,
+      "rating_after": 53.7,
+      "rank_before": 50,
+      "rank_after": 48,
+      "link": [
+       {
+        "vs": "Miami (OH)",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Boise State",
+      "change": -0.29,
+      "rating_after": 62.3,
+      "rank_before": 24,
+      "rank_after": 25,
+      "link": [
+       {
+        "vs": "Western Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Michigan",
+      "change": -0.28,
+      "rating_after": 55.0,
+      "rank_before": 42,
+      "rank_after": 42,
+      "link": [
+       {
+        "vs": "Western Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Rice",
+      "change": -0.27,
+      "rating_after": 32.6,
+      "rank_before": 121,
+      "rank_after": 121,
+      "link": [
+       {
+        "vs": "Western Michigan",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Boise State",
+      "change": -0.29,
+      "rating_after": 62.3,
+      "rank_before": 24,
+      "rank_after": 25,
+      "link": [
+       {
+        "vs": "Western Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Michigan",
+      "change": -0.28,
+      "rating_after": 55.0,
+      "rank_before": 42,
+      "rank_after": 42,
+      "link": [
+       {
+        "vs": "Western Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Pittsburgh",
+      "change": 0.28,
+      "rating_after": 52.0,
+      "rank_before": 58,
+      "rank_after": 58,
+      "link": [
+       {
+        "vs": "Miami (OH)",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Rice",
+      "change": -0.27,
+      "rating_after": 32.6,
+      "rank_before": 121,
+      "rank_after": 121,
+      "link": [
+       {
+        "vs": "Western Michigan",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UConn",
+      "change": 0.26,
+      "rating_after": 43.6,
+      "rank_before": 97,
+      "rank_after": 96,
+      "link": [
+       {
+        "vs": "Miami (OH)",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 37
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-25T03:31:18Z"
  }
 }
