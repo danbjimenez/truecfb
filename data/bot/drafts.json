@@ -212,5 +212,219 @@
    }
   },
   "created": "2026-11-23T06:56:42Z"
+ },
+ "401866470": {
+  "post": "FINAL: Eastern Michigan 17, Kent State 12\nMatchup Rating 62\nEastern Michigan #120 → #117 · Kent State #129 → #130\n#EMUEagles #KentState",
+  "length": 137,
+  "alt": "FINAL: Eastern Michigan 17, Kent State 12 · home win\nMatchup Rating 62\nEastern Michigan: Game Rating 46.7 · Team Rating 34.3 (+1.2)\nKent State: Game Rating 14.9 · Team Rating 27.3 (-1.2)\nRipple: Michigan State +0.1 (beat Eastern Michigan) · South Florida -0.1 (beat Kent State)",
+  "day": "2026-11-24",
+  "matchup_rating": 62,
+  "teams": [
+   "Eastern Michigan",
+   "Kent State"
+  ],
+  "impact": {
+   "game_id": 401866470,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-24",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 62,
+   "winner": "Eastern Michigan",
+   "teams": [
+    {
+     "team": "Eastern Michigan",
+     "fbs": true,
+     "points": 17,
+     "won": true,
+     "site": "home",
+     "game_rating": 46.7,
+     "rating_before": 33.1,
+     "rating_after": 34.3,
+     "change": 1.2,
+     "rank_before": 120,
+     "rank_after": 117,
+     "bonus": -15.7,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Kent State",
+     "fbs": true,
+     "points": 12,
+     "won": false,
+     "site": "road",
+     "game_rating": 14.9,
+     "rating_before": 28.5,
+     "rating_after": 27.3,
+     "change": -1.2,
+     "rank_before": 129,
+     "rank_after": 130,
+     "bonus": -22.7,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Michigan State",
+      "change": 0.15,
+      "rating_after": 45.6,
+      "rank_before": 89,
+      "rank_after": 87,
+      "link": [
+       {
+        "vs": "Eastern Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Wisconsin",
+      "change": 0.14,
+      "rating_after": 58.7,
+      "rank_before": 30,
+      "rank_after": 30,
+      "link": [
+       {
+        "vs": "Eastern Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "San José State",
+      "change": 0.12,
+      "rating_after": 37.0,
+      "rank_before": 112,
+      "rank_after": 112,
+      "link": [
+       {
+        "vs": "Eastern Michigan",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "South Florida",
+      "change": -0.13,
+      "rating_after": 43.4,
+      "rank_before": 97,
+      "rank_after": 98,
+      "link": [
+       {
+        "vs": "Kent State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "South Carolina",
+      "change": -0.13,
+      "rating_after": 58.4,
+      "rank_before": 31,
+      "rank_after": 31,
+      "link": [
+       {
+        "vs": "Kent State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Bowling Green",
+      "change": -0.13,
+      "rating_after": 29.8,
+      "rank_before": 128,
+      "rank_after": 128,
+      "link": [
+       {
+        "vs": "Kent State",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Michigan State",
+      "change": 0.15,
+      "rating_after": 45.6,
+      "rank_before": 89,
+      "rank_after": 87,
+      "link": [
+       {
+        "vs": "Eastern Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Wisconsin",
+      "change": 0.14,
+      "rating_after": 58.7,
+      "rank_before": 30,
+      "rank_after": 30,
+      "link": [
+       {
+        "vs": "Eastern Michigan",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "South Florida",
+      "change": -0.13,
+      "rating_after": 43.4,
+      "rank_before": 97,
+      "rank_after": 98,
+      "link": [
+       {
+        "vs": "Kent State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "South Carolina",
+      "change": -0.13,
+      "rating_after": 58.4,
+      "rank_before": 31,
+      "rank_after": 31,
+      "link": [
+       {
+        "vs": "Kent State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Bowling Green",
+      "change": -0.13,
+      "rating_after": 29.8,
+      "rank_before": 128,
+      "rank_after": 128,
+      "link": [
+       {
+        "vs": "Kent State",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 12
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-25T03:16:30Z"
  }
 }
