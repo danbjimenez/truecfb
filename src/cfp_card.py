@@ -2,8 +2,8 @@
 committee publishes a ranking.
 
 The left column is the TrueCFB top 25 (rank, team, Team Rating, record), the right column is the
-committee's 25 (rank, team, and in brackets how many spots higher (+) or lower (−) the committee has
-the team than TrueCFB). A line joins each team; the top 12 lines are bold. Teams on only one list
+committee's 25 (rank, team, and in a right-aligned column how many spots higher (+) or lower (−) the
+committee has the team than TrueCFB). A line joins each team; the top 12 lines are bold. Teams on only one list
 start or end at a note under that list.
 
 Brand: TrueCFB is always the base, on the left. Lines are in each team's main color
