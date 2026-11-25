@@ -1,11 +1,12 @@
-"""TrueCFB reply bot: what the model may know when it writes a reply.
+"""TrueCFB reply bot: the lookups the model can make, and which numbers a reply may use.
 
   primer(readme_path) -> the README's rules, word for word (the system prompt's knowledge of v1.0)
-  sheet(book, intent, teams, conferences, season) -> the fact sheet: every number the reply may use
+  LOOKUPS, run(book, name, args) -> the tools the model calls and their text answers
   parts(book, line) -> one schedule line's Game Rating split into the rule's parts
+  allowed(*texts), unsupported(reply, ...) -> the number check
 
-Every number on the sheet comes from files the frozen v1.0 engine wrote (site/data.json,
-site/history.json, site/sched_{season}.json, data/bot/drafts.json). Nothing here computes a rating.
+Every number a lookup returns comes from files the frozen v1.0 engine wrote (reply_book.Book).
+Nothing here computes a rating.
 The parts of a Game Rating are split the same way the site's How it works page does it (site/js/how.js),
 from the engine's published settings and margin curve; they are display only, and the published Game
 Rating is always the number that counts. Gaps and changes are plain subtractions of published numbers,
@@ -16,7 +17,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from reply_templates import Unanswerable, UNRELIABLE, INDEPENDENTS, r1, date  # noqa: E402
+from reply_book import Unanswerable, UNRELIABLE, INDEPENDENTS, r1, date  # noqa: E402
 
 # The README sections the model learns v1.0 from, in order. Read at run time, so the model always
 # knows the version the engine runs, never an older copy.
@@ -24,7 +25,7 @@ PRIMER_FROM = "## The rules"
 PRIMER_UNTIL = "## Version policy"
 MINUS = "−"
 NEIGHBORS = 2          # teams listed above and below each team in focus
-TOP_SHEET = 10
+MAX_LIST = 25         # most rows one lookup returns
 
 
 def signed(x):
@@ -145,12 +146,6 @@ def neighbors(book, t, y):
     return f"Ranked around {t}: " + " · ".join(f"#{r[x][1]} {x} {r1(r[x][0])}" for x in near)
 
 
-def top_block(book, y, n=TOP_SHEET):
-    r = book.data["ratings"][str(y)]
-    order = sorted(r, key=lambda t: r[t][1])[:n]
-    return [f"Top {n}: " + " · ".join(f"#{r[t][1]} {t} {r1(r[t][0])} ({r[t][2]}-{r[t][3]})" for t in order)]
-
-
 def conf_block(book, c, y):
     info = book.conf(c, y)
     r = book.data["ratings"][str(y)]
@@ -180,41 +175,202 @@ def game_impact_block(book, a, b, y):
     return lines
 
 
-def sheet(book, intent, teams=(), conferences=(), season=None):
-    """The fact sheet for one question, as plain text. Raises Unanswerable like the templates do."""
-    y = book.season(season)
-    teams = [t for i, t in enumerate(teams) if t and t not in list(teams)[:i]][:2]
-    head = [f"TrueCFB v1.0, {y} season, numbers {book.when(y)}."]
+# ---------- the lookups ----------
+
+def header(book, y):
+    lines = [f"TrueCFB v1.0, {y} season, numbers {book.when(y)}."]
     if y in UNRELIABLE:
-        head.append("2020 is flagged unreliable: most conferences played only themselves, so nothing ties "
-                    "one conference's level to another's. Say so if you use 2020 numbers.")
-    body = []
-    if intent == "how":
-        return "\n".join(head)
-    if intent == "top":
-        body += top_block(book, y)
-    elif intent == "conference":
-        confs = [c for c in conferences if c != INDEPENDENTS][:2]
-        if not confs:
-            raise Unanswerable("no conference named")
-        for c in confs:
-            body += conf_block(book, c, y)
-        if len(confs) == 2:
-            a, b = (book.conf(c, y) for c in confs)
-            hi, lo = sorted([a, b], key=lambda c: c["rank"])
-            body.append(f"Gap: {hi['conf']} {r1(hi['rating'] - lo['rating'])} above {lo['conf']} in Conference Rating.")
-    else:
-        if not teams:
-            raise Unanswerable(f"{intent}: no team named")
-        for t in teams:
-            body += team_block(book, t, y) + [neighbors(book, t, y), ""]
-        if len(teams) == 2:
-            a, b = (book.team(t, y) for t in teams)
-            hi, lo = sorted([a, b], key=lambda t: t["rank"])
-            body.append(f"Gap: {hi['team']} (#{hi['rank']}) {r1(hi['rating'] - lo['rating'])} above "
-                        f"{lo['team']} (#{lo['rank']}) in Team Rating.")
-            body += game_impact_block(book, teams[0], teams[1], y)
-    return "\n".join(head + [""] + [x for x in body]).strip()
+        lines.append("2020 is flagged unreliable: most conferences played only themselves, so nothing ties "
+                     "one conference's level to another's. Say so if you use 2020 numbers.")
+    return lines
+
+
+def team_name(book, name, y):
+    """The engine's spelling of a team, or Unanswerable with the closest names."""
+    names = book.teams(y)
+    if name in names:
+        return name
+    low = {n.lower(): n for n in names}
+    if str(name).lower() in low:
+        return low[str(name).lower()]
+    import difflib
+    near = difflib.get_close_matches(str(name), names, n=4, cutoff=0.5)
+    raise Unanswerable(f"{name!r} is not an FBS team TrueCFB rated in {y}"
+                       + (f"; closest names: {', '.join(near)}" if near else ""))
+
+
+def conf_name(book, name, y):
+    names = book.conferences(y)
+    low = {n.lower(): n for n in names}
+    if str(name).lower() in low:
+        return low[str(name).lower()]
+    raise Unanswerable(f"no Conference Rating for {name!r} in {y}; conferences: {', '.join(names)}")
+
+
+def look_rankings(book, season=None, start=1, count=10):
+    y = book.season(season)
+    r = book.data["ratings"][str(y)]
+    order = sorted(r, key=lambda t: r[t][1])
+    start, count = max(1, int(start or 1)), max(1, min(int(count or 10), MAX_LIST))
+    rows = order[start - 1: start - 1 + count]
+    if not rows:
+        raise Unanswerable(f"{y} has {len(order)} ranked teams")
+    return header(book, y) + [f"Ranking #{start} to #{start + len(rows) - 1} of {len(order)}:"] + [
+        f"#{r[t][1]} {t} · Team Rating {r1(r[t][0])} · {r[t][2]}-{r[t][3]} · "
+        f"{book.data['team_conf'].get(str(y), {}).get(t, '')}" for t in rows]
+
+
+def look_team(book, team, season=None):
+    y = book.season(season)
+    t = team_name(book, team, y)
+    return header(book, y) + team_block(book, t, y) + [neighbors(book, t, y)]
+
+
+def look_matchup(book, team_a, team_b, season=None):
+    y = book.season(season)
+    a, b = team_name(book, team_a, y), team_name(book, team_b, y)
+    if a == b:
+        raise Unanswerable("two different teams are needed")
+    ta, tb = book.team(a, y), book.team(b, y)
+    hi, lo = sorted([ta, tb], key=lambda t: t["rank"])
+    lines = header(book, y) + [f"{t['team']}: #{t['rank']} · Team Rating {r1(t['rating'])} · {t['wins']}-{t['losses']}"
+                               for t in (hi, lo)]
+    lines.append(f"Gap: {hi['team']} (#{hi['rank']}) {r1(hi['rating'] - lo['rating'])} above "
+                 f"{lo['team']} (#{lo['rank']}) in Team Rating.")
+    m = book.meeting(a, b, y)
+    if m:
+        lines.append(f"Their game in {y}:")
+        lines += [game_line(book, name, g, y).replace("- ", f"- {name}: ", 1) for name, g in zip((a, b), m) if g]
+    lines += game_impact_block(book, a, b, y)
+    return lines
+
+
+def look_conference(book, conference=None, season=None):
+    y = book.season(season)
+    if conference:
+        return header(book, y) + conf_block(book, conf_name(book, conference, y), y)
+    rows = sorted((book.conf(c, y) for c in book.conferences(y)), key=lambda c: c["rank"])
+    return header(book, y) + ["Conference Ratings (each the plain average of its members' Team Ratings):"] + [
+        f"#{c['rank']} {c['conf']} {r1(c['rating'])}" for c in rows]
+
+
+SNAP_LABEL = {"reg": "at the end of the regular season", "final": "final, after the postseason"}
+
+
+def snap_label(key):
+    return SNAP_LABEL.get(key, f"going into week {key[1:]}" if key[1:].isdigit() else key)
+
+
+def look_polls(book, poll="cfp", season=None, week=None):
+    y = book.season(season)
+    poll = str(poll or "cfp").lower()
+    if poll not in ("cfp", "ap"):
+        raise Unanswerable("poll must be cfp or ap")
+    col, name = (5, "CFP ranking") if poll == "cfp" else (6, "AP poll")
+    snaps = book.snaps(y)
+    keys = [k for k, rows in snaps.items() if any(row[col] for row in rows)]
+    if week:
+        keys = [k for k in keys if k == f"w{int(week)}"]
+    if not keys:
+        raise Unanswerable(f"no {name} on file for {y}" + (f" week {week}" if week else ""))
+    key = keys[-1]
+    rows = snaps[key]
+    polled = sorted((row for row in rows if row[col]), key=lambda row: (row[col], row[0]))
+    lines = header(book, y) + [f"The {name} {snap_label(key)}, with TrueCFB's ranking at the same point "
+                               f"(Team Rating and record):"]
+    for row in polled:
+        gap = row[0] - row[col]
+        say = ("same spot" if gap == 0 else
+               f"{abs(gap)} spot{'s' if abs(gap) > 1 else ''} {'lower' if gap > 0 else 'higher'} in TrueCFB")
+        lines.append(f"{name.split()[0]} #{row[col]} {row[1]} · TrueCFB #{row[0]} · {r1(row[2])} · "
+                     f"{row[3]}-{row[4]} · {say}")
+    left_out = [row for row in rows if not row[col] and row[0] <= 25]
+    if left_out:
+        lines.append(f"In TrueCFB's top 25 but not in the {name}: " + " · ".join(
+            f"TrueCFB #{row[0]} {row[1]} {r1(row[2])} ({row[3]}-{row[4]})" for row in left_out))
+    far = sorted(polled, key=lambda row: -abs(row[0] - row[col]))[:5]
+    lines.append(f"Biggest differences from the {name}: " + " · ".join(
+        f"{row[1]} ({name.split()[0]} #{row[col]}, TrueCFB #{row[0]})" for row in far))
+    return lines
+
+
+def look_games(book, season=None, order="highest", result="any", count=10):
+    """Every FBS team's games in a season, sorted by Game Rating."""
+    y = book.season(season)
+    result, count = str(result or "any").lower(), max(1, min(int(count or 10), MAX_LIST))
+    rows = []
+    for t, gs in book.sched(y).items():
+        for g in gs:
+            won = g[3] > g[4]
+            if (result == "win" and not won) or (result == "loss" and won):
+                continue
+            rows.append((g[6], t, g))
+    rows.sort(key=lambda x: x[0], reverse=str(order).lower() != "lowest")
+    what = {"win": "wins", "loss": "losses"}.get(result, "games")
+    lines = header(book, y) + [f"The {count} {'lowest' if str(order).lower() == 'lowest' else 'highest'} "
+                               f"Game Ratings in {what}, {y} (each team's side of a game):"]
+    lines += [game_line(book, t, g, y).replace("- ", f"- {t} ", 1) for _, t, g in rows[:count]]
+    return lines
+
+
+SEASON = {"type": "integer", "description": "A season from 2014 on. Leave it out for the current season."}
+LOOKUPS = [
+    {"name": "rankings", "fn": look_rankings,
+     "description": "TrueCFB's ranking: rank, Team Rating, record and conference for a slice of teams.",
+     "parameters": {"type": "object", "properties": {
+         "season": SEASON,
+         "start": {"type": "integer", "description": "First rank to list (default 1)."},
+         "count": {"type": "integer", "description": f"How many teams (default 10, at most {MAX_LIST})."}}}},
+    {"name": "team", "fn": look_team,
+     "description": "One team's season: rank, Team Rating, record, conference, its bonus, where it started, "
+                    "every game with its Game Rating split into the rule's parts and the Team Rating after it, "
+                    "its highest and lowest Game Rating, and the teams ranked around it.",
+     "parameters": {"type": "object", "properties": {
+         "team": {"type": "string", "description": "The team's name exactly as in the team list."},
+         "season": SEASON}, "required": ["team"]}},
+    {"name": "matchup", "fn": look_matchup,
+     "description": "Two teams side by side: ranks, Team Ratings, the gap, and their game that season if they "
+                    "played (each side's Game Rating, and what the game did to the ranking when it was recent).",
+     "parameters": {"type": "object", "properties": {
+         "team_a": {"type": "string"}, "team_b": {"type": "string"}, "season": SEASON},
+         "required": ["team_a", "team_b"]}},
+    {"name": "conference", "fn": look_conference,
+     "description": "One conference's Conference Rating, rank and members in order; or, with no conference "
+                    "given, every conference's Conference Rating in order.",
+     "parameters": {"type": "object", "properties": {
+         "conference": {"type": "string", "description": "Leave it out for all conferences."},
+         "season": SEASON}}},
+    {"name": "polls", "fn": look_polls,
+     "description": "The CFP ranking or AP poll beside TrueCFB's ranking at the same point of the season: each "
+                    "poll team's TrueCFB rank and how far apart the two are, TrueCFB top-25 teams the poll left "
+                    "out, and the biggest differences. The latest one on file unless a week is given.",
+     "parameters": {"type": "object", "properties": {
+         "poll": {"type": "string", "enum": ["cfp", "ap"]}, "season": SEASON,
+         "week": {"type": "integer", "description": "Leave it out for the latest."}}}},
+    {"name": "games", "fn": look_games,
+     "description": "The highest or lowest Game Ratings of a season across all FBS teams, in wins, losses or "
+                    "all games. For best wins, best losses, worst losses, the biggest results of the season.",
+     "parameters": {"type": "object", "properties": {
+         "season": SEASON, "order": {"type": "string", "enum": ["highest", "lowest"]},
+         "result": {"type": "string", "enum": ["any", "win", "loss"]},
+         "count": {"type": "integer", "description": f"Default 10, at most {MAX_LIST}."}}}},
+]
+BY_NAME = {x["name"]: x for x in LOOKUPS}
+
+
+def run(book, name, args):
+    """One lookup's answer as text. A lookup that finds nothing says why, so the model can try another."""
+    if name not in BY_NAME:
+        return f"No lookup named {name!r}."
+    import inspect
+    fn = BY_NAME[name]["fn"]
+    known = inspect.signature(fn).parameters
+    try:
+        return "\n".join(fn(book, **{k: v for k, v in (args or {}).items() if k in known and v not in (None, "")}))
+    except Unanswerable as why:
+        return f"Nothing found: {why}"
+    except (TypeError, ValueError) as err:
+        return f"That lookup did not work ({err}). Check its fields."
 
 
 # ---------- which numbers a reply may use ----------
