@@ -133,11 +133,11 @@ Run the tests with `python tests/test_reply_bot.py` (no keys needed). Try one qu
 |---|---|---|
 | Mention read: the Worker's check (app-only token) plus the draft job's read (own account) | $0.006 | $0.006 |
 | Parent post read (when there is one) | $0.005 | $0.005 |
-| Model: read + write (Grok 4.7; a rewrite adds ≈$0.005) | ≈$0.009 | ≈$0.009 |
+| Model: lookups and the reply (Grok 4.7, 2 to 3 turns; 78-question test, 25 Nov 2026) | ≈$0.014 | ≈$0.014 |
 | Reply post ("summoned"; $0.015 if X bills it as a plain post) | $0.010 | none |
-| **Total** | **≈$0.030** | **≈$0.020** |
+| **Total** | **≈$0.035** | **≈$0.025** |
 
-The Worker only checks whether there is anything new (up to 5 posts); the draft job then reads them with the account's own keys at $0.001 each. Putting the write keys on the Worker would save $0.005 a mention; not worth it. At 100 replies a week, about $3 a week. GitHub Actions minutes are free on a public repo.
+The Worker only checks whether there is anything new (up to 5 posts); the draft job then reads them with the account's own keys at $0.001 each. Putting the write keys on the Worker would save $0.005 a mention; not worth it. At 100 replies a week, about $3.50 a week. GitHub Actions minutes are free on a public repo.
 
 ### Risks
 

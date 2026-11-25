@@ -74,7 +74,9 @@ def game_line(book, team, g, y):
         who = f"{opp} (FCS, rated {r1(book.data['settings']['fcs'])})"
     else:
         rank = ranks.get(opp, [None, None])[1]
-        who = f"{opp} (#{rank}, {r1(g[7])})" if rank else f"{opp} ({r1(g[7])})"
+        # The opponent's rank and rating now: the rating is what its bonus uses, the rank is not where it
+        # stood on the day of the game, so it is labeled "now".
+        who = f"{opp} (now #{rank}, {r1(g[7])})" if rank else f"{opp} ({r1(g[7])})"
     where = {"H": "vs", "A": "at"}.get(g[2], "vs")
     site = "" if g[2] in ("H", "A") else ", neutral site"
     res = "won" if p["won"] else "lost"

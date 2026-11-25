@@ -31,6 +31,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 README = os.path.join(ROOT, "README.md")
 TARGET = 250           # asked of the model; the check enforces 280
 MAX_CALLS = 8          # model turns for one question
+MAX_LOOKUPS = 12       # lookups for one question
 MAX_REWRITES = 1
 
 PREDICTS = re.compile(r"\b(will|should|would|going to|gonna)\s+(win|beat|lose|cover|upset|top|make)\b"
@@ -52,7 +53,7 @@ Numbers. Code checks every one before anyone sees the reply:
 - Never calculate anything: no sums, differences, averages, percentages, counts or projections of your own. The lookups already give the gaps and changes you need.
 - Never write a number as a word ("two losses"). If a count is not written in a lookup, leave it out.
 - Every claim must be stated in a lookup or the rules, not only every number. Do not compare two numbers yourself (higher, lower, matches, about the same, above average) unless a lookup states that comparison, as it does for gaps, "highest Game Rating", "spots higher" and "Ranked around". A Team Rating is the average of the Game Ratings; do not describe any one game as matching or beating it.
-- Say which point in the season the numbers are from when it matters (each lookup's first line says).
+- Say which point in the season the numbers are from when it matters (each lookup's first line says). In a game line, an opponent's rank is its rank now ("now #1"), not on the day of the game; say so or leave it out.
 
 TrueCFB's words. Code checks these too:
 - The name is TrueCFB. The version is v1.0.
@@ -151,6 +152,9 @@ def answer(book, mention, parent="", readme_path=README, provider=None, model=No
         results = []
         for call in calls:
             if call["name"] != "reply":
+                if len(out["lookups"]) >= MAX_LOOKUPS:
+                    results.append((call["id"], f"Lookup limit ({MAX_LOOKUPS}) reached. Call reply now with what you have."))
+                    continue
                 text = X.run(book, call["name"], call["args"])
                 seen.append(text)
                 out["lookups"].append(lookup_label(call["name"], call["args"]))

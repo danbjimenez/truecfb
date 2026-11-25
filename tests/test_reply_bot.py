@@ -196,6 +196,9 @@ def test_skip_and_errors():
     res = go(Fake(*[[("rankings", {})]] * 20))
     assert res["status"] == "failed" and "model turns" in res["problems"][0]
     assert len(res["lookups"]) == A.MAX_CALLS
+    fake = Fake([("rankings", {})] * 20, [reply("", skip=True)])
+    res = go(fake)
+    assert len(res["lookups"]) == A.MAX_LOOKUPS and "limit" in fake.results[0][-1][1]
 
 
 def test_provider_choice():
