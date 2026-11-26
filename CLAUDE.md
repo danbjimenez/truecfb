@@ -30,7 +30,7 @@ Read before changing things:
 | `src/card.py` | The 1200 × 675 result card |
 | `src/cfp_card.py` | The weekly "TrueCFB vs the CFP ranking" card and post |
 | `src/bot_drafts.py`, `src/bot_post.py` | X bot: drafts to Telegram, posting |
-| `src/reply_bot.py`, `reply_agent.py`, `reply_facts.py`, `reply_book.py`, `reply_model.py` | Reply bot (`docs/REPLY-BOT.md`): the model (Grok by default) answers any college football question, looking up the engine's numbers as it needs them; code checks every number |
+| `src/reply_bot.py`, `reply_agent.py`, `reply_facts.py`, `reply_book.py`, `reply_whatif.py`, `reply_model.py` | Reply bot (`docs/REPLY-BOT.md`): the model (Grok by default) answers any college football question, looking up the engine's numbers as it needs them (what-ifs re-run the engine from `site/whatif.json`); code checks every number |
 | `site/` | The static site (Cloudflare serves it); `site/live.json` = finals the bot has handled |
 | `worker/index.js` | Cloudflare Worker: scoreboard check + Telegram hook |
 | `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `telegram-setup.yml`, `release.yml` |
@@ -60,7 +60,7 @@ Known local difference: on an Apple Silicon Mac, the week-1 order of teams tied 
 ## Open work
 
 - **Selection day, Sun 6 Dec 2026:** add the final 2026 CFP ranking to `data/cfp_final.json` (key `"2026"`, 25 names in order, spelled as in `data/polls/2026.json`). The date is already in `run_all.py`; that one entry switches 2026 to count bowl and playoff games. Until then the current season counts regular-season games only.
-- **Reply bot:** built in draft mode, off until its secrets are added (`XAI_API_KEY` first); steps in `docs/REPLY-BOT.md` ("Turning it on"). Read the model test's replies before going live, and send X an approval request before setting `REPLIES_LIVE`.
+- **Reply bot:** live since 26 Nov 2026 (`REPLIES_LIVE` on; every reply still needs Dan's Post reply tap). Dan chose not to file X's written-approval request (X's 17 Nov developer docs say none is needed). Next: push mentions to the Worker (X Activity API) instead of polling.
 - **Security settings (Dan, from the 23 Nov 2026 review):** in GitHub, an `x-bot` environment limited to `main` holding the four `X_*` secrets (then add `environment: x-bot` to post-to-x.yml), a ruleset on `main` blocking force-push and deletion, GitHub-owned actions only with SHA pinning required, email privacy, Dependabot alerts on. In Cloudflare, a WAF rule allowing `/hooks/telegram` only from Telegram's IP ranges (`149.154.160.0/20`, `91.108.4.0/22`).
 - **Site content from the agent** (later): beyond X posts, Dan wants the agent to write content for the site and keep the data fresh. Setup stays Claude + Cloudflare + GitHub Actions; self-hosting on a Mac mini was considered and dropped.
 - **Preseason tie order:** fix the unstable sort above (`kind="stable"` or a name tiebreak) so local runs match the jobs. It changes the published order of tied teams once, so it needs Dan's OK.

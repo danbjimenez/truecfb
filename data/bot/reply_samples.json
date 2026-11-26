@@ -1,5 +1,5 @@
 {
- "about": "Made-up mentions of @truecfb for the model test (src/reply_eval.py). Not real posts. expect: 'reply' (a real question it should answer), 'skip' (nothing to answer, or an attempt to steer the bot), or 'either' (no clear right call; read the result). Includes how-it-works and why questions, and questions no fixed type covers (the CFP, best losses, players).",
+ "about": "Made-up mentions of @truecfb for the model test (src/reply_eval.py). Not real posts. expect: 'reply' (a real question it should answer), 'skip' (nothing to answer, or an attempt to steer the bot), or 'either' (no clear right call; read the result). Includes how-it-works and why questions, and questions no fixed type covers (the CFP, best losses, players, and games not yet played).",
  "samples": [
   {"post": "@truecfb where does Utah land in your rankings?", "above": "", "expect": "reply"},
   {"post": "@truecfb thoughts?", "above": "Utah stays undefeated. Utes roll TCU 38-17 in Fort Worth.", "expect": "reply"},
@@ -78,6 +78,11 @@
   {"post": "@truecfb who's the best QB in the country?", "above": "", "expect": "either"},
   {"post": "@truecfb who should be the last team in the playoff?", "above": "", "expect": "either"},
   {"post": "@truecfb which conference is the deepest?", "above": "", "expect": "reply"},
-  {"post": "@truecfb biggest upset of the year by your numbers?", "above": "", "expect": "either"}
+  {"post": "@truecfb biggest upset of the year by your numbers?", "above": "", "expect": "either"},
+  {"post": "@truecfb what are the implications for tonight's Texas Tech game?", "above": "", "expect": "reply"},
+  {"post": "@truecfb what's at stake for Utah this week?", "above": "", "expect": "reply"},
+  {"post": "@truecfb how far would Georgia drop if they lose to Georgia Tech?", "above": "", "expect": "reply"},
+  {"post": "@truecfb what's the biggest game this weekend by your numbers?", "above": "", "expect": "reply"},
+  {"post": "@truecfb who's in the best spot in the Big 12 race?", "above": "", "expect": "reply"}
  ]
 }

@@ -7,6 +7,7 @@ Writes to <out_dir>:
   rank_{year}.json every snapshot's full ranking: [rank, team, rating, wins, losses, CFP rank, AP rank]
   sched_{year}.json every team's rating at the start of the season and every game, with the Team Rating after it
   history.json     every team's and every conference's rating and rank at every snapshot of every season
+  whatif.json      the newest season's engine inputs, unrounded, for the reply bot's what-if lookup
 and then, from those files, the team pages, rankings.json, llms.txt and sitemap.xml (see build_pages.py)"""
 import sys, json, os
 import numpy as np, pandas as pd
@@ -251,6 +252,18 @@ for y in range(2014, LAST + 1):
               separators=(",", ":"), ensure_ascii=False)
     json.dump({sn["id"]: sn["all"] for sn in snaps}, open(f"{out_dir}/rank_{y}.json", "w"), separators=(",", ":"), ensure_ascii=False)
     data["seasons"][str(y)] = snaps
+    if y == LAST:
+        # The newest season's engine inputs, unrounded, so the reply bot's what-if lookup (reply_whatif.py)
+        # can re-run the engine with one made-up result added and start from exactly the published ranking.
+        cols = ["season", "week", "home", "away", "home_fbs", "away_fbs", "margin_home", "neutral",
+                "season_type", "note", "game_id"]
+        rows = [[int(r.season), int(r.week), r.home, r.away, bool(r.home_fbs), bool(r.away_fbs), int(r.margin_home),
+                 bool(r.neutral), r.season_type, None if pd.isna(r.note) else str(r.note), str(r.game_id)]
+                for r in s[cols].itertuples(index=False)]
+        json.dump({"season": y, "about": "Engine inputs for the newest season (display only; see src/reply_whatif.py)",
+                   "venue": float(V), "F": [float(x) for x in F], "h2h": bool(closed(y)), "teams": teams,
+                   "prior": {t: float(prior[t]) for t in prior.index}, "columns": cols, "games": rows},
+                  open(f"{out_dir}/whatif.json", "w"), separators=(",", ":"), ensure_ascii=False)
     prior = prior_next
 if "current" not in data:   # every season in the run is finished
     last_y = max(data["seasons"])
