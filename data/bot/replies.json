@@ -1,5 +1,5 @@
 {
- "newest": "2126069319696314506",
+ "newest": "2126072772422160702",
  "items": {
   "2125457972080038164": {
    "at": "2026-11-25T05:16:02Z",
@@ -33,6 +33,28 @@
    ],
    "status": "drafted",
    "reply": "TrueCFB rates results, not predictions. Texas Tech is #10 at 69.4, 0.8 above BYU. The opponent adds Texas Tech's +19.4 bonus, win or lose.",
+   "by": "grok-4.7"
+  },
+  "2126072772422160702": {
+   "at": "2026-11-26T22:01:07Z",
+   "user": "866bd1a3954dd951",
+   "thread": "2125783592949219562",
+   "model": "grok-4.7",
+   "lookups": [
+    "rankings",
+    "polls",
+    "polls",
+    "rankings",
+    "team",
+    "team",
+    "team",
+    "team",
+    "matchup",
+    "matchup",
+    "team"
+   ],
+   "status": "drafted",
+   "reply": "No. CFP has Tennessee #5, Alabama #6. TrueCFB has Alabama #6 at 73.0, 1.4 above #7 Tennessee in Team Rating, even after losing 26-10 there. Neighbors swap on head-to-head only within 1.0 at season's end. Indiana is #13 at 66.3, 1.0 above #14 Iowa.",
    "by": "grok-4.7"
   }
  }
