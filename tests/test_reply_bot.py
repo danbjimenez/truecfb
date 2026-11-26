@@ -183,8 +183,9 @@ class Fake:
         self.system, self.tools = system, tools
         return self
 
-    def say(self, text):
+    def say(self, text, images=()):
         self.sent.append(text)
+        self.images = list(images)
 
     def step(self):
         if self.fail:
@@ -231,6 +232,18 @@ def test_reply_after_a_lookup_is_drafted():
     assert res["lookups"] == ["matchup(Utah, BYU)"]
     assert "Game Rating 89.3" in fake.results[0][0][1]
     assert "## The rules" in fake.system and "<post>" in fake.sent[0]
+
+
+def test_images_go_to_the_model():
+    fake = Fake([reply("", skip=True)])
+    real = M.chat
+    M.chat = fake
+    try:
+        A.answer(BOOK, "@truecfb what do you think?", "Are these ranked right?", README,
+                 images=[f"https://pbs.twimg.com/media/{i}.jpg" for i in range(6)])
+    finally:
+        M.chat = real
+    assert len(fake.images) == A.MAX_IMAGES and "images come with those posts" in fake.system
 
 
 def test_numbers_must_come_from_this_questions_lookups():

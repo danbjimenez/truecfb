@@ -1,7 +1,7 @@
 """TrueCFB reply bot: the conversation with the model, for either provider.
 
   chat(system, tools, provider, model) -> a Chat
-  Chat.say(text)                       adds a user message
+  Chat.say(text, images)               adds a user message, with image URLs if any
   Chat.step() -> [{"id", "name", "args"}] the lookups (or the reply) the model calls next
   Chat.answer([(id, text), ...])       gives the model what its calls returned
   Chat.provider, Chat.model, Chat.usage (one entry per call: tokens in, cached, out, seconds)
@@ -32,8 +32,10 @@ class GrokChat:
         self.tools = [{"type": "function", "function": {"name": t["name"], "description": t["description"],
                                                          "parameters": t["parameters"]}} for t in tools]
 
-    def say(self, text):
-        self.messages.append({"role": "user", "content": text})
+    def say(self, text, images=()):
+        content = text if not images else [{"type": "text", "text": text}] + [
+            {"type": "image_url", "image_url": {"url": u, "detail": "high"}} for u in images]
+        self.messages.append({"role": "user", "content": content})
 
     def _post(self, body):
         import requests
@@ -92,8 +94,10 @@ class ClaudeChat:
         self.tools = [{"name": t["name"], "description": t["description"], "input_schema": t["parameters"]} for t in tools]
         self.messages = []
 
-    def say(self, text):
-        self.messages.append({"role": "user", "content": text})
+    def say(self, text, images=()):
+        content = text if not images else [{"type": "image", "source": {"type": "url", "url": u}} for u in images] + [
+            {"type": "text", "text": text}]
+        self.messages.append({"role": "user", "content": content})
 
     def step(self):
         t0 = time.monotonic()

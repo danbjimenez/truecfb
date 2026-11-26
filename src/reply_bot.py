@@ -127,16 +127,18 @@ def my_id(a):
 
 
 def mentions(a, uid, since_id):
-    """New posts that mention @truecfb, oldest first, with the posts they reply to or quote."""
+    """New posts that mention @truecfb, oldest first, with the posts they reply to or quote. Each post gets
+    "images": the URLs of its photos (a video's still image), for the model to read."""
     params = {"max_results": 100,
-              "tweet.fields": "author_id,conversation_id,created_at,referenced_tweets,entities,possibly_sensitive,in_reply_to_user_id",
-              "expansions": "referenced_tweets.id"}
+              "tweet.fields": "author_id,conversation_id,created_at,referenced_tweets,entities,possibly_sensitive,in_reply_to_user_id,attachments",
+              "expansions": "referenced_tweets.id,attachments.media_keys,referenced_tweets.id.attachments.media_keys",
+              "media.fields": "type,url,preview_image_url"}
     if since_id:
         params["since_id"] = since_id
     else:
         start = datetime.now(timezone.utc) - timedelta(hours=FIRST_LOOK_HOURS)
         params["start_time"] = start.strftime("%Y-%m-%dT%H:%M:%SZ")
-    posts, above, token = [], {}, None
+    posts, above, media, token = [], {}, {}, None
     for _ in range(5):   # at most 500 mentions a run
         if token:
             params["pagination_token"] = token
@@ -146,9 +148,13 @@ def mentions(a, uid, since_id):
         j = r.json()
         posts += j.get("data", [])
         above.update({t["id"]: t for t in j.get("includes", {}).get("tweets", [])})
+        media.update({m["media_key"]: m for m in j.get("includes", {}).get("media", [])})
         token = j.get("meta", {}).get("next_token")
         if not token:
             break
+    for t in posts + list(above.values()):   # the photos (or a video's still) in each post, as URLs
+        keys = (t.get("attachments") or {}).get("media_keys", [])
+        t["images"] = [u for u in (media.get(k, {}).get("url") or media.get(k, {}).get("preview_image_url") for k in keys) if u]
     return sorted(posts, key=lambda p: int(p["id"])), above
 
 
@@ -211,11 +217,13 @@ def draft(site_dir, bot_dir, outbox_path):
             continue
         par = parent_of(p, above)
         par_text = question_text(par.get("text", "")) if par else ""
-        res = A.answer(book, text, par_text)
+        images = p.get("images", []) + (par.get("images", []) if par else [])
+        res = A.answer(book, text, par_text, images=images)
         # Only the lookup names go in the public file: their fields are the model's words, shaped by the post.
         item.update({"model": res["by"], "lookups": [x.split("(")[0] for x in res["lookups"]][:12]})
         top = ["Reply draft" + ("" if live() else " (draft mode: posting is off)"), "",
-               f"Asked: {text[:500]}", *([f"Above: {par_text[:500]}"] if par_text else []), link]
+               f"Asked: {text[:500]}", *([f"Above: {par_text[:500]}"] if par_text else []),
+               *([f"Images read: {len(images)}"] if images else []), link]
         looked = "Looked up: " + (", ".join(res["lookups"]) or "nothing")
         if res["status"] == "declined":
             item["status"] = "skipped"; item["why"] = "model: nothing to answer"   # its note goes to Telegram only
