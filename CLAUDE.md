@@ -32,8 +32,8 @@ Read before changing things:
 | `src/bot_drafts.py`, `src/bot_post.py` | X bot: drafts to Telegram, posting |
 | `src/reply_bot.py`, `reply_agent.py`, `reply_facts.py`, `reply_book.py`, `reply_model.py` | Reply bot (`docs/REPLY-BOT.md`): the model (Grok by default) answers any college football question, looking up the engine's numbers as it needs them; code checks every number |
 | `site/` | The static site (Cloudflare serves it); `site/live.json` = finals the bot has handled |
-| `worker/index.js` | Cloudflare Worker: scoreboard check + Telegram hook |
-| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `telegram-setup.yml`, `release.yml` |
+| `worker/index.js` | Cloudflare Worker: scoreboard check, Telegram hook, X's push of mentions (`/hooks/x`; set up with `src/x_push.py`) |
+| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `x-push.yml`, `telegram-setup.yml`, `release.yml` |
 | `data/` | Polls, CFP finals, team colors, team hashtags, bot drafts and posted log (downloaded game files are not committed) |
 
 ## Running locally
