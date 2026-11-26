@@ -13,8 +13,16 @@ on:
         description: "Models to try, space-separated: claude, grok, or provider:model"
         required: false
         default: "grok"
+      set:
+        description: "core (about 13 samples, about $0.15) or all (about 83, about $1)"
+        required: false
+        default: "core"
+      from:
+        description: "Start at the Nth sample of that set (optional)"
+        required: false
+        default: ""
       limit:
-        description: "Only the first N sample mentions (optional; all 64 when empty)"
+        description: "Stop after N samples (optional)"
         required: false
         default: ""
 
@@ -39,6 +47,8 @@ jobs:
       - name: Try the model
         env:
           MODELS: ${{ inputs.models }}
+          SAMPLE_SET: ${{ inputs.set }}
+          SAMPLE_FROM: ${{ inputs.from }}
           SAMPLE_LIMIT: ${{ inputs.limit }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
