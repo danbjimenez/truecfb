@@ -1,5 +1,5 @@
 {
- "newest": "2126178068171747771",
+ "newest": "2126179800750731760",
  "items": {
   "2125457972080038164": {
    "at": "2026-11-25T05:16:02Z",
@@ -68,6 +68,22 @@
   },
   "2126178068171747771": {
    "at": "2026-11-27T05:01:04Z",
+   "user": "866bd1a3954dd951",
+   "thread": "2126069319696314506",
+   "status": "skipped",
+   "why": "already answered them in this thread"
+  },
+  "2126179691140948251": {
+   "at": "2026-11-27T05:15:57Z",
+   "user": "a12e644bc8604b5c",
+   "thread": "2126069319696314506",
+   "model": "grok-4.7",
+   "lookups": [],
+   "status": "failed",
+   "why": "model error: xAI API 402: {\"code\":\"personal-team-blocked:spending-limit\",\"error\":\"You have run out of credits or need a Grok subscription. Add credits at https://g"
+  },
+  "2126179800750731760": {
+   "at": "2026-11-27T05:15:58Z",
    "user": "866bd1a3954dd951",
    "thread": "2126069319696314506",
    "status": "skipped",
