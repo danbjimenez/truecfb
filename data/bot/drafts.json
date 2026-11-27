@@ -1762,5 +1762,433 @@
    }
   },
   "created": "2026-11-27T20:31:46Z"
+ },
+ "401862840": {
+  "post": "FINAL: UTSA 28, Tulsa 22\nMatchup Rating 110\nUTSA #28 → #26 · Tulsa #68 → #72\n#BirdsUp #Tulsa",
+  "length": 94,
+  "alt": "FINAL: UTSA 28, Tulsa 22 · home win\nMatchup Rating 110\nUTSA: Game Rating 68.7 · Team Rating 61.5 (+0.7) · #28 → #26\nTulsa: Game Rating 41.8 · Team Rating 49.0 (-0.7) · #68 → #72\nRipple: Texas State +0.1 (lost to UTSA) · Sam Houston -0.1 (lost to Tulsa)",
+  "day": "2026-11-27",
+  "matchup_rating": 110,
+  "teams": [
+   "UTSA",
+   "Tulsa"
+  ],
+  "impact": {
+   "game_id": 401862840,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 110,
+   "winner": "UTSA",
+   "teams": [
+    {
+     "team": "UTSA",
+     "fbs": true,
+     "points": 28,
+     "won": true,
+     "site": "home",
+     "game_rating": 68.7,
+     "rating_before": 60.8,
+     "rating_after": 61.5,
+     "change": 0.7,
+     "rank_before": 28,
+     "rank_after": 26,
+     "bonus": 11.5,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Tulsa",
+     "fbs": true,
+     "points": 22,
+     "won": false,
+     "site": "road",
+     "game_rating": 41.8,
+     "rating_before": 49.7,
+     "rating_after": 49.0,
+     "change": -0.7,
+     "rank_before": 68,
+     "rank_after": 72,
+     "bonus": -1.0,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Texas State",
+      "change": 0.09,
+      "rating_after": 55.8,
+      "rank_before": 39,
+      "rank_after": 39,
+      "link": [
+       {
+        "vs": "UTSA",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Colorado State",
+      "change": 0.09,
+      "rating_after": 36.2,
+      "rank_before": 114,
+      "rank_after": 114,
+      "link": [
+       {
+        "vs": "UTSA",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UAB",
+      "change": 0.07,
+      "rating_after": 43.0,
+      "rank_before": 99,
+      "rank_after": 99,
+      "link": [
+       {
+        "vs": "UTSA",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Sam Houston",
+      "change": -0.07,
+      "rating_after": 21.1,
+      "rank_before": 137,
+      "rank_after": 137,
+      "link": [
+       {
+        "vs": "Tulsa",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Oklahoma State",
+      "change": -0.07,
+      "rating_after": 59.9,
+      "rank_before": 29,
+      "rank_after": 29,
+      "link": [
+       {
+        "vs": "Tulsa",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Army",
+      "change": -0.06,
+      "rating_after": 45.4,
+      "rank_before": 89,
+      "rank_after": 89,
+      "link": [
+       {
+        "vs": "Tulsa",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Texas State",
+      "change": 0.09,
+      "rating_after": 55.8,
+      "rank_before": 39,
+      "rank_after": 39,
+      "link": [
+       {
+        "vs": "UTSA",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Colorado State",
+      "change": 0.09,
+      "rating_after": 36.2,
+      "rank_before": 114,
+      "rank_after": 114,
+      "link": [
+       {
+        "vs": "UTSA",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Sam Houston",
+      "change": -0.07,
+      "rating_after": 21.1,
+      "rank_before": 137,
+      "rank_after": 137,
+      "link": [
+       {
+        "vs": "Tulsa",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Oklahoma State",
+      "change": -0.07,
+      "rating_after": 59.9,
+      "rank_before": 29,
+      "rank_after": 29,
+      "link": [
+       {
+        "vs": "Tulsa",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UAB",
+      "change": 0.07,
+      "rating_after": 43.0,
+      "rank_before": 99,
+      "rank_after": 99,
+      "link": [
+       {
+        "vs": "UTSA",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 10
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-27T20:46:25Z"
+ },
+ "401866473": {
+  "post": "FINAL: Toledo 34, Ohio 31\nMatchup Rating 98\nToledo #62 → #52 · Ohio #80 → #87\n#OhioBobcats #ToledoRockets",
+  "length": 107,
+  "alt": "FINAL: Toledo 34, Ohio 31 · road win\nMatchup Rating 98\nToledo: Game Rating 69.9 · Team Rating 52.6 (+1.7) · #62 → #52\nOhio: Game Rating 28.4 · Team Rating 45.6 (-1.7) · #80 → #87\nRipple: San Diego State +0.2 (lost to Toledo) · Jacksonville State -0.2 (lost to Ohio)",
+  "day": "2026-11-27",
+  "matchup_rating": 98,
+  "teams": [
+   "Ohio",
+   "Toledo"
+  ],
+  "impact": {
+   "game_id": 401866473,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 98,
+   "winner": "Toledo",
+   "teams": [
+    {
+     "team": "Ohio",
+     "fbs": true,
+     "points": 31,
+     "won": false,
+     "site": "home",
+     "game_rating": 28.4,
+     "rating_before": 47.3,
+     "rating_after": 45.6,
+     "change": -1.7,
+     "rank_before": 80,
+     "rank_after": 87,
+     "bonus": -4.4,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Toledo",
+     "fbs": true,
+     "points": 34,
+     "won": true,
+     "site": "road",
+     "game_rating": 69.9,
+     "rating_before": 50.9,
+     "rating_after": 52.6,
+     "change": 1.7,
+     "rank_before": 62,
+     "rank_after": 52,
+     "bonus": 2.6,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "San Diego State",
+      "change": 0.18,
+      "rating_after": 48.5,
+      "rank_before": 76,
+      "rank_after": 75,
+      "link": [
+       {
+        "vs": "Toledo",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Temple",
+      "change": 0.17,
+      "rating_after": 25.7,
+      "rank_before": 132,
+      "rank_after": 132,
+      "link": [
+       {
+        "vs": "Toledo",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Michigan State",
+      "change": 0.16,
+      "rating_after": 45.5,
+      "rank_before": 90,
+      "rank_after": 88,
+      "link": [
+       {
+        "vs": "Toledo",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Jacksonville State",
+      "change": -0.18,
+      "rating_after": 48.1,
+      "rank_before": 78,
+      "rank_after": 78,
+      "link": [
+       {
+        "vs": "Ohio",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "South Alabama",
+      "change": -0.17,
+      "rating_after": 43.6,
+      "rank_before": 95,
+      "rank_after": 96,
+      "link": [
+       {
+        "vs": "Ohio",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Central Michigan",
+      "change": -0.16,
+      "rating_after": 40.3,
+      "rank_before": 106,
+      "rank_after": 106,
+      "link": [
+       {
+        "vs": "Ohio",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "San Diego State",
+      "change": 0.18,
+      "rating_after": 48.5,
+      "rank_before": 76,
+      "rank_after": 75,
+      "link": [
+       {
+        "vs": "Toledo",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Jacksonville State",
+      "change": -0.18,
+      "rating_after": 48.1,
+      "rank_before": 78,
+      "rank_after": 78,
+      "link": [
+       {
+        "vs": "Ohio",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Temple",
+      "change": 0.17,
+      "rating_after": 25.7,
+      "rank_before": 132,
+      "rank_after": 132,
+      "link": [
+       {
+        "vs": "Toledo",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "South Alabama",
+      "change": -0.17,
+      "rating_after": 43.6,
+      "rank_before": 95,
+      "rank_after": 96,
+      "link": [
+       {
+        "vs": "Ohio",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Michigan State",
+      "change": 0.16,
+      "rating_after": 45.5,
+      "rank_before": 90,
+      "rank_after": 88,
+      "link": [
+       {
+        "vs": "Toledo",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 15
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-27T20:46:25Z"
  }
 }
