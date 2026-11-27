@@ -1120,5 +1120,219 @@
    }
   },
   "created": "2026-11-27T04:31:37Z"
+ },
+ "401866472": {
+  "post": "FINAL: Buffalo 17, Akron 9\nMatchup Rating 75\nBuffalo #78 → #76 · Akron #131\n#Zips #UBBulls",
+  "length": 91,
+  "alt": "FINAL: Buffalo 17, Akron 9 · road win\nMatchup Rating 75\nBuffalo: Game Rating 52.7 · Team Rating 48.3 (+0.4) · #78 → #76\nAkron: Game Rating 21.9 · Team Rating 26.3 (-0.4) · #131\nRipple: UNLV -0.1 (beat Akron)",
+  "day": "2026-11-27",
+  "matchup_rating": 75,
+  "teams": [
+   "Akron",
+   "Buffalo"
+  ],
+  "impact": {
+   "game_id": 401866472,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 75,
+   "winner": "Buffalo",
+   "teams": [
+    {
+     "team": "Akron",
+     "fbs": true,
+     "points": 9,
+     "won": false,
+     "site": "home",
+     "game_rating": 21.9,
+     "rating_before": 26.7,
+     "rating_after": 26.3,
+     "change": -0.4,
+     "rank_before": 131,
+     "rank_after": 131,
+     "bonus": -23.7,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Buffalo",
+     "fbs": true,
+     "points": 17,
+     "won": true,
+     "site": "road",
+     "game_rating": 52.7,
+     "rating_before": 47.9,
+     "rating_after": 48.3,
+     "change": 0.4,
+     "rank_before": 78,
+     "rank_after": 76,
+     "bonus": -1.7,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Florida International",
+      "change": 0.04,
+      "rating_after": 35.2,
+      "rank_before": 116,
+      "rank_after": 116,
+      "link": [
+       {
+        "vs": "Buffalo",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Toledo",
+      "change": 0.04,
+      "rating_after": 51.0,
+      "rank_before": 62,
+      "rank_after": 62,
+      "link": [
+       {
+        "vs": "Buffalo",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Bowling Green",
+      "change": 0.04,
+      "rating_after": 29.8,
+      "rank_before": 128,
+      "rank_after": 128,
+      "link": [
+       {
+        "vs": "Buffalo",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "UNLV",
+      "change": -0.05,
+      "rating_after": 49.5,
+      "rank_before": 70,
+      "rank_after": 70,
+      "link": [
+       {
+        "vs": "Akron",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Wake Forest",
+      "change": -0.05,
+      "rating_after": 69.9,
+      "rank_before": 9,
+      "rank_after": 9,
+      "link": [
+       {
+        "vs": "Akron",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Ohio",
+      "change": -0.05,
+      "rating_after": 47.5,
+      "rank_before": 80,
+      "rank_after": 80,
+      "link": [
+       {
+        "vs": "Akron",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "UNLV",
+      "change": -0.05,
+      "rating_after": 49.5,
+      "rank_before": 70,
+      "rank_after": 70,
+      "link": [
+       {
+        "vs": "Akron",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Wake Forest",
+      "change": -0.05,
+      "rating_after": 69.9,
+      "rank_before": 9,
+      "rank_after": 9,
+      "link": [
+       {
+        "vs": "Akron",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Ohio",
+      "change": -0.05,
+      "rating_after": 47.5,
+      "rank_before": 80,
+      "rank_after": 80,
+      "link": [
+       {
+        "vs": "Akron",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Eastern Michigan",
+      "change": -0.04,
+      "rating_after": 34.0,
+      "rank_before": 118,
+      "rank_after": 119,
+      "link": [
+       {
+        "vs": "Akron",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Florida International",
+      "change": 0.04,
+      "rating_after": 35.2,
+      "rank_before": 116,
+      "rank_after": 116,
+      "link": [
+       {
+        "vs": "Buffalo",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 0
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-27T20:16:20Z"
  }
 }
