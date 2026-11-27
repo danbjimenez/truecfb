@@ -2190,5 +2190,219 @@
    }
   },
   "created": "2026-11-27T20:46:25Z"
+ },
+ "401869930": {
+  "post": "FINAL: South Alabama 20, App State 13\nMatchup Rating 87\nSouth Alabama #96 → #92 · App State #97 → #101\n#SouthAlabama #GoApp",
+  "length": 125,
+  "alt": "FINAL: South Alabama 20, App State 13 · home win\nMatchup Rating 87\nSouth Alabama: Game Rating 62.0 · Team Rating 45.2 (+1.7)\nApp State: Game Rating 25.0 · Team Rating 41.8 (-1.7)\nRipple: Southern Miss +0.2 (lost to South Alabama) · Old Dominion -0.2 (beat App State)",
+  "day": "2026-11-27",
+  "matchup_rating": 87,
+  "teams": [
+   "South Alabama",
+   "App State"
+  ],
+  "impact": {
+   "game_id": 401869930,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 87,
+   "winner": "South Alabama",
+   "teams": [
+    {
+     "team": "South Alabama",
+     "fbs": true,
+     "points": 20,
+     "won": true,
+     "site": "home",
+     "game_rating": 62.0,
+     "rating_before": 43.6,
+     "rating_after": 45.2,
+     "change": 1.7,
+     "rank_before": 96,
+     "rank_after": 92,
+     "bonus": -4.8,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "App State",
+     "fbs": true,
+     "points": 13,
+     "won": false,
+     "site": "road",
+     "game_rating": 25.0,
+     "rating_before": 43.5,
+     "rating_after": 41.8,
+     "change": -1.7,
+     "rank_before": 97,
+     "rank_after": 101,
+     "bonus": -8.2,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Southern Miss",
+      "change": 0.23,
+      "rating_after": 30.9,
+      "rank_before": 126,
+      "rank_after": 126,
+      "link": [
+       {
+        "vs": "South Alabama",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Louisiana Tech",
+      "change": 0.22,
+      "rating_after": 56.6,
+      "rank_before": 35,
+      "rank_after": 35,
+      "link": [
+       {
+        "vs": "South Alabama",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Louisiana",
+      "change": 0.21,
+      "rating_after": 49.8,
+      "rank_before": 68,
+      "rank_after": 68,
+      "link": [
+       {
+        "vs": "South Alabama",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Old Dominion",
+      "change": -0.24,
+      "rating_after": 32.3,
+      "rank_before": 123,
+      "rank_after": 123,
+      "link": [
+       {
+        "vs": "App State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Georgia Southern",
+      "change": -0.23,
+      "rating_after": 51.1,
+      "rank_before": 61,
+      "rank_after": 62,
+      "link": [
+       {
+        "vs": "App State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Georgia State",
+      "change": -0.23,
+      "rating_after": 38.0,
+      "rank_before": 110,
+      "rank_after": 111,
+      "link": [
+       {
+        "vs": "App State",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Old Dominion",
+      "change": -0.24,
+      "rating_after": 32.3,
+      "rank_before": 123,
+      "rank_after": 123,
+      "link": [
+       {
+        "vs": "App State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Southern Miss",
+      "change": 0.23,
+      "rating_after": 30.9,
+      "rank_before": 126,
+      "rank_after": 126,
+      "link": [
+       {
+        "vs": "South Alabama",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Georgia Southern",
+      "change": -0.23,
+      "rating_after": 51.1,
+      "rank_before": 61,
+      "rank_after": 62,
+      "link": [
+       {
+        "vs": "App State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Georgia State",
+      "change": -0.23,
+      "rating_after": 38.0,
+      "rank_before": 110,
+      "rank_after": 111,
+      "link": [
+       {
+        "vs": "App State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Louisiana Tech",
+      "change": 0.22,
+      "rating_after": 56.6,
+      "rank_before": 35,
+      "rank_after": 35,
+      "link": [
+       {
+        "vs": "South Alabama",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 20
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-27T23:16:32Z"
  }
 }
