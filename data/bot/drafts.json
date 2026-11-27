@@ -906,5 +906,219 @@
    ]
   },
   "created": "2026-11-25T05:20:30Z"
+ },
+ "401856879": {
+  "post": "FINAL: Texas Tech 48, TCU 27\nMatchup Rating 119\nTexas Tech #10 · TCU #72\n#WreckEm #GoFrogs",
+  "length": 90,
+  "alt": "FINAL: Texas Tech 48, TCU 27 · home win\nMatchup Rating 119\nTexas Tech: Game Rating 72.9 · Team Rating 69.7 (+0.3) · #10\nTCU: Game Rating 45.8 · Team Rating 49.0 (-0.3) · #72",
+  "day": "2026-11-26",
+  "matchup_rating": 119,
+  "teams": [
+   "Texas Tech",
+   "TCU"
+  ],
+  "impact": {
+   "game_id": 401856879,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-26",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 119,
+   "winner": "Texas Tech",
+   "teams": [
+    {
+     "team": "Texas Tech",
+     "fbs": true,
+     "points": 48,
+     "won": true,
+     "site": "home",
+     "game_rating": 72.9,
+     "rating_before": 69.4,
+     "rating_after": 69.7,
+     "change": 0.3,
+     "rank_before": 10,
+     "rank_after": 10,
+     "bonus": 19.7,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "TCU",
+     "fbs": true,
+     "points": 27,
+     "won": false,
+     "site": "road",
+     "game_rating": 45.8,
+     "rating_before": 49.3,
+     "rating_after": 49.0,
+     "change": -0.3,
+     "rank_before": 72,
+     "rank_after": 72,
+     "bonus": -1.0,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Colorado",
+      "change": 0.04,
+      "rating_after": 46.6,
+      "rank_before": 84,
+      "rank_after": 84,
+      "link": [
+       {
+        "vs": "Texas Tech",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Oregon State",
+      "change": 0.03,
+      "rating_after": 49.5,
+      "rank_before": 71,
+      "rank_after": 71,
+      "link": [
+       {
+        "vs": "Texas Tech",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Houston",
+      "change": 0.03,
+      "rating_after": 64.1,
+      "rank_before": 18,
+      "rank_after": 18,
+      "link": [
+       {
+        "vs": "Texas Tech",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Kansas",
+      "change": -0.04,
+      "rating_after": 46.5,
+      "rank_before": 85,
+      "rank_after": 85,
+      "link": [
+       {
+        "vs": "TCU",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "BYU",
+      "change": -0.04,
+      "rating_after": 68.5,
+      "rank_before": 11,
+      "rank_after": 11,
+      "link": [
+       {
+        "vs": "TCU",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "North Carolina",
+      "change": -0.03,
+      "rating_after": 52.5,
+      "rank_before": 53,
+      "rank_after": 53,
+      "link": [
+       {
+        "vs": "TCU",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Kansas",
+      "change": -0.04,
+      "rating_after": 46.5,
+      "rank_before": 85,
+      "rank_after": 85,
+      "link": [
+       {
+        "vs": "TCU",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Colorado",
+      "change": 0.04,
+      "rating_after": 46.6,
+      "rank_before": 84,
+      "rank_after": 84,
+      "link": [
+       {
+        "vs": "Texas Tech",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "BYU",
+      "change": -0.04,
+      "rating_after": 68.5,
+      "rank_before": 11,
+      "rank_after": 11,
+      "link": [
+       {
+        "vs": "TCU",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Oregon State",
+      "change": 0.03,
+      "rating_after": 49.5,
+      "rank_before": 71,
+      "rank_after": 71,
+      "link": [
+       {
+        "vs": "Texas Tech",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Houston",
+      "change": 0.03,
+      "rating_after": 64.1,
+      "rank_before": 18,
+      "rank_after": 18,
+      "link": [
+       {
+        "vs": "Texas Tech",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 0
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-27T04:31:37Z"
  }
 }
