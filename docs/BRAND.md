@@ -5,12 +5,13 @@ The full design system (colors, type, components, wordmark files) lives in a Cla
 ## Words
 
 - **The name is always written TrueCFB**: capital T, lowercase "rue", capital CFB. Everywhere: titles, headings, labels, navigation, body text, posts and cards. Never all capitals, even inside a heading that is otherwise uppercase by style (the stylesheet's `.nm` class keeps the name's capitals).
-- **The version is written v1.0** in copy, code and docs.
+- **The version is written 2026.2**: year.release, no "v" (2026.1 was released as "v1.0"), in copy, code and docs.
 - **Every TrueCFB number is a rating, never a score.** "Score" only means points on the scoreboard (28-20).
   - **Game Rating**: what one team earns for one game, 0 to 100 (above 100 in the postseason).
   - **Team Rating**: the average of a team's Game Ratings.
   - **Conference Rating**: the plain average of its members' Team Ratings.
-  - **Matchup Rating**: the pot the two teams in a game split, 100 plus both teams' bonuses.
+  - **Matchup Rating**: the pot the two teams in a game split, 100 plus both teams' strengths.
+  - **Strength**: how far a team is rated above or below 50 (Team Rating − 50); what it adds to an opponent's Game Rating, win or lose. Called the "bonus" before 27 Nov 2026 (Dan's call: "bonus" reads oddly when it is negative).
 - **Tagline:** "Unbiased, Deterministic, Open Source Rankings". "Deterministic" is kept on purpose, for the analytics audience.
 - **Site description line:** "Every FBS team rated on results alone. Every game counts. Open source formula."
 - **Chart titles:** "Team Rating History", "Conference Rating History".
@@ -18,7 +19,7 @@ The full design system (colors, type, components, wordmark files) lives in a Cla
 
 ## Numbers
 
-- One decimal on ratings. Signed changes, bonuses and gaps, with a real minus sign (−) in images and on the site.
+- One decimal on ratings. Signed changes, strengths and gaps, with a real minus sign (−) in images and on the site.
 - "NR" for not ranked. Tabular figures.
 
 ## Look

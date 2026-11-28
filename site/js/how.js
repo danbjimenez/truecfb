@@ -76,7 +76,7 @@
       if(before[champ] && before[runner] && lost)
         $("po-after").textContent = champ + " went from " + before[champ][2].toFixed(1) + " before the playoff to " + fin(champ) + " after it, and " + runner + " from " +
           before[runner][2].toFixed(1) + " to " + fin(runner) + ". " + runner + "'s loss in the final still earned " + lost[6].toFixed(1) +
-          ": the loser adds the winner's bonus, and no bonus is bigger than the champion's. Part of each rise also comes from opponents. Their bowl and playoff points raise their bonuses, which raises the value of having played them.";
+          ": the loser adds the winner's strength, and no strength is bigger than the champion's. Part of each rise also comes from opponents. Their bowl and playoff points raise their strengths, which raises the value of having played them.";
       $("po-run").hidden = false;
     }).catch(() => {});
   }

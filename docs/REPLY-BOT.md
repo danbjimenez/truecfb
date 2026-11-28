@@ -1,6 +1,6 @@
 # The @truecfb reply bot
 
-Status: **built in draft mode, 23 Nov 2026 (plan approved by Dan the same day). Off until its secrets are added**; see "Turning it on" at the end. Posting stays off until the GitHub variable `REPLIES_LIVE` is `true`. **24 Nov 2026 (Dan's call): the model writes the reply**, and code checks every number before Dan sees it. **25 Nov 2026 (Dan's call): any college football question**, not a fixed list of question types: the model looks up the engine's numbers it needs (rankings, a team's season, two teams, conferences, the CFP and AP beside TrueCFB, the season's best and worst Game Ratings) and answers from them. Grok 4.7 is the default model.
+Status: **live since 26 Nov 2026** (`REPLIES_LIVE` is `true`; every reply still waits for Dan's "Post reply" tap). Dan chose not to file X's written-approval request (section 1). **24 Nov 2026 (Dan's call): the model writes the reply**, and code checks every number before Dan sees it. **25 Nov 2026 (Dan's call): any college football question**, not a fixed list of question types: the model looks up the engine's numbers it needs (rankings, a team's season, two teams, conferences, the CFP and AP beside TrueCFB, the season's best and worst Game Ratings) and answers from them. Grok 4.7 is the default model.
 
 When someone tags @truecfb (usually under another account's post, asking it to weigh in), a model works out what TrueCFB's numbers say about it, looking them up as it goes, and writes the reply. Code checks that every number in the reply is one a lookup returned for that question. It starts in draft mode: each draft goes to Telegram, and nothing posts until Dan taps.
 
@@ -81,15 +81,15 @@ Dan taps Post reply ─► Worker /hooks/telegram ─► post-reply.yml
 
 - **Worker** (recommended): it already wakes every 5 minutes, is on time, and starts a GitHub job only when there is something new. It gets a new **read-only** secret, `X_BEARER_TOKEN` (app-only). It still never holds the X write keys and never computes a rating. The newest handled id comes from `site/replies.json`, the same pattern as `site/live.json`; Actions also checks `data/bot/replies.json`, so a duplicate dispatch does nothing.
 - **Actions cron**: GitHub delays scheduled runs by 5 to 30 minutes and runs a ~40-second job even when there is nothing to do. Not worth it.
-- **Later:** X's Activity API pushes mention events to a webhook (wider reply and mention coverage, changelog 19 Nov 2026). The Worker could take those instead of polling. Not needed at this volume.
+- **Push (26 Nov 2026, Dan's call):** X's Activity API pushes each mention (`post.mention.create`) to `https://truecfb.com/hooks/x` the moment it happens, and the Worker starts the draft job, so the wait is the job and the model (a minute or two), not the next check. The Worker answers X's ownership check and verifies every push with the app's OAuth 2.0 client secret (`X_CLIENT_SECRET`, a Cloudflare secret; it cannot post on its own). Once that secret is set, the Worker's own check of the mentions drops to every 30 minutes, as a backup in case X ever turns the webhook off (it does after failed checks). Cost: X bills each pushed event (its price table does not list mentions yet; likely about $0.005, the same as reading the mention). Set up with Actions → "Reply bot: set up push" (`src/x_push.py`), steps below.
 
 ### What the model does and what the engine does
 
 | Model (Grok 4.7 by default; tool calls) | Engine and code |
 |---|---|
 | **Reads** the post and the post above it, decides what TrueCFB's numbers can say about it, and **looks them up** (`reply_facts.LOOKUPS`): `rankings`, `team` (a season game by game, each Game Rating split into its parts), `matchup` (two teams, the gap, their game), `conference`, `polls` (the CFP ranking or AP poll beside TrueCFB's ranking at the same point, and the biggest differences), `games` (a season's highest or lowest Game Ratings, in wins, losses or all games), `upcoming` (games not yet played, from the public schedule file the ratings jobs read, with kickoff times), `what_if` (one game not yet played, a close and a two-score result each way: the v1.0 engine re-run with that game added, so every what-if number is engine output; `src/reply_whatif.py`, from `site/whatif.json`). The `team` lookup also gives the team's games still to play and its conference record; `conference` gives every member's record in games between members | Every number, from the engine's files only (`reply_book.Book`): rank, Team Rating, Game Rating and its parts, Matchup Rating, Conference Rating, record, the CFP and AP ranks the engine published beside its own (`site/rank_*.json`), gaps and changes |
-| **Writes** the reply, with the README's rules word for word as its knowledge of v1.0 (`reply_facts.primer`, read from the README on every run). May use general football knowledge in words; may not add a number of its own | **Checks** the reply (`reply_agent.problems`): every number must be written in something a lookup returned for this question, or in the rules, sign included; brand and X rules; no prediction wording. One rewrite, then no draft (Telegram shows the attempt and why) |
-| Never calculates: the lookups already split each Game Rating into its parts (result, venue, opponent's bonus, postseason, the 0 to 100 limit) and give every gap | Splits each Game Rating the way the site's How it works page does, from the engine's published settings and margin curve; the split matches every published Game Rating of every season to rounding (`tests/test_reply_bot.py`) |
+| **Writes** the reply, with the README's rules word for word as its knowledge of the rules (`reply_facts.primer`, read from the README on every run). May use general football knowledge in words; may not add a number of its own | **Checks** the reply (`reply_agent.problems`): every number must be written in something a lookup returned for this question, or in the rules, sign included; brand and X rules; no prediction wording. One rewrite, then no draft (Telegram shows the attempt and why) |
+| Never calculates: the lookups already split each Game Rating into its parts (result, opponent's strength, margin, venue, postseason, the 0 to 100 limit) and give every gap | Splits each Game Rating the way the site's How it works page does, from the engine's published settings and margin curve; the split matches every published Game Rating of every season to rounding (`tests/test_reply_bot.py`) |
 
 What the check cannot catch: a number used for the wrong thing (calling a Game Rating the Team Rating, or quoting a real 8-point margin as "8 points better"), a claim made from general knowledge in words, and wording that predicts without the usual words. Dan reads every draft, with what the model looked up and what it says the reply rests on.
 
@@ -98,7 +98,7 @@ What the check cannot catch: a number used for the wrong thing (calling a Game R
 **Why lookups instead of fixed question types (25 Nov 2026):** the first live test, "where does the CFP committee diverge the most from your rankings, and why?", fit none of the eight types and got no draft. Adding a type for each new kind of question doesn't scale; giving the model lookups does, and the number check works the same on whatever it looked up. The fixed templates went with the types.
 
 Rules for every reply, enforced in code like `game_impact.post_text`:
-- **TrueCFB** spelling, **v1.0**, **Rating** (never "score" for a TrueCFB number; "score" only for points, as in 28-20).
+- **TrueCFB** spelling, the current version (**2026.2**, from `engine.VERSION`), **Rating** (never "score" for a TrueCFB number; "score" only for points, as in 28-20).
 - One decimal on ratings; signed changes with a real minus sign (−); "NR" for unranked.
 - Describes, never predicts; no hype, no emoji; fan terms.
 - No links, no hashtags, no @mentions in the text. `exclude_reply_user_ids` keeps the other account in the thread from being mentioned automatically.
@@ -124,7 +124,8 @@ Same bot and chat as the result posts. The message shows what they asked, the po
 | `.github/workflows/reply-draft.yml` | Started by the Worker; drafts and sends to Telegram |
 | `.github/workflows/post-reply.yml` | Started by a "Post reply" tap; posts only while `REPLIES_LIVE` is `true` |
 | `.github/workflows/reply-eval.yml` | "Reply bot: try the model", by hand |
-| `worker/index.js` | `pollMentions()` (only runs when `X_BEARER_TOKEN` and `X_USER_ID` are set) and the `rpost:` / `rskip:` taps |
+| `worker/index.js` | `/hooks/x` (X's push of mentions, with `X_CLIENT_SECRET`), `pollMentions()` (the backup check; only runs when `X_BEARER_TOKEN` and `X_USER_ID` are set) and the `rpost:` / `rskip:` taps |
+| `src/x_push.py`, `.github/workflows/x-push.yml`, `tests/test_worker_xhook.mjs` | Register the webhook and the mention subscription with X; the Worker hook's signing checked against Node's HMAC (`node tests/test_worker_xhook.mjs`) |
 | `data/bot/replies.json`, `data/bot/optout.json`, `site/replies.json` | What was handled (ids, which lookups were used, the reply, what happened; never the text people wrote), opt-outs as hashes, and the newest handled id for the Worker |
 | `requirements-reply.txt` | `anthropic`, for the reply jobs only (Grok is called with `requests`) |
 
@@ -153,7 +154,7 @@ The Worker only checks whether there is anything new (up to 5 posts); the draft 
 7. **Predictions.** TrueCFB describes, never predicts. The model is told so, and the check rejects common prediction wording ("will beat", "favored", "odds"). Wording that predicts without those words is on Dan's review.
 8. **Bowl games.** Until the final 2026 CFP ranking is added on selection day (6 Dec), bowl results don't count. The lookups only hold games the engine has counted, so a question about a bowl game gets the two teams side by side, not that game.
 9. **Token expiry.** `GITHUB_DISPATCH_TOKEN` expires about Nov 2027; the reply bot depends on it too.
-10. **A wrong explanation of the formula in public.** The writer learns v1.0 from the README's own text, not a summary, and the model test includes how-it-works questions to read before going live.
+10. **A wrong explanation of the formula in public.** The writer learns the rules from the README's own text, not a summary, and the model test includes how-it-works questions to read before going live.
 
 ## Turning it on
 
@@ -164,4 +165,11 @@ The Worker only checks whether there is anything new (up to 5 posts); the draft 
 5. **Before going live:** update the bio (automated account, tag it for a TrueCFB answer, reply "stop" to opt out, a link to Dan's account) and send X the approval request (section 1).
 6. **Go live:** set the GitHub variable `REPLIES_LIVE` to `true`. New drafts get a "Post reply" button.
 
-To pause: delete `REPLIES_LIVE` (stops posting) or the Cloudflare `X_BEARER_TOKEN` (stops checking mentions).
+### Push (mentions arrive the moment they happen)
+
+1. **X console** (console.x.com) → app `truecfb-bot` → **User authentication settings** → set up OAuth 2.0 (type: Web App or Automated App; callback URL `https://truecfb.com/`; website `https://truecfb.com`). Save, then copy the **OAuth 2.0 Client Secret** (shown once). This does not change the posting keys.
+2. **Cloudflare** → Workers & Pages → `truecfb` → Settings → Variables and Secrets → add a **Secret** `X_CLIENT_SECRET` with that value → Deploy.
+3. **GitHub** → Actions → "Reply bot: set up push" → Run with `setup`. It registers the webhook (X checks it right away) and subscribes it to mentions of @truecfb as @truecfb. If X refuses the subscription with these keys, it says so: X may want a one-time OAuth 2.0 sign-in by @truecfb instead.
+4. Tag @truecfb: a draft should reach Telegram in a minute or two. `status` shows what is registered; `remove` undoes it (the backup check keeps working).
+
+To pause: delete `REPLIES_LIVE` (stops posting) or the Cloudflare `X_BEARER_TOKEN` (stops the backup check); "Reply bot: set up push" → `remove` stops the push.

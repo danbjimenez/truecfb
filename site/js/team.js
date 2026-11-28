@@ -129,12 +129,12 @@
         const opp = g[8] ? esc(g[1]) + ' <span class="rec">FCS</span>' : teamLink(g[1], isCurrent ? null : y);
         const after = g[11] == null ? "" : g[11].toFixed(1) + '<span class="sub2">' + move(g[11], prev) + (g[12] ? " #" + g[12] : "") + "</span>";
         if(g[11] != null) prev = g[11];
-        return "<tr><td>" + where(g) + opp + '<span class="sub2"><span>' + day(g[0]) + " \u00b7 bonus " + bonus(D, g[7]) + " \u00b7</span> <span>Matchup Rating " + pot + post +
+        return "<tr><td>" + where(g) + opp + '<span class="sub2"><span>' + day(g[0]) + " \u00b7 strength " + bonus(D, g[7]) + " \u00b7</span> <span>Matchup Rating " + pot + post +
           "</span></span></td><td>" + resultText(g) + "</td><td>" + g[6].toFixed(1) + '</td><td class="rt">' + after + "</td></tr>";
       }).join("");
       $("t-sched").innerHTML = first + (rows || '<tr><td colspan="4">No games played yet this season.</td></tr>');
 
-      const tiles = [[bonus(D, info[0]), "Bonus: what " + t + " is worth to anyone who plays it"]];
+      const tiles = [[bonus(D, info[0]), "Strength: what " + t + " adds to anyone who plays it, win or lose"]];
       if(games.length){
         const best = games.reduce((a, b) => b[6] > a[6] ? b : a), low = games.reduce((a, b) => b[6] < a[6] ? b : a);
         const avgOpp = games.reduce((s, g) => s + g[7], 0) / games.length;

@@ -68,7 +68,7 @@ def test_every_lookup_in_every_season():
         calls += [("conference", {"conference": c, "season": y}) for c in BOOK.conferences(y)]
         for name, args in calls:
             text = X.run(BOOK, name, args)
-            assert text.startswith(f"TrueCFB v1.0, {y} season"), (name, args, text[:300])
+            assert text.startswith(f"TrueCFB {R.VERSION}, {y} season"), (name, args, text[:300])
             assert ("flagged unreliable" in text) == (y == 2020), (name, args)
         assert "Their game in" in X.run(BOOK, "matchup", {"team_a": order[0], "team_b": played, "season": y})
 
@@ -124,7 +124,7 @@ def test_polls_beside_truecfb():
 
 def test_lookups_that_find_nothing_say_why():
     assert "closest names: Alabama" in X.run(BOOK, "team", {"team": "Bama"})
-    assert X.run(BOOK, "team", {"team": "georgia"}).startswith("TrueCFB v1.0")       # any capitals
+    assert X.run(BOOK, "team", {"team": "georgia"}).startswith(f"TrueCFB {R.VERSION}")       # any capitals
     assert X.run(BOOK, "rankings", {"season": 1999}).startswith("Nothing found")
     assert X.run(BOOK, "conference", {"conference": "Ivy League"}).startswith("Nothing found")
     assert X.run(BOOK, "nope", {}).startswith("No lookup named")
@@ -147,7 +147,7 @@ def test_system_prompt_names_every_team():
 # ---------- the checks ----------
 
 def test_numbers_and_signs():
-    assert X.numbers("Utah #3 beat BYU 28-20 (+1.5), bonus −25.0 and -2.9, TrueCFB v1.0, Nov 21") == [
+    assert X.numbers("Utah #3 beat BYU 28-20 (+1.5), bonus −25.0 and -2.9, TrueCFB " + R.VERSION + ", Nov 21") == [
         ("", "3"), ("", "28"), ("", "20"), ("+", "1.5"), ("−", "25.0"), ("−", "2.9"), ("", "21")]
     plain, signed = X.allowed("bonus −25.0 · Team Rating 74.2 · home −2.9")
     assert X.unsupported("Team Rating 74.2, bonus −25.0", plain, signed) == []

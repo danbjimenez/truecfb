@@ -1,6 +1,6 @@
 """TrueCFB reply bot: the engine's published numbers, read once, and the rules every reply must keep.
 
-The bot reads only files the frozen v1.0 engine wrote:
+The bot reads only files the engine wrote:
   site/data.json           each season's Team Ratings, ranks and records, settings, the current week
   site/history.json        each conference's Conference Rating and rank
   site/sched_{season}.json every team's games, with each Game Rating and the Team Rating after it
@@ -20,6 +20,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from game_impact import weighted_length, MAX_POST  # noqa: E402
+from engine import VERSION as ENGINE_VERSION  # noqa: E402
+
+VERSION = ENGINE_VERSION   # how the version is written: year.release, e.g. 2026.2, no "v"
 
 INDEPENDENTS = "FBS Independents"
 SCHEDULE_URL = "https://raw.githubusercontent.com/sportsdataverse/cfbfastR-data/main/schedules/csv/cfb_schedules_{y}.csv"
@@ -183,8 +186,8 @@ def check(text):
     for m in re.finditer(r"true\s*cfb", text, re.I):
         if m.group(0) != "TrueCFB":
             problems.append(f'name written "{m.group(0)}"')
-    if re.search(r"v1(?!\.0)|version 1\b", text):
-        problems.append("version not written v1.0")
+    if re.search(r"\bv\d+(?:\.\d+)*\b", text) or re.search(r"\bversion (?!" + re.escape(VERSION) + r"\b)\d", text):
+        problems.append(f"version not written {VERSION}")
     if re.search(r"https?://|www\.|\.(com|org|net|io)\b", text, re.I):
         problems.append("has a link (X charges $0.20 a post)")
     if "@" in text:

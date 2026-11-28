@@ -6,8 +6,10 @@
 // 2. /hooks/telegram: when Dan taps "Post to X" or "Skip" on a draft, start the "Post to X" job on
 //    GitHub (or mark it skipped). Only Dan's chat is accepted, and only with the bot's secret header.
 //
-// 3. Reply bot (docs/REPLY-BOT.md): every few minutes, ask X whether anyone new has tagged @truecfb,
-//    and if so start the "Reply drafts" job on GitHub. "Post reply" taps start "Post a reply".
+// 3. Reply bot (docs/REPLY-BOT.md): /hooks/x receives X's push (Activity API, post.mention.create) the
+//    moment someone tags @truecfb, and starts the "Reply drafts" job on GitHub. A slower check of the
+//    mentions (every 30 minutes once push is set up) is the backup in case X ever turns the webhook
+//    off. "Post reply" taps start "Post a reply".
 //
 // The Worker never holds the X write keys and never computes a rating. Posting happens on GitHub,
 // from the draft the engine wrote. For the reply bot it holds only a read-only X token.
@@ -16,6 +18,9 @@
 //   CFBD_API_KEY, GITHUB_DISPATCH_TOKEN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 //   X_BEARER_TOKEN (read-only app token) and X_USER_ID (@truecfb's numeric id): the reply bot stays
 //   off until both are set.
+//   X_CLIENT_SECRET (the X app's OAuth 2.0 client secret): turns on /hooks/x. X signs every push with
+//   it and checks the hook with it. It cannot post on its own: posting needs @truecfb's user keys,
+//   which only GitHub holds.
 
 const REPO = "danbjimenez/truecfb";
 const SCOREBOARD = "https://api.collegefootballdata.com/scoreboard?classification=fbs";
@@ -28,6 +33,7 @@ export default {
       if (request.method !== "POST") return reply("Not found", 404);
       return telegramHook(request, env, ctx);
     }
+    if (url.pathname === "/hooks/x") return xHook(request, env, ctx);
     return env.ASSETS.fetch(request);
   },
 
@@ -94,16 +100,19 @@ async function dispatch(env, workflow, inputs) {
 
 // ---------- 3. mentions of @truecfb ----------
 
-// Every run on Saturdays (and early Sunday), every third run (15 minutes) the rest of the week, all day.
-export function shouldCheckMentions(d) {
+// Without push: every run on Saturdays (and early Sunday), every third run (15 minutes) the rest of the
+// week. With push set up (X_CLIENT_SECRET), the check is only the backup: every 30 minutes. A check that
+// finds nothing costs nothing on X's pay-per-use plan (it bills per post returned).
+export function shouldCheckMentions(d, push = false) {
   const h = d.getUTCHours(), day = d.getUTCDay(), m = d.getUTCMinutes();
+  if (push) return m % 30 < 5;
   const saturday = (day === 6 && h >= 16) || (day === 0 && h < 9);
   return saturday || m % 15 < 5;
 }
 
 async function pollMentions(env, now) {
   if (!env.X_BEARER_TOKEN || !env.X_USER_ID || !env.GITHUB_DISPATCH_TOKEN) return; // reply bot not set up
-  if (!shouldCheckMentions(now)) return;
+  if (!shouldCheckMentions(now, Boolean(env.X_CLIENT_SECRET))) return;
   if (!/^\d{1,20}$/.test(String(env.X_USER_ID))) return;
   // The newest mention the draft job has handled; it writes site/replies.json after each run.
   const seen = await env.ASSETS.fetch(new Request("https://truecfb.com/replies.json"));
@@ -122,6 +131,61 @@ async function pollMentions(env, now) {
   if (!found) return;
   const ok = await dispatch(env, "reply-draft.yml", { since_id: newest });
   console.log(`bot: new mention(s) -> reply-draft ${ok ? "started" : "FAILED"}`);
+}
+
+// ---------- 3b. X's push: /hooks/x ----------
+
+const MAX_X_EVENT_BYTES = 256 * 1024;
+
+// X's webhook check and signatures: "sha256=" + base64(HMAC-SHA256(key, message)).
+export async function xSign(secret, message) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message)));
+  let bin = "";
+  for (const b of mac) bin += String.fromCharCode(b);
+  return "sha256=" + btoa(bin);
+}
+
+// The mention a push is about, or null: only post.mention.create for our own account, not by us.
+export function mentionFrom(event, userId) {
+  const e = event && typeof event === "object" ? (event.data && event.data.event_type ? event.data : event) : null;
+  if (!e || e.event_type !== "post.mention.create") return null;
+  if (String(e.filter?.user_id ?? "") !== String(userId)) return null;
+  const id = String(e.payload?.id ?? "");
+  if (!/^\d{1,20}$/.test(id) || String(e.payload?.author_id ?? "") === String(userId)) return null;
+  return id;
+}
+
+async function xHook(request, env, ctx) {
+  if (!env.X_CLIENT_SECRET || !env.X_USER_ID || !env.GITHUB_DISPATCH_TOKEN) return reply("Not found", 404);
+  const url = new URL(request.url);
+  if (request.method === "GET") {
+    // X's check that we own this URL (on creation, then about once a day).
+    const token = url.searchParams.get("crc_token") || "";
+    if (!token || token.length > 1000) return reply("Bad request", 400);
+    return new Response(JSON.stringify({ response_token: await xSign(env.X_CLIENT_SECRET, token) }),
+      { headers: { ...HOOK_HEADERS, "Content-Type": "application/json" } });
+  }
+  if (request.method !== "POST") return reply("Not found", 404);
+  const body = await request.text();
+  if (body.length > MAX_X_EVENT_BYTES) return reply("Too large", 413);
+  const sig = request.headers.get("X-Twitter-Webhooks-Signature-OAuth2") || "";
+  if (!sig || !sameSecret(sig, await xSign(env.X_CLIENT_SECRET, body))) return reply("Forbidden", 403);
+  let event;
+  try {
+    event = JSON.parse(body);
+  } catch {
+    return reply("ok");
+  }
+  const id = mentionFrom(event, env.X_USER_ID);
+  if (id) {
+    // The draft job reads every new mention itself (and skips ones it has handled), so a repeated
+    // push or two at once start at most one extra run.
+    ctx.waitUntil(dispatch(env, "reply-draft.yml", {}).then((ok) =>
+      console.log(`bot: pushed mention ${id} -> reply-draft ${ok ? "started" : "FAILED"}`)));
+  }
+  return reply("ok");
 }
 
 // ---------- 2. Telegram taps ----------

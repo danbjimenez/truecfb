@@ -1,6 +1,6 @@
 # TrueCFB: working notes for Claude
 
-TrueCFB is Dan Jimenez's open-source college football ranking: every FBS team rated on results alone, with a public, deterministic formula (v1.0, frozen 21 Nov 2026). Live at truecfb.com, posts as @truecfb on X. This repo is the whole project: formula, site, data jobs and the X bot.
+TrueCFB is Dan Jimenez's open-source college football ranking: every FBS team rated on results alone, with a public, deterministic formula (2026.2, 27 Nov 2026; versions are year.release, and 2026.1 was released as v1.0 on 21 Nov 2026). Live at truecfb.com, posts as @truecfb on X. This repo is the whole project: formula, site, data jobs and the X bot.
 
 Read before changing things:
 - `README.md`: the rules, exact definitions, anchor games, how to run it.
@@ -10,8 +10,8 @@ Read before changing things:
 
 ## Rules that never bend
 
-- **The formula is frozen at v1.0.** No change to a rule or a number without a new version, recorded in the README's version history, with every season re-run. Display, data plumbing and site work are not formula changes, but must leave every published number unchanged; check that before calling it done.
-- **Write the name TrueCFB** (never all capitals) and the version **v1.0**.
+- **The formula is fixed at 2026.2.** No change to a rule or a number without a new version, recorded in the README's version history, with every season re-run. Display, data plumbing and site work are not formula changes, but must leave every published number unchanged; check that before calling it done.
+- **Write the name TrueCFB** (never all capitals) and the version as **2026.2** (year.release, no "v"; code reads it from `engine.VERSION`).
 - **Rating, never score.** Game Rating (one team, one game), Team Rating, Conference Rating, Matchup Rating (the pot two teams split). "Score" means points on the scoreboard only.
 - **Blind to the jersey:** no team logos, mascots or team colors, except each team's line on the Top 25 chart and on the CFP comparison card. Blue = higher, orange = lower; never red/green as a verdict.
 - **Every number in a post or card comes from the engine.** Result posts and cards use fixed templates. Replies (since 24 Nov 2026, Dan's call) are written by a model that looks up the engine's published numbers (any college football question since 25 Nov), and code rejects any reply with a number those lookups did not return. No model ever decides a number.
@@ -32,8 +32,8 @@ Read before changing things:
 | `src/bot_drafts.py`, `src/bot_post.py` | X bot: drafts to Telegram, posting |
 | `src/reply_bot.py`, `reply_agent.py`, `reply_facts.py`, `reply_book.py`, `reply_whatif.py`, `reply_model.py` | Reply bot (`docs/REPLY-BOT.md`): the model (Grok by default) answers any college football question, looking up the engine's numbers as it needs them (what-ifs re-run the engine from `site/whatif.json`); code checks every number |
 | `site/` | The static site (Cloudflare serves it); `site/live.json` = finals the bot has handled |
-| `worker/index.js` | Cloudflare Worker: scoreboard check + Telegram hook |
-| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `telegram-setup.yml`, `release.yml` |
+| `worker/index.js` | Cloudflare Worker: scoreboard check, Telegram hook, X's push of mentions (`/hooks/x`; set up with `src/x_push.py`) |
+| `.github/workflows/` | `refresh.yml` (3×/week + daily in Dec/Jan), `game-final.yml`, `post-to-x.yml`, `reply-draft.yml`, `post-reply.yml`, `reply-eval.yml`, `x-push.yml`, `telegram-setup.yml`, `release.yml` |
 | `data/` | Polls, CFP finals, team colors, team hashtags, bot drafts and posted log (downloaded game files are not committed) |
 
 ## Running locally

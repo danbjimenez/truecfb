@@ -3,7 +3,7 @@
   WhatIf(site_dir) -> the newest season's engine inputs (site/whatif.json, written by run_all.py)
   WhatIf.scenarios(team, opponent, site, margins) -> for each result, every team's new Team Rating and rank
 
-It runs the frozen v1.0 engine (engine.rate, engine.rank_with_h2h) on the season's published games with
+It runs the engine (engine.rate, engine.rank_with_h2h) on the season's published games with
 one game added. Nothing here changes a rule or a number: it is the same calculation on a season that
 has one more game in it. Before any what-if, the season is re-run without the extra game and must give
 exactly the published ratings; if it does not (the file is older than the latest results), the lookup

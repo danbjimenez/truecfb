@@ -1,6 +1,6 @@
 name: Refresh ratings
 
-# Pulls the latest game results, re-runs every season with the frozen formula,
+# Pulls the latest game results, re-runs every season with the current formula,
 # and saves the new numbers to site/. The site republishes whenever site/ changes. When a new CFP
 # ranking is in, it also drafts the "TrueCFB vs the CFP ranking" post and sends it to Telegram.
 #
