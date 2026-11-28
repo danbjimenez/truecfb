@@ -427,6 +427,12 @@ def look_what_if(book, team, opponent=None, site=None):
         + ". The engine re-run on this season with this one game added and nothing else changed "
           "(other games still to be played will move the numbers too).",
         "Now: " + " · ".join(f"{x} #{pub[x][1]}, Team Rating {r1(pub[x][0])}" for x in (t, o) if x in pub)]
+    met = None if game else book.meeting(t, o, y)
+    if met:
+        g = met[0]
+        lines.append(f"{t} and {o} already played on {MONTHS[int(g[0][:2]) - 1]} {int(g[0][3:])}: {t} "
+                     f"{'won' if g[3] > g[4] else 'lost'} {g[3]}-{g[4]}, and that result is in the numbers above. "
+                     "This what-if adds a second game between them; say so, or answer about the game played.")
     base = w.base_rank
     for sc in w.scenarios(t, o, site):
         m, table, rank = sc["margin"], sc["table"], sc["rank"]

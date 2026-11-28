@@ -112,8 +112,24 @@ class Book:
                             "tbd": yes(x.get("start_time_tbd")), "home": x["home_team"], "away": x["away_team"],
                             "neutral": yes(x.get("neutral_site")), "conference_game": yes(x.get("conference_game")),
                             "note": "" if x.get("notes") in (None, "", "NA") else x["notes"]})
-            self._upcoming = sorted(out, key=lambda g: g["when"])
+            self._upcoming = sorted((g for g in out if not self.played(g)), key=lambda g: g["when"])
         return self._upcoming or None
+
+    def played(self, g):
+        """True when a schedule-file game already has its result in the published data. The public file
+        can mark a game completed a day or more after it ends, while the bot adds same-day finals."""
+        from datetime import date
+        from zoneinfo import ZoneInfo
+        day = g["when"].astimezone(ZoneInfo("America/New_York")).date()
+        y = self.current
+        for t, o in ((g["home"], g["away"]), (g["away"], g["home"])):
+            for x in self.games(t, y):
+                if x[1] != o:
+                    continue
+                mm, dd = (int(v) for v in x[0].split("-"))
+                if abs((date(y + 1 if mm < 7 else y, mm, dd) - day).days) <= 1:
+                    return True
+        return False
 
     def games(self, t, y):
         """[date, opponent, site, points for, points against, ot, Game Rating, opp rating, FCS flag,
