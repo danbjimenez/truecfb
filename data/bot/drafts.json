@@ -2404,5 +2404,219 @@
    }
   },
   "created": "2026-11-27T23:16:32Z"
+ },
+ "401862838": {
+  "post": "FINAL: Temple 35, Memphis 31\nMatchup Rating 80\nTemple #132 → #128 · Memphis #45 → #63\n#GoTigersGo #TempleOwls",
+  "length": 111,
+  "alt": "FINAL: Temple 35, Memphis 31 · road win\nMatchup Rating 80\nTemple: Game Rating 75.2 · Team Rating 30.0 (+4.3) · #132 → #128\nMemphis: Game Rating 5.1 · Team Rating 50.3 (-4.3) · #45 → #63\nRipple: Penn State +0.5 (beat Temple) · Arkansas State -0.5 (lost to Memphis)",
+  "day": "2026-11-27",
+  "matchup_rating": 80,
+  "teams": [
+   "Memphis",
+   "Temple"
+  ],
+  "impact": {
+   "game_id": 401862838,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 80,
+   "winner": "Temple",
+   "teams": [
+    {
+     "team": "Memphis",
+     "fbs": true,
+     "points": 31,
+     "won": false,
+     "site": "home",
+     "game_rating": 5.1,
+     "rating_before": 54.6,
+     "rating_after": 50.3,
+     "change": -4.3,
+     "rank_before": 45,
+     "rank_after": 63,
+     "bonus": 0.3,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Temple",
+     "fbs": true,
+     "points": 35,
+     "won": true,
+     "site": "road",
+     "game_rating": 75.2,
+     "rating_before": 25.7,
+     "rating_after": 30.0,
+     "change": 4.3,
+     "rank_before": 132,
+     "rank_after": 128,
+     "bonus": -20.0,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Penn State",
+      "change": 0.47,
+      "rating_after": 52.6,
+      "rank_before": 57,
+      "rank_after": 52,
+      "link": [
+       {
+        "vs": "Temple",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Toledo",
+      "change": 0.42,
+      "rating_after": 53.1,
+      "rank_before": 52,
+      "rank_after": 50,
+      "link": [
+       {
+        "vs": "Temple",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "UConn",
+      "change": 0.42,
+      "rating_after": 44.0,
+      "rank_before": 96,
+      "rank_after": 96,
+      "link": [
+       {
+        "vs": "Temple",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Arkansas State",
+      "change": -0.45,
+      "rating_after": 33.9,
+      "rank_before": 117,
+      "rank_after": 120,
+      "link": [
+       {
+        "vs": "Memphis",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UNLV",
+      "change": -0.44,
+      "rating_after": 49.0,
+      "rank_before": 70,
+      "rank_after": 71,
+      "link": [
+       {
+        "vs": "Memphis",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Boise State",
+      "change": -0.42,
+      "rating_after": 61.9,
+      "rank_before": 25,
+      "rank_after": 25,
+      "link": [
+       {
+        "vs": "Memphis",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Penn State",
+      "change": 0.47,
+      "rating_after": 52.6,
+      "rank_before": 57,
+      "rank_after": 52,
+      "link": [
+       {
+        "vs": "Temple",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Arkansas State",
+      "change": -0.45,
+      "rating_after": 33.9,
+      "rank_before": 117,
+      "rank_after": 120,
+      "link": [
+       {
+        "vs": "Memphis",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UNLV",
+      "change": -0.44,
+      "rating_after": 49.0,
+      "rank_before": 70,
+      "rank_after": 71,
+      "link": [
+       {
+        "vs": "Memphis",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Boise State",
+      "change": -0.42,
+      "rating_after": 61.9,
+      "rank_before": 25,
+      "rank_after": 25,
+      "link": [
+       {
+        "vs": "Memphis",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Toledo",
+      "change": 0.42,
+      "rating_after": 53.1,
+      "rank_before": 52,
+      "rank_after": 50,
+      "link": [
+       {
+        "vs": "Temple",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 56
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-28T00:01:57Z"
  }
 }
