@@ -112,9 +112,11 @@
     "matchup",
     "matchup"
    ],
-   "status": "drafted",
+   "status": "posted",
    "reply": "Not really. Florida and Oklahoma already beat Texas, and those wins are each team's highest Game Rating, 99.9 and 96.9. Texas only moved up +0.2 with the road win over Texas A&M, so those wins barely got better.",
-   "by": "grok-4.7"
+   "by": "grok-4.7",
+   "reply_id": "2126541907199164534",
+   "posted": "2026-11-28T05:01:14Z"
   }
  }
 }
