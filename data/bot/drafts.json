@@ -3505,5 +3505,246 @@
    }
   },
   "created": "2026-11-28T04:02:06Z"
+ },
+ "401856756": {
+  "post": "FINAL: Texas 16, Texas A&M 6\nMatchup Rating 126\nTexas #2 · Texas A&M #62\n#GigEm #HookEm",
+  "length": 87,
+  "alt": "FINAL: Texas 16, Texas A&M 6 · road win\nMatchup Rating 126\nTexas: Game Rating 75.8 · Team Rating 76.1 (0.0) · #2\nTexas A&M: Game Rating 50.6 · Team Rating 50.3 (0.0) · #62",
+  "day": "2026-11-27",
+  "matchup_rating": 126,
+  "teams": [
+   "Texas A&M",
+   "Texas"
+  ],
+  "impact": {
+   "game_id": 401856756,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 126,
+   "matchup_pct": 91,
+   "winner": "Texas",
+   "teams": [
+    {
+     "team": "Texas A&M",
+     "fbs": true,
+     "points": 6,
+     "won": false,
+     "site": "home",
+     "parts": {
+      "result": 30.0,
+      "strength": 26.1,
+      "margin": -2.5,
+      "venue": -3.0,
+      "limit": 0.0,
+      "post": 0.0
+     },
+     "record": [
+      4,
+      8
+     ],
+     "game_rating_pct": 52,
+     "game_rating": 50.6,
+     "rating_before": 50.2,
+     "rating_after": 50.3,
+     "change": 0.0,
+     "rank_before": 62,
+     "rank_after": 62,
+     "bonus": 0.3,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Texas",
+     "fbs": true,
+     "points": 16,
+     "won": true,
+     "site": "road",
+     "parts": {
+      "result": 70.0,
+      "strength": 0.3,
+      "margin": 2.5,
+      "venue": 3.0,
+      "limit": 0.0,
+      "post": 0.0
+     },
+     "record": [
+      10,
+      2
+     ],
+     "game_rating_pct": 89,
+     "game_rating": 75.8,
+     "rating_before": 76.1,
+     "rating_after": 76.1,
+     "change": -0.0,
+     "rank_before": 2,
+     "rank_after": 2,
+     "bonus": 26.1,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Missouri State",
+      "change": 0.0,
+      "rating_after": 32.0,
+      "rank_before": 124,
+      "rank_after": 124,
+      "link": [
+       {
+        "vs": "Texas A&M",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Alabama",
+      "change": 0.0,
+      "rating_after": 71.7,
+      "rank_before": 6,
+      "rank_after": 6,
+      "link": [
+       {
+        "vs": "Texas A&M",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Kentucky",
+      "change": 0.0,
+      "rating_after": 62.2,
+      "rank_before": 23,
+      "rank_after": 23,
+      "link": [
+       {
+        "vs": "Texas A&M",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Texas State",
+      "change": -0.0,
+      "rating_after": 54.9,
+      "rank_before": 40,
+      "rank_after": 40,
+      "link": [
+       {
+        "vs": "Texas",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UTSA",
+      "change": -0.0,
+      "rating_after": 60.4,
+      "rank_before": 27,
+      "rank_after": 27,
+      "link": [
+       {
+        "vs": "Texas",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Ohio State",
+      "change": -0.0,
+      "rating_after": 62.8,
+      "rank_before": 20,
+      "rank_after": 20,
+      "link": [
+       {
+        "vs": "Texas",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Texas State",
+      "change": -0.0,
+      "rating_after": 54.9,
+      "rank_before": 40,
+      "rank_after": 40,
+      "link": [
+       {
+        "vs": "Texas",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UTSA",
+      "change": -0.0,
+      "rating_after": 60.4,
+      "rank_before": 27,
+      "rank_after": 27,
+      "link": [
+       {
+        "vs": "Texas",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Ohio State",
+      "change": -0.0,
+      "rating_after": 62.8,
+      "rank_before": 20,
+      "rank_after": 20,
+      "link": [
+       {
+        "vs": "Texas",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Ole Miss",
+      "change": -0.0,
+      "rating_after": 65.4,
+      "rank_before": 16,
+      "rank_after": 16,
+      "link": [
+       {
+        "vs": "Texas",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Missouri State",
+      "change": 0.0,
+      "rating_after": 32.0,
+      "rank_before": 124,
+      "rank_after": 124,
+      "link": [
+       {
+        "vs": "Texas A&M",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 0
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "2026.2"
+   }
+  },
+  "created": "2026-11-28T04:16:16Z"
  }
 }
