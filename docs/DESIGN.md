@@ -1,6 +1,6 @@
-# TrueCFB v1.0: why it works the way it does
+# TrueCFB v1.1: why it works the way it does
 
-The rules and numbers are in the [README](../README.md). This file keeps the reasoning: the goals, why each setting has the value it has, what was tried and dropped, and what the postseason points do. TrueCFB was designed by Dan Jimenez with Claude in November 2026, and v1.0 was frozen on 21 November 2026.
+The rules and numbers are in the [README](../README.md). This file keeps the reasoning: the goals, why each setting has the value it has, what was tried and dropped, and what the postseason points do. TrueCFB was designed by Dan Jimenez with Claude in November 2026, v1.0 was released on 21 November 2026, and v1.1 (the margin rule) on 27 November 2026.
 
 ## Goals
 
@@ -16,9 +16,10 @@ The rules and numbers are in the [README](../README.md). This file keeps the rea
 
 ## Why these settings
 
-- **Win 75 / loss 25 with margin ±5** is Dan's own description of the scale ("beat the best team by a ton is 100, lose to the worst by a lot is 0"). Margin is the smallest input.
+- **Win 70 / loss 30, plus or minus 1 point for every 4 points of margin, up to 40 (v1.1).** Winning is the biggest input: a 1-point win is worth about 40 more than a 1-point loss. Margin is the smallest: at most 10. The rule a fan can do in their head replaced v1.0's curve (the share of 2014 to 2025 games decided by fewer points), which gave almost the same numbers but needed a lookup table. See "The v1.1 margin rule" below for the tests.
+- **Overtime games count by their final score (v1.1).** v1.0 counted them as a 1-point margin. Fans and every box score read the final score, and the effect is small (top 25 moves 0.15 spots on average).
 - **Opponent bonus at full value.** The first draft used 0.9 × (rating − 50), which guarantees one answer in every possible season. Full value was chosen for release: one less thing to explain ("you just add your opponent's bonus"), and non-conference results reach conference mates at full strength. The cost is 2020 (see below).
-- **Venue at 2.86** is measured, not chosen: the average edge of home teams in conference games on this scale (home teams won 55.5% of 6,131 conference games, 2014 to 2025). A larger value would turn venue into a bonus for playing on the road and raise the cost of hosting a small program.
+- **Venue at 2.75** (2.86 in v1.0) is measured, not chosen: the average edge of home teams in conference games on this scale (home teams won 55.5% of 6,131 conference games, 2014 to 2025). A larger value would turn venue into a bonus for playing on the road and raise the cost of hosting a small program.
 - **FCS at 25** (the data implies 16 to 21). Set higher on purpose to soften the cost of scheduling a small program. At full bonus value this number also helps hold the whole scale in place.
 - **Six-game fade-out** kept over a fresh start: starting everyone at 50 leaves the ranking far from the poll for the first month. The regular-season final ranking is the same either way.
 - **Playoff points above the 100 limit:** a playoff win is already near 100, so points kept under the limit would only help the loser. The winner's points grow by round so that advancing always pays more.
@@ -34,7 +35,7 @@ Measured effect (average Game Rating minus the team's own Team Rating, 11 season
 ## One answer, and 2020
 
 - Opponent ratings come from the same calculation: start every team at 50 and repeat until nothing moves. Starting at 50 is part of the rule.
-- In every season except 2020, starting anywhere gives the same ratings (checked on all 191 non-2020 snapshots, from starts of 5, 50 and 95). The level is held in place by FCS games, the 0 to 100 limits and the carried-over placeholders.
+- In every season except 2020, starting anywhere gives the same ratings (checked on all 191 non-2020 snapshots, from starts of 5, 50 and 95; re-checked for v1.1 on 179 weekly and end-of-season snapshots). The level is held in place by FCS games, the 0 to 100 limits and the carried-over placeholders.
 - 2020: in five late-season snapshots the ratings depend on the starting point (by up to 14.5 points), because conference-only schedules left nothing tying one conference's level to another's. That season is marked unreliable and left out of summary figures. Bonus at 0.9 remains the fallback if a future season is cut into isolated groups.
 
 ## What the postseason points do (11 seasons, 2020 left out)
@@ -68,8 +69,30 @@ Measured effect (average Game Rating minus the team's own Team Rating, 11 season
 | Postseason games that can only help (losses never count) | Breaks "every game counts" |
 | Flat playoff points kept under the 100 limit | The limit absorbs the winner's points, so the champion is not always 1st |
 | Bonus at 0.9 (the first draft) | Replaced before release for a simpler rule |
+| Betting spreads to set the expected margin (considered for v1.1) | Brings in reputation, injuries and market opinion, which a results-only rating leaves out; great teams get no credit when they win as expected; opponent strength counts twice (the spread and the bonus); lines differ by book and time and are not free to republish |
+| Win 60 + 1 point per point of margin, up to 40 (considered for v1.1) | Margin outweighs winning (a 1-point win is only 22 above a 1-point loss); a 40-point home win over an FCS team earns about 72, so cupcake blowouts pay; top 25 moves 3.5 spots from v1.0 and matches the committee's top 4 in 1 of 11 seasons |
+| A narrower (±3) or wider (±7.5) margin range | Both drift further from the committee than ±5; ignoring margin entirely is clearly worse |
 
-## Ideas for a future version (not in v1.0)
+## The v1.1 margin rule
+
+Dan asked for a margin rule that is simple to say and not arbitrary. Every rule below was run on every season from 2014 to 2025 with overtime games at their final score (2020 left out of the averages). "Higher-ranked team won" is the share of regular-season games won by the team ranked higher in that season's regular-season final ranking.
+
+| Rule (win; a loss mirrors it) | Top 25 moves vs v1.0 | Gap from committee | Same top 4 as committee | Higher-ranked team won | Team Ratings vs a bell curve |
+|---|---|---|---|---|---|
+| v1.0: 70 to 80 on the margin curve, OT as 1 point | – | 3.01 | 6 of 11 | 82.6% | 0.027 |
+| **v1.1: 70 + 1 per 4 points, up to 40** | 0.46 spots | 3.00 | 6 of 11 | 82.6% | 0.025 |
+| 70 + 1 per 3 points, up to 30 | 0.40 | 3.06 | 5 of 11 | 82.6% | 0.026 |
+| 70 + 2 per touchdown, up to 35 | 0.37 | 3.01 | 6 of 11 | – | – |
+| 65 + 1 per 2 points, up to 30 | 1.31 | 3.29 | 3 of 11 | 82.1% | 0.025 |
+| 60 + 1 per point, up to 40 | 3.53 | 4.65 | 1 of 11 | 81.0% | 0.025 |
+| No margin (75 / 25) | 1.47 | 3.56 | 4 of 11 | 82.7% | 0.022 |
+
+- Team Ratings are close to a bell curve under every rule: symmetric, a little flatter than a bell curve (slightly fewer teams at the extremes), and the biggest gap from one is about 2.5% of teams. The margin rule barely changes that shape, so it could not decide the rule. The win/loss gap and the opponent bonus set the spread.
+- Game Ratings form two overlapping humps (wins and losses) under any rule.
+- "Higher-ranked team won" slightly favors rules with less margin (no margin scores highest), so it is a check, not a target. Matching the committee is a check too, never a goal.
+- A 100 is still possible: the 80 caps the result part only; the opponent's bonus comes on top. #1 beating #2 at a neutral site by 14 or more reaches 100.
+
+## Ideas for a future version (not in v1.1)
 
 Any of these would be a new version, with every season re-run.
 
@@ -80,5 +103,5 @@ Any of these would be a new version, with every season re-run.
 ## Naming history
 
 - Named TrueCFB on 22 Nov 2026. Considered and dropped: OpenFPI (ESPN's FPI is a predictive metric), OpenRank (crowded), OpenCFB (an existing project at opencfb.com), RealCFB (domain taken), BasedCFB, BlindCFB (too easy to joke about). The [prefix]CFB pattern carries across the family.
-- Before release the formula went through two drafts numbered 1.0 and 1.1. Draft 1.0 had the opponent bonus at 0.9; draft 1.1 had it at full value and was released as v1.0. Older commits and notes use the draft numbers.
+- Before release the formula went through two drafts numbered 1.0 and 1.1. Draft 1.0 had the opponent bonus at 0.9; draft 1.1 had it at full value and was released as v1.0. Older commits and notes use the draft numbers; draft 1.1 is not the released v1.1 (27 Nov 2026), which changed the margin rule.
 - "Game Rating" first meant the pot two teams split; it was renamed Matchup Rating, and Game Rating now means what one team earns for one game.

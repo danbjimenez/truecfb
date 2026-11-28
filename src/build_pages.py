@@ -263,7 +263,7 @@ def home_parts(S):
         {"@type": "WebSite", "name": "TrueCFB", "url": SITE + "/",
          "description": "Every FBS team rated on results alone. Every game counts. Open source formula."},
         {"@type": "Dataset", "name": "TrueCFB college football rankings",
-         "description": "TrueCFB v1.0 Team Ratings and ranks for every FBS team, from game results alone, "
+         "description": f"TrueCFB v{D['version']} Team Ratings and ranks for every FBS team, from game results alone, "
                         "at every point of every season since 2014. Rebuilt by a public, deterministic formula after each week's games.",
          "url": SITE + "/", "license": "https://opensource.org/licenses/MIT", "isAccessibleForFree": True,
          "creator": {"@type": "Person", "name": "Dan Jimenez"},
@@ -317,7 +317,7 @@ def llms_txt(S):
                     for r in S.ranking[:25])
     return f"""# TrueCFB
 
-> TrueCFB is an open source college football ranking. Every FBS team is rated on game results alone, by a public, deterministic formula (TrueCFB v1.0, frozen 21 November 2026). Every game counts. It measures the season that was played; it does not predict games.
+> TrueCFB is an open source college football ranking. Every FBS team is rated on game results alone, by a public, deterministic formula (TrueCFB v{D['version']}; any change to a rule is a new version, with every season re-run). Every game counts. It measures the season that was played; it does not predict games.
 
 TrueCFB numbers are ratings, not points. A score is points on the scoreboard (28-20); a rating is TrueCFB's measure.
 

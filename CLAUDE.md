@@ -1,6 +1,6 @@
 # TrueCFB: working notes for Claude
 
-TrueCFB is Dan Jimenez's open-source college football ranking: every FBS team rated on results alone, with a public, deterministic formula (v1.0, frozen 21 Nov 2026). Live at truecfb.com, posts as @truecfb on X. This repo is the whole project: formula, site, data jobs and the X bot.
+TrueCFB is Dan Jimenez's open-source college football ranking: every FBS team rated on results alone, with a public, deterministic formula (v1.1, 27 Nov 2026; first released as v1.0 on 21 Nov 2026). Live at truecfb.com, posts as @truecfb on X. This repo is the whole project: formula, site, data jobs and the X bot.
 
 Read before changing things:
 - `README.md`: the rules, exact definitions, anchor games, how to run it.
@@ -10,8 +10,8 @@ Read before changing things:
 
 ## Rules that never bend
 
-- **The formula is frozen at v1.0.** No change to a rule or a number without a new version, recorded in the README's version history, with every season re-run. Display, data plumbing and site work are not formula changes, but must leave every published number unchanged; check that before calling it done.
-- **Write the name TrueCFB** (never all capitals) and the version **v1.0**.
+- **The formula is fixed at v1.1.** No change to a rule or a number without a new version, recorded in the README's version history, with every season re-run. Display, data plumbing and site work are not formula changes, but must leave every published number unchanged; check that before calling it done.
+- **Write the name TrueCFB** (never all capitals) and the version as **v1.1** (the current one; code reads it from `engine.VERSION`).
 - **Rating, never score.** Game Rating (one team, one game), Team Rating, Conference Rating, Matchup Rating (the pot two teams split). "Score" means points on the scoreboard only.
 - **Blind to the jersey:** no team logos, mascots or team colors, except each team's line on the Top 25 chart and on the CFP comparison card. Blue = higher, orange = lower; never red/green as a verdict.
 - **Every number in a post or card comes from the engine.** Result posts and cards use fixed templates. Replies (since 24 Nov 2026, Dan's call) are written by a model that looks up the engine's published numbers (any college football question since 25 Nov), and code rejects any reply with a number those lookups did not return. No model ever decides a number.

@@ -5,7 +5,7 @@ The full design system (colors, type, components, wordmark files) lives in a Cla
 ## Words
 
 - **The name is always written TrueCFB**: capital T, lowercase "rue", capital CFB. Everywhere: titles, headings, labels, navigation, body text, posts and cards. Never all capitals, even inside a heading that is otherwise uppercase by style (the stylesheet's `.nm` class keeps the name's capitals).
-- **The version is written v1.0** in copy, code and docs.
+- **The version is written v1.1** (the current one, with a lower-case v) in copy, code and docs.
 - **Every TrueCFB number is a rating, never a score.** "Score" only means points on the scoreboard (28-20).
   - **Game Rating**: what one team earns for one game, 0 to 100 (above 100 in the postseason).
   - **Team Rating**: the average of a team's Game Ratings.

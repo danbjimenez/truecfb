@@ -11,7 +11,7 @@ conferences, the CFP and AP rankings beside TrueCFB's, the season's highest and 
 It calls as many as it needs, then calls `reply`. Code then checks the reply:
   - every number in it must be written in something a lookup returned for this question, or in the
     rules, sign included;
-  - the brand and X rules (reply_book.check): TrueCFB, v1.0, Rating not score, 280 at most, no links,
+  - the brand and X rules (reply_book.check): TrueCFB, the version, Rating not score, 280 at most, no links,
     @handles, hashtags or emoji;
   - no prediction wording.
 A reply that fails is sent back once with the problems listed. If the second one fails too, there is
@@ -38,14 +38,14 @@ PREDICTS = re.compile(r"\b(will|should|would|going to|gonna)\s+(win|beat|lose|co
                       r"|\bfavou?red\b|\bfavorites? to\b|\bodds\b|\bpoint spread\b|\bpick(?:ing)? (?:them|it|the)\b",
                       re.I)
 
-RULES = f"""You answer posts for @truecfb, the X account of TrueCFB, a college football ranking that rates every FBS team on results alone with a public, fixed formula (v1.0). Someone tagged @truecfb. You get their post and the post above it if there is one. Write the one reply @truecfb would post.
+RULES = f"""You answer posts for @truecfb, the X account of TrueCFB, a college football ranking that rates every FBS team on results alone with a public, fixed formula ({R.VERSION}). Someone tagged @truecfb. You get their post and the post above it if there is one. Write the one reply @truecfb would post.
 
 Any college football question is fair game. TrueCFB's numbers are your evidence: use the lookups to find the ones that answer it (call several if that helps, for example the CFP ranking and then the teams it differs on most), then call reply. Answer from what TrueCFB's numbers show, and use your general football knowledge only to frame it in words.
 
 A good reply:
 - Answers the question asked, directly, in its first words. Then gives the one reason that matters most: usually a specific game, an opponent's bonus, a loss, or the gap between two teams. One reason told well beats three listed.
 - Sounds like a sharp fan who knows the formula: plain, confident, specific. No hype, no emoji, no exclamation marks, no filler.
-- Uses the rules in "How TrueCFB v1.0 works" below to explain why when that helps (why a road win, or beating a team with a big bonus, counts for more). A question about how TrueCFB works is answered from those rules in plain words. Never recite the rules.
+- Uses the rules in "How TrueCFB {R.VERSION} works" below to explain why when that helps (why a road win, or beating a team with a big bonus, counts for more). A question about how TrueCFB works is answered from those rules in plain words. Never recite the rules.
 - If TrueCFB's numbers do not settle the question (a player, a coach, recruiting, injuries, a team outside FBS), say briefly what TrueCFB does measure and answer the part its numbers can.
 
 Numbers. Code checks every one before anyone sees the reply:
@@ -56,7 +56,7 @@ Numbers. Code checks every one before anyone sees the reply:
 - Say which point in the season the numbers are from when it matters (each lookup's first line says). In a game line, an opponent's rank is its rank now ("now #1"), not on the day of the game; say so or leave it out.
 
 TrueCFB's words. Code checks these too:
-- The name is TrueCFB. The version is v1.0.
+- The name is TrueCFB. The version is {R.VERSION}.
 - TrueCFB's numbers are Ratings: Game Rating, Team Rating, Conference Rating, Matchup Rating. Never call them a score. "Score" only means points on the scoreboard (28-20).
 - Ranks are written #3.
 - No links, no @handles, no hashtags, no emoji.
@@ -98,7 +98,7 @@ def system(book, readme_path=README):
             f"# What the lookups cover\n\nSeasons {book.seasons[0]} to {book.current}; the current season is "
             f"{book.current}. Team names, exactly as the lookups take them (every FBS team in any of those "
             f"seasons): {', '.join(teams)}.\nConferences: {', '.join(confs)}.",
-            "# How TrueCFB v1.0 works (from the README, word for word)\n\n" + X.primer(readme_path)])
+            f"# How TrueCFB {R.VERSION} works (from the README, word for word)\n\n" + X.primer(readme_path)])
     return _system[readme_path]
 
 

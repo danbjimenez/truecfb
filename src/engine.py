@@ -1,12 +1,13 @@
-"""TrueCFB rating engine, version 1.0, frozen 21 Nov 2026  (results only; team-blind; reproducible)
+"""TrueCFB rating engine, version 1.1, 27 Nov 2026  (results only; team-blind; reproducible)
 Any change to a rule or number below is a new version, with every season re-run.
+v1.1 changed rule 2 (margin: 1 point per 4 points of margin instead of a curve, and overtime games
+count by their real final score). Every other rule is as in v1.0 (21 Nov 2026).
 
 GAME RATING, computed for each FBS team in each game:
-  1. Start: a win is 75, a loss is 25.
-  2. Margin moves it up to 5 points either way. Look up F(m): the share of all FBS-vs-FBS games
-     (2014-2025) decided by fewer than m points, plus half of those decided by exactly m.
-        win  = 70 + 10 * F(m)        loss = 30 - 10 * F(m)
-     An overtime game counts as a 1-point margin.
+  1. Start: a win is 70, a loss is 30.
+  2. Margin: 1 point for every 4 points of final margin, up to a 40-point margin.
+        win  = 70 + min(m, 40) / 4        loss = 30 - min(m, 40) / 4
+     m is the final score margin, overtime included.
   3. Venue: road team +V, home team -V, neutral site 0.  V is the measured edge of home teams in
      conference games on this same scale (about 3).
   4. Opponent: + (opponent's rating - 50), the opponent's "bonus".  Any FCS opponent counts as a 25.
@@ -20,7 +21,8 @@ TEAM RATING = average of its Game Ratings this season. Every game counts. Until 
   yet played.
 Opponent ratings come from this same calculation: start everyone at 50 and repeat until no
   rating moves. Starting at 50 is part of the rule. In every season except 2020 any starting point
-  gives the same answer (checked on all 191 snapshots). In late 2020, with conference-only schedules,
+  gives the same answer (checked on all 191 snapshots for v1.0,
+  and on 179 weekly and end-of-season snapshots for v1.1). In late 2020, with conference-only schedules,
   nothing ties one conference's level to another's, so that season's ratings depend on the start
   and are treated as unreliable.
 """
@@ -28,8 +30,9 @@ import numpy as np
 import pandas as pd
 
 NAME = "TrueCFB"              # named 22 Nov 2026; the name is not part of the formula
-VERSION = "1.0"
-WIN_RANGE = (70.0, 80.0)      # 1-point win .. biggest win; losses mirror it (30 .. 20)
+VERSION = "1.1"
+WIN_RANGE = (70.0, 80.0)      # a win before margin .. a win by MARGIN_CAP or more; losses mirror it (30 .. 20)
+MARGIN_CAP = 40               # margin stops counting here: 1 point per 4 points, at most 10 (v1.0 used a curve)
 OPP_WEIGHT = 1.0              # the opponent's bonus at full value (0.9 in a draft before the public release)
 FCS_RATING = 25.0
 CARRY = 6
@@ -42,10 +45,9 @@ FIRST_PLAYOFF_SEASON = 2014
 
 
 def load_games(path):
+    """Every game with its final score margin (overtime included since v1.1). Ties are dropped."""
     g = pd.read_csv(path, low_memory=False)
-    g["margin_home"] = g.home_pts - g.away_pts
-    g.loc[g.ot, "margin_home"] = np.sign(g.loc[g.ot, "margin_home"])
-    g["margin_home"] = g.margin_home.astype(int)
+    g["margin_home"] = (g.home_pts - g.away_pts).astype(int)
     return g[g.margin_home != 0].copy()
 
 
@@ -75,14 +77,12 @@ def postseason_bonus(season_type, note, season):
     return PLAYOFF_BONUS, PLAYOFF_WIN_BONUS[rd], rd
 
 
-def margin_curve(games, seasons=REF_SEASONS):
-    ref = games[games.season.isin(seasons) & games.home_fbs & games.away_fbs]
-    a = ref.margin_home.abs().to_numpy()
-    mx = int(games.margin_home.abs().max())
-    F = np.zeros(mx + 1)
-    for m in range(1, mx + 1):
-        F[m] = ((a < m).sum() + 0.5 * (a == m).sum()) / len(a)
-    return F
+def margin_curve(games, cap=MARGIN_CAP):
+    """F[m]: how much of the margin range a win by m points uses, min(m, cap) / cap, for every margin up to
+    the largest in `games`. raw_rating turns it into 70 + m / 4 for a win (v1.1). v1.0 used the share of
+    2014-2025 games decided by fewer than m points instead."""
+    mx = max(int(games.margin_home.abs().max()), cap)
+    return np.minimum(np.arange(mx + 1), cap) / cap
 
 
 def raw_rating(margin, F, win=WIN_RANGE):
