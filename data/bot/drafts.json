@@ -3050,5 +3050,219 @@
    }
   },
   "created": "2026-11-28T00:31:31Z"
+ },
+ "401864546": {
+  "post": "FINAL: New Mexico 42, Air Force 19\nMatchup Rating 112\nNew Mexico #33 → #30 · Air Force #45 → #50\n#GoLobos #AirForceFalcons",
+  "length": 124,
+  "alt": "FINAL: New Mexico 42, Air Force 19 · home win\nMatchup Rating 112\nNew Mexico: Game Rating 76.9 · Team Rating 59.2 (+1.7)\nAir Force: Game Rating 34.9 · Team Rating 52.6 (-1.7)\nRipple: New Mexico State +0.2 (lost to New Mexico) · Army -0.2 (lost to Air Force)",
+  "day": "2026-11-27",
+  "matchup_rating": 112,
+  "teams": [
+   "New Mexico",
+   "Air Force"
+  ],
+  "impact": {
+   "game_id": 401864546,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 112,
+   "winner": "New Mexico",
+   "teams": [
+    {
+     "team": "New Mexico",
+     "fbs": true,
+     "points": 42,
+     "won": true,
+     "site": "home",
+     "game_rating": 76.9,
+     "rating_before": 57.5,
+     "rating_after": 59.2,
+     "change": 1.7,
+     "rank_before": 33,
+     "rank_after": 30,
+     "bonus": 9.2,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Air Force",
+     "fbs": true,
+     "points": 19,
+     "won": false,
+     "site": "road",
+     "game_rating": 34.9,
+     "rating_before": 54.3,
+     "rating_after": 52.6,
+     "change": -1.7,
+     "rank_before": 45,
+     "rank_after": 50,
+     "bonus": 2.6,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "New Mexico State",
+      "change": 0.19,
+      "rating_after": 28.2,
+      "rank_before": 130,
+      "rank_after": 130,
+      "link": [
+       {
+        "vs": "New Mexico",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Oklahoma",
+      "change": 0.18,
+      "rating_after": 65.3,
+      "rank_before": 17,
+      "rank_after": 17,
+      "link": [
+       {
+        "vs": "New Mexico",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Hawai'i",
+      "change": 0.17,
+      "rating_after": 31.3,
+      "rank_before": 125,
+      "rank_after": 125,
+      "link": [
+       {
+        "vs": "New Mexico",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Army",
+      "change": -0.21,
+      "rating_after": 45.2,
+      "rank_before": 89,
+      "rank_after": 90,
+      "link": [
+       {
+        "vs": "Air Force",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Navy",
+      "change": -0.21,
+      "rating_after": 44.2,
+      "rank_before": 94,
+      "rank_after": 95,
+      "link": [
+       {
+        "vs": "Air Force",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "UConn",
+      "change": -0.17,
+      "rating_after": 43.8,
+      "rank_before": 96,
+      "rank_after": 96,
+      "link": [
+       {
+        "vs": "Air Force",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Army",
+      "change": -0.21,
+      "rating_after": 45.2,
+      "rank_before": 89,
+      "rank_after": 90,
+      "link": [
+       {
+        "vs": "Air Force",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Navy",
+      "change": -0.21,
+      "rating_after": 44.2,
+      "rank_before": 94,
+      "rank_after": 95,
+      "link": [
+       {
+        "vs": "Air Force",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "New Mexico State",
+      "change": 0.19,
+      "rating_after": 28.2,
+      "rank_before": 130,
+      "rank_after": 130,
+      "link": [
+       {
+        "vs": "New Mexico",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Oklahoma",
+      "change": 0.18,
+      "rating_after": 65.3,
+      "rank_before": 17,
+      "rank_after": 17,
+      "link": [
+       {
+        "vs": "New Mexico",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Hawai'i",
+      "change": 0.17,
+      "rating_after": 31.3,
+      "rank_before": 125,
+      "rank_after": 125,
+      "link": [
+       {
+        "vs": "New Mexico",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 12
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-28T01:01:46Z"
  }
 }
