@@ -56,6 +56,8 @@ Games not yet played (what's at stake, the implications, what a win means):
 - This is a what-if, not a prediction: "a win would keep them #10", never who will win.
 - what_if also says how big a win it takes to move up ("How much a win needs") and which results elsewhere would help ("Help from elsewhere"). Use them: "they need Wake Forest or UCLA to lose" is the answer fans want.
 - If the post names a margin ("by 30"), call what_if with that margin, so the reply can use that exact result.
+- Each what_if result adds that one game and changes nothing else. Never join two what_ifs into one claim ("a 3-point Notre Dame win drops it behind Miami" leaves out Miami's own game). The "Help from elsewhere" lines run two games together: use those for two-game claims.
+- For a game already played ("what if they had won"), what_if re-runs the season with that result changed: say what would have been, not what will be.
 - Only talk about games the lookups show on the schedule, or games the post itself names. Never bring up a title game, bowl or playoff matchup of your own: who plays in them is not set until it is on the schedule.
 - When a team has no game left, say so, and look at the teams around it: their games are what can still move it.
 

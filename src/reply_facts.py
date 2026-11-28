@@ -428,10 +428,19 @@ def look_what_if(book, team, opponent=None, site=None, margin=None):
           "(other games still to be played will move the numbers too).",
         "Now: " + " · ".join(f"{x} #{pub[x][1]}, Team Rating {r1(pub[x][0])}" for x in (t, o) if x in pub)]
     met = None if game else book.meeting(t, o, y)
-    if met:
+    redo = met and w.played(t, o)
+    if redo:
+        g = met[0]
+        site = redo[1]
+        lines[next(i for i, x in enumerate(lines) if x.startswith("What-if: "))] = (f"What-if, a game already played: {t} and {o} played on {MONTHS[int(g[0][:2]) - 1]} "
+                    f"{int(g[0][3:])} ({'at home' if site == 'home' else 'on the road' if site == 'away' else 'neutral site'} "
+                    f"for {t}), and {t} {'won' if g[3] > g[4] else 'lost'} {max(g[3], g[4])}-{min(g[3], g[4])}. The lines below re-run the "
+                    "season with that one result changed and nothing else: say \"would have\", since later games "
+                    "might have gone differently too.")
+    elif met:
         g = met[0]
         lines.append(f"{t} and {o} already played on {MONTHS[int(g[0][:2]) - 1]} {int(g[0][3:])}: {t} "
-                     f"{'won' if g[3] > g[4] else 'lost'} {g[3]}-{g[4]}, and that result is in the numbers above. "
+                     f"{'won' if g[3] > g[4] else 'lost'} {max(g[3], g[4])}-{min(g[3], g[4])}, and that result is in the numbers above. "
                      "This what-if adds a second game between them; say so, or answer about the game played.")
     elif not game:
         lines.append(f"{t} vs {o} is not on the schedule file: a made-up game. Call it hypothetical, and do not call "
@@ -443,7 +452,11 @@ def look_what_if(book, team, opponent=None, site=None, margin=None):
         margin = None
     if margin == 0:
         raise Unanswerable("a game cannot end in a tie; give a margin other than 0")
-    if margin is None:
+    if redo:
+        won = met[0][3] > met[0][4]
+        ms = [margin] if margin is not None else ([-3, -17] if won else [3, 17])
+        scen = [dict(zip(("table", "rank"), w.changed(t, o, m)), margin=m) for m in ms]
+    elif margin is None:
         scen = w.scenarios(t, o, site)
     else:
         table, rank = w.with_game(t, o, site, margin)
@@ -465,8 +478,10 @@ def look_what_if(book, team, opponent=None, site=None, margin=None):
             extra += f" · {t} moves past " + ", ".join(sorted(passed, key=base.get)[:4])
         if behind:
             extra += f" · {t} falls behind " + ", ".join(sorted(behind, key=base.get)[:4])
-        lines.append(f"If {winner} wins by {abs(m)}: " + " · ".join(parts) + extra)
-    lines += what_it_takes(book, w, t, o, site, pub)
+        lines.append((f"Had {winner} won by {abs(m)}: " if redo else f"If {winner} wins by {abs(m)}: ")
+                     + " · ".join(parts) + extra)
+    if not redo:
+        lines += what_it_takes(book, w, t, o, site, pub)
     return lines
 
 
@@ -516,10 +531,11 @@ def what_it_takes(book, w, t, o, site, pub):
                 break
         if need:
             m, r = need
+            own = w.with_game(t, o, site, m)[1][t]
             out.append(f"Help from elsewhere: if #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, a {t} win "
-                       f"by {m} or more puts {t} past {a}, at #{r}." if m > 1 else
+                       f"by {m} or more puts {t} past {a}, at #{r} (#{own} with that win and no help)." if m > 1 else
                        f"Help from elsewhere: if #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, any {t} "
-                       f"win puts {t} past {a}, at #{r}.")
+                       f"win puts {t} past {a}, at #{r} (#{own} with a win and no help).")
         else:
             out.append(f"#{base[a]} {a} losing to {b} by {HELP_LOSS} would not be enough: even with a win by {cap}, "
                        f"{t} stays behind {a}.")
@@ -581,8 +597,9 @@ LOOKUPS += [
                     "close and a two-score result each way. Gives both teams' new Team Rating, the change, the "
                     "new rank and who they pass or fall behind; how big a win it takes to move up (by 1 to 40, "
                     "where margin stops counting); and which losses by the teams just above would move it further. "
-                    "With no opponent, it uses the team's next game. Use it for playoff and \"what do they need\" "
-                    "questions too.",
+                    "With no opponent, it uses the team's next game. For a game already played, it re-runs the "
+                    "season with that result changed (\"what if they had won\"). Use it for playoff and \"what do "
+                    "they need\" questions too.",
      "parameters": {"type": "object", "properties": {
          "team": {"type": "string"},
          "opponent": {"type": "string", "description": "Leave it out for the team's next game."},

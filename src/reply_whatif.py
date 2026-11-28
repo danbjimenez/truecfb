@@ -61,6 +61,24 @@ class WhatIf:
         rows = [self.row(*g) for g in games]
         return self.run(pd.concat([self.games, pd.DataFrame(rows)], ignore_index=True))
 
+    def played(self, team, opponent):
+        """The latest game between the two this season: (row index, site from team's side), or None."""
+        g = self.games
+        hit = g[((g.home == team) & (g.away == opponent)) | ((g.home == opponent) & (g.away == team))]
+        if hit.empty:
+            return None
+        r = hit.iloc[-1]
+        return hit.index[-1], ("neutral" if r.neutral else "home" if r.home == team else "away")
+
+    def changed(self, team, opponent, margin):
+        """The season with the game the two already played given a different result (margin from team's
+        side) and nothing else changed."""
+        import pandas as pd
+        idx, site = self.played(team, opponent)
+        row = self.row(team, opponent, site, margin)
+        row["week"] = int(self.games.loc[idx, "week"])
+        return self.run(pd.concat([self.games.drop(index=idx), pd.DataFrame([row])], ignore_index=True))
+
     def with_game(self, team, opponent, site, margin):
         """The season with one more game (see with_games)."""
         return self.with_games([(team, opponent, site, margin)])

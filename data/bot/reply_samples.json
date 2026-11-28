@@ -91,6 +91,8 @@
   {"post": "@truecfb if Georgia loses to Georgia Tech, who moves up to #1?", "above": "", "expect": "reply"},
   {"post": "@truecfb what if Alabama beats Auburn by 30?", "above": "", "expect": "reply"},
   {"post": "@truecfb does Utah lose its top 4 spot if it loses the Big 12 title game to Texas Tech?", "above": "", "expect": "reply"},
-  {"post": "@truecfb what would Indiana need to crack your top 10?", "above": "", "expect": "reply"}
+  {"post": "@truecfb what would Indiana need to crack your top 10?", "above": "", "expect": "reply"},
+  {"post": "@truecfb what if Texas had beaten Florida?", "above": "", "expect": "reply"},
+  {"post": "@truecfb who controls their own destiny for the last playoff spots?", "above": "", "expect": "reply"}
  ]
 }

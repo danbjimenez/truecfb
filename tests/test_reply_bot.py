@@ -124,12 +124,20 @@ def test_what_if_runs_the_engine():
     _, both = w.with_games([(a, b, "home", 17), (ORDER[8], ORDER[100], "away", -3)])
     _, alone = w.with_game(a, b, "home", 17)
     assert both[a] <= alone[a]                           # a loss above can only help
+    last = BOOK.games(ORDER[0], y)[-1]                   # a game already played, its result changed
+    if last[1] in pub:
+        redo = X.run(BOOK, "what_if", {"team": ORDER[0], "opponent": last[1]})
+        assert "What-if, a game already played:" in redo and "Had " in redo and "How much a win needs" not in redo, redo
+        idx, _ = w.played(ORDER[0], last[1])
+        flip = -(last[3] - last[4])
+        table, _ = w.changed(ORDER[0], last[1], last[3] - last[4])   # the same result: the published ratings
+        assert round(float(table.rating[ORDER[0]]), 1) == pub[ORDER[0]][0]
     assert "Nothing found" in X.run(BOOK, "what_if", {"team": ORDER[50]})           # no game left, no opponent
     fcs = X.run(BOOK, "what_if", {"team": a, "opponent": "Montana State", "site": "home"})   # an FCS opponent
     assert "If Montana State wins by 3:" in fcs and "Montana State #" not in fcs, fcs
     last = BOOK.games(ORDER[0], y)[-1][1]                    # an opponent already played: said, not hidden
     again = X.run(BOOK, "what_if", {"team": ORDER[0], "opponent": last})
-    assert f"{ORDER[0]} and {last} already played on" in again, again
+    assert f"{ORDER[0]} and {last} already played on" in again or "a game already played" in again, again
     assert "already played" not in text
 
 
