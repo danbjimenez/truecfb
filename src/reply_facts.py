@@ -389,7 +389,7 @@ def look_upcoming(book, team=None, count=12):
         upcoming_line(book, g, y) for g in soon[:count]]
 
 
-def look_what_if(book, team, opponent=None, site=None):
+def look_what_if(book, team, opponent=None, site=None, margin=None):
     """What a win or loss in one game would do, by re-running the engine with that game added."""
     import reply_whatif as WI
     y = book.current
@@ -433,8 +433,22 @@ def look_what_if(book, team, opponent=None, site=None):
         lines.append(f"{t} and {o} already played on {MONTHS[int(g[0][:2]) - 1]} {int(g[0][3:])}: {t} "
                      f"{'won' if g[3] > g[4] else 'lost'} {g[3]}-{g[4]}, and that result is in the numbers above. "
                      "This what-if adds a second game between them; say so, or answer about the game played.")
+    elif not game:
+        lines.append(f"{t} vs {o} is not on the schedule file: a made-up game. Call it hypothetical, and do not call "
+                     "it a title game, a bowl or a playoff game unless the post did.")
     base = w.base_rank
-    for sc in w.scenarios(t, o, site):
+    try:
+        margin = int(margin) if margin not in (None, "") else None
+    except (TypeError, ValueError):
+        margin = None
+    if margin == 0:
+        raise Unanswerable("a game cannot end in a tie; give a margin other than 0")
+    if margin is None:
+        scen = w.scenarios(t, o, site)
+    else:
+        table, rank = w.with_game(t, o, site, margin)
+        scen = [{"margin": margin, "table": table, "rank": rank}]
+    for sc in scen:
         m, table, rank = sc["margin"], sc["table"], sc["rank"]
         winner = t if m > 0 else o
         parts = []
@@ -457,7 +471,7 @@ def look_what_if(book, team, opponent=None, site=None):
 
 
 HELP_ABOVE = 3      # teams just above that the what-if checks for help from other games
-HELP_MARGIN = 17    # the win used when asking what other results would add (a two-score win)
+HELP_LOSS = 3       # the loss by a team above used when asking what other results would add (a close one)
 
 
 def what_it_takes(book, w, t, o, site, pub):
@@ -482,22 +496,33 @@ def what_it_takes(book, w, t, o, site, pub):
         gap = round(float(table.rating[ahead]) - float(table.rating[t]), 1)
         if gap > 0:
             out.append(f"Even after a win by {cap}, {t} would be {r1(gap)} below #{best - 1} {ahead} in Team Rating.")
-    _, alone = w.with_game(t, o, site, HELP_MARGIN)
     above = sorted((x for x in base if base[t] - HELP_ABOVE <= base[x] < base[t]), key=base.get)
+    _, solo = w.with_game(t, o, site, 1)
     for a in above:
+        if solo[t] < solo[a]:
+            continue                       # any win already passes it: no help needed
         g = next((g for g in (next_games(book, a) or []) if t not in (g["home"], g["away"])), None)
         if not g:
-            out.append(f"#{base[a]} {a} has no game left on the schedule file, so {t} can only pass it on its own results.")
+            out.append(f"#{base[a]} {a} has no game left on the schedule file (title games and bowls are added only "
+                       f"once set), so for now {t} can only pass it on its own results.")
             continue
         b = g["away"] if g["home"] == a else g["home"]
         a_site = "neutral" if g["neutral"] else ("home" if g["home"] == a else "away")
-        _, both = w.with_games([(t, o, site, HELP_MARGIN), (a, b, a_site, -3)])
-        if both[t] != alone[t]:
-            out.append(f"Help from elsewhere: if {t} wins by {HELP_MARGIN} and #{base[a]} {a} loses to {b} by 3 "
-                       f"({when(g)}), {t} would be #{both[t]} (#{alone[t]} with the win alone).")
+        need = None
+        for m in range(1, cap + 1):
+            _, both = w.with_games([(t, o, site, m), (a, b, a_site, -HELP_LOSS)])
+            if both[t] < both[a]:
+                need = (m, both[t])
+                break
+        if need:
+            m, r = need
+            out.append(f"Help from elsewhere: if #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, a {t} win "
+                       f"by {m} or more puts {t} past {a}, at #{r}." if m > 1 else
+                       f"Help from elsewhere: if #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, any {t} "
+                       f"win puts {t} past {a}, at #{r}.")
         else:
-            out.append(f"#{base[a]} {a} losing to {b} by 3 would not move {t} past it with a {HELP_MARGIN}-point win "
-                       f"(still #{alone[t]}).")
+            out.append(f"#{base[a]} {a} losing to {b} by {HELP_LOSS} would not be enough: even with a win by {cap}, "
+                       f"{t} stays behind {a}.")
     return out
 
 
@@ -562,7 +587,9 @@ LOOKUPS += [
          "team": {"type": "string"},
          "opponent": {"type": "string", "description": "Leave it out for the team's next game."},
          "site": {"type": "string", "enum": ["home", "away", "neutral"],
-                  "description": "From the team's side. Leave it out to use the schedule."}},
+                  "description": "From the team's side. Leave it out to use the schedule."},
+         "margin": {"type": "integer", "description": "One exact result to run, from the team's side: 30 for a "
+                    "30-point win, -7 for a 7-point loss. Leave it out for a close and a two-score result each way."}},
          "required": ["team"]}},
 ]
 BY_NAME = {x["name"]: x for x in LOOKUPS}
