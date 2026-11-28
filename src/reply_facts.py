@@ -406,7 +406,7 @@ def look_what_if(book, team, opponent=None, site=None, margin=None):
         game = ups[0]
         o = game["away"] if game["home"] == t else game["home"]
     else:
-        raise Unanswerable(f"{t} has no game left on the schedule file; give an opponent")
+        return look_help(book, t)
     if game and not site:
         site = "neutral" if game["neutral"] else ("home" if game["home"] == t else "away")
     site = site if site in ("home", "away", "neutral") else "neutral"
@@ -485,6 +485,43 @@ def look_what_if(book, team, opponent=None, site=None, margin=None):
     return lines
 
 
+def look_help(book, t):
+    """A team with no game left: which losses by the teams just above would move it up (engine re-runs)."""
+    import reply_whatif as WI
+    y = book.current
+    if not hasattr(book, "_whatif"):
+        try:
+            book._whatif = WI.WhatIf(book.site_dir, book.data["ratings"][str(y)])
+        except WI.OutOfDate as why:
+            book._whatif = str(why)
+    if isinstance(book._whatif, str):
+        raise Unanswerable(book._whatif)
+    w = book._whatif
+    pub = book.data["ratings"][str(y)]
+    base = w.base_rank
+    lines = header(book, y) + [
+        f"{t} has no game left on the schedule file (title games and bowls are added only once set), so for now "
+        f"only other results can move it. Now: {t} #{base[t]}, Team Rating {r1(pub[t][0])}."]
+    losses = []
+    for a in sorted((x for x in base if base[t] - HELP_ABOVE - 1 <= base[x] < base[t]), key=base.get):
+        g = next(iter(next_games(book, a) or []), None)
+        if not g:
+            lines.append(f"#{base[a]} {a} has no game left either.")
+            continue
+        b = g["away"] if g["home"] == a else g["home"]
+        a_site = "neutral" if g["neutral"] else ("home" if g["home"] == a else "away")
+        rank = w.with_game(a, b, a_site, -HELP_LOSS)[1]
+        if rank[t] < rank[a]:
+            losses.append((a, b, a_site))
+            lines.append(f"If #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, {t} moves past it, to #{rank[t]}.")
+        else:
+            lines.append(f"#{base[a]} {a} losing to {b} by {HELP_LOSS} would not drop it below {t}.")
+    if len(losses) > 1:
+        rank = w.with_games([(a, b, s, -HELP_LOSS) for a, b, s in losses])[1]
+        lines.append(f"If all of those lose ({', '.join(a for a, _, _ in losses)}), {t} would be #{rank[t]}.")
+    return lines
+
+
 HELP_ABOVE = 3      # teams just above that the what-if checks for help from other games
 HELP_LOSS = 3       # the loss by a team above used when asking what other results would add (a close one)
 
@@ -542,6 +579,62 @@ def what_it_takes(book, w, t, o, site, pub):
     return out
 
 
+STAKES_MAX = 8
+
+
+def look_stakes(book, start=9, count=6):
+    """The playoff picture around a cut: for a slice of TrueCFB's ranking, each team's committee rank, its
+    next game, and what a close win, the biggest win and a close loss would do to its rank (engine re-runs,
+    one game added each)."""
+    import reply_whatif as WI
+    y = book.current
+    try:
+        start, count = max(1, int(start)), max(1, min(int(count), STAKES_MAX))
+    except (TypeError, ValueError):
+        start, count = 9, 6
+    if not hasattr(book, "_whatif"):
+        try:
+            book._whatif = WI.WhatIf(book.site_dir, book.data["ratings"][str(y)])
+        except WI.OutOfDate as why:
+            book._whatif = str(why)
+    if isinstance(book._whatif, str):
+        raise Unanswerable(book._whatif)
+    w = book._whatif
+    pub = book.data["ratings"][str(y)]
+    base = w.base_rank
+    snaps = book.snaps(y)
+    cfp_key = next((k for k in reversed(list(snaps)) if any(r[5] for r in snaps[k])), None)
+    cfp = {r[1]: r[5] for r in snaps[cfp_key]} if cfp_key else {}
+    cap = WI.E.MARGIN_CAP
+    order = sorted(base, key=base.get)[start - 1: start - 1 + count]
+    lines = header(book, y) + [
+        f"The picture from TrueCFB #{start} to #{start + len(order) - 1}: each team's next game and what it would do "
+        "to its TrueCFB rank, with that one game added and nothing else changed. CFP ranks are the committee's "
+        f"latest ({'going into week ' + cfp_key[1:] if cfp_key and cfp_key.startswith('w') else cfp_key or 'none yet'}). TrueCFB does not pick a playoff field."]
+    for t in order:
+        tag = f"#{base[t]} {t} ({r1(pub[t][0])}" + (f", CFP #{cfp[t]})" if cfp.get(t) else ", not in the CFP ranking)")
+        g = next(iter(next_games(book, t) or []), None)
+        if not g:
+            lines.append(f"{tag}: no game left on the schedule file (title games and bowls are added only once set).")
+            continue
+        o = g["away"] if g["home"] == t else g["home"]
+        site = "neutral" if g["neutral"] else ("home" if g["home"] == t else "away")
+        where = {"home": f"vs {o}", "away": f"at {o}", "neutral": f"vs {o} (neutral)"}[site]
+        close = w.with_game(t, o, site, 3)[1][t]
+        big = w.with_game(t, o, site, cap)[1][t]
+        loss = w.with_game(t, o, site, -3)[1][t]
+        above = next((x for x in base if base[x] == base[t] - 1), None)
+        if above:
+            need = next((m for m in range(1, cap + 1) if w.with_game(t, o, site, m)[1][t] < base[t]), None)
+            own = (f"a win by {need} or more moves it up on its own" if need and need > 1 else
+                   "any win moves it up on its own" if need else f"no win moves it past #{base[t] - 1} {above} on its own")
+        else:
+            own = "it is #1"
+        lines.append(f"{tag}: {where} ({when(g)}) · a close win: #{close} · a win by {cap}: #{big} · a close loss: "
+                     f"#{loss} · {own}.")
+    return lines
+
+
 SEASON = {"type": "integer", "description": "A season from 2014 on. Leave it out for the current season."}
 LOOKUPS = [
     {"name": "rankings", "fn": look_rankings,
@@ -592,6 +685,14 @@ LOOKUPS += [
      "parameters": {"type": "object", "properties": {
          "team": {"type": "string", "description": "Leave it out for the week's biggest games."},
          "count": {"type": "integer", "description": f"Default 12, at most {MAX_LIST}."}}}},
+    {"name": "stakes", "fn": look_stakes,
+     "description": "The playoff picture around a cut in one call: for a slice of TrueCFB's ranking, each team's "
+                    "committee rank, its next game, its TrueCFB rank after a close win, a win by 40 and a close "
+                    "loss, and whether a win alone moves it up. For bubble, \"who controls their destiny\" and "
+                    "\"playoff picture\" questions; then what_if for the team that matters most.",
+     "parameters": {"type": "object", "properties": {
+         "start": {"type": "integer", "description": "First TrueCFB rank (default 9)."},
+         "count": {"type": "integer", "description": f"How many teams (default 6, at most {STAKES_MAX})."}}}},
     {"name": "what_if", "fn": look_what_if,
      "description": "What one game not yet played would do: the engine re-run with that game added, for a "
                     "close and a two-score result each way. Gives both teams' new Team Rating, the change, the "

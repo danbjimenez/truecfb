@@ -93,6 +93,9 @@
   {"post": "@truecfb does Utah lose its top 4 spot if it loses the Big 12 title game to Texas Tech?", "above": "", "expect": "reply"},
   {"post": "@truecfb what would Indiana need to crack your top 10?", "above": "", "expect": "reply"},
   {"post": "@truecfb what if Texas had beaten Florida?", "above": "", "expect": "reply"},
-  {"post": "@truecfb who controls their own destiny for the last playoff spots?", "above": "", "expect": "reply"}
+  {"post": "@truecfb who controls their own destiny for the last playoff spots?", "above": "", "expect": "reply"},
+  {"post": "@truecfb who's on the playoff bubble right now?", "above": "", "expect": "reply"},
+  {"post": "@truecfb what has to happen for Florida to get into your top 12?", "above": "", "expect": "reply"},
+  {"post": "@truecfb could Ohio State still sneak into your top 10?", "above": "", "expect": "reply"}
  ]
 }
