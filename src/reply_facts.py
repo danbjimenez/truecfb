@@ -632,7 +632,7 @@ def look_stakes(book, start=9, count=6):
     lines = header(book, y) + [
         f"The picture from TrueCFB #{start} to #{start + len(order) - 1}: each team's next game and what it would do "
         "to its TrueCFB rank, with that one game added and nothing else changed. CFP ranks are the committee's "
-        f"latest ({'going into week ' + cfp_key[1:] if cfp_key and cfp_key.startswith('w') else cfp_key or 'none yet'}). TrueCFB does not pick a playoff field."]
+        f"latest ({'going into week ' + cfp_key[1:] if cfp_key and cfp_key.startswith('w') else cfp_key or 'none yet'}). Ranks are TrueCFB's; the committee's field also gives spots to conference champions."]
     for t in order:
         tag = f"#{base[t]} {t} ({r1(pub[t][0])}" + (f", CFP #{cfp[t]})" if cfp.get(t) else ", not in the CFP ranking)")
         g = next(iter(next_games(book, t) or []), None)

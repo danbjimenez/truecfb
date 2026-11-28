@@ -115,6 +115,10 @@ Rules for every reply, enforced in code like `game_impact.post_text`:
 
 Same bot and chat as the result posts. The message shows what they asked, the post above, a link to the mention (the handle is on X; looking it up through the API costs $0.010), the drafted reply and the model that wrote it, what the reply rests on, and what it looked up. A mention whose reply failed the checks twice gets its own message with the model's attempt and why, and no buttons; mentions the model chose to skip are listed in one message per run, with its reason. Buttons: **Post reply** (only while `REPLIES_LIVE` is `true`) and **Skip**, as `rpost:<id>` / `rskip:<id>` taps beside the result posts' `post:` / `skip:`. Tap behavior is the same as today: buttons come off first, so a double tap can't post twice.
 
+### One answer shape (28 Nov 2026, Dan's call)
+
+A perfect analyst for every question isn't possible; showing the math is. Every reply is "here is what TrueCFB's numbers say about your question", in two or three sentences: (1) the TrueCFB answer in words, (2) the math behind it: the one or two results or numbers that drive it, (3) what's next when it helps. Replies never say what TrueCFB can't do, doesn't rate or won't predict: "best QB?" gets "on results alone, Georgia is the team to beat, and here is why". `reply_agent.DISCLAIMS` rejects disclaimer wording ("TrueCFB doesn't…", "can't say", "not predictions") and the model rewrites once, like any other failed check.
+
 ### Answering a post Dan picks (28 Nov 2026)
 
 When Dan sees a post @truecfb should answer, he shares its link with the Telegram bot; any words after the link are his note on what to cover ("focus on the playoff angle"). The Worker (Dan's chat only) starts "Reply drafts" with that post id, and the draft arrives like any other.

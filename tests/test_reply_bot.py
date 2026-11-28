@@ -184,6 +184,15 @@ def test_numbers_and_signs():
     assert X.unsupported("Team Rating 75.3", plain, signed) == ["75.3"]          # made up
 
 
+def test_no_disclaimers():
+    """A reply says what TrueCFB's numbers show, never what TrueCFB can't do."""
+    for bad in ["TrueCFB doesn't rate quarterbacks, but Georgia is #1.", "TrueCFB rates results, not predictions.",
+                "It cannot say who gets in.", "TrueCFB does not rank schedules."]:
+        assert any("can't do" in p for p in A.problems(bad, set(), set())), bad
+    for ok in ["BYU can't climb on its own this week.", "Texas Tech, whose season is done, stays ahead."]:
+        assert not any("can't do" in p for p in A.problems(ok, set(), set())), ok
+
+
 def test_rules_catch_mistakes():
     assert R.check("Utah has the best score")            # rating, never score
     assert R.check("TRUECFB top 5")                       # the name
