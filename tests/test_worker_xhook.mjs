@@ -17,7 +17,7 @@ if (W.mentionFrom(like, "99") !== null) throw new Error("other event accepted");
 if (W.mentionFrom({ event_type: "post.mention.create", filter: { user_id: "99" }, payload: { id: "7", author_id: "1" } }, "99") !== "7")
   throw new Error("unwrapped event not accepted");
 const d = (iso) => new Date(iso);
-if (!W.shouldCheckMentions(d("2026-11-26T10:30:00Z"), true) || W.shouldCheckMentions(d("2026-11-26T10:15:00Z"), true))
-  throw new Error("backup schedule");
+if (!W.shouldCheckMentions(d("2026-11-26T10:30:00Z"), true) || !W.shouldCheckMentions(d("2026-11-26T10:05:00Z"), true))
+  throw new Error("backup schedule: every run with push");
 if (!W.shouldCheckMentions(d("2026-11-26T10:15:00Z"), false)) throw new Error("old schedule changed");
 console.log("worker x hook ok");
