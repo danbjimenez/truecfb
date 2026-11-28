@@ -24,6 +24,10 @@ def schedule_fixture():
     r = json.load(open(os.path.join(ROOT, "site", "data.json")))["ratings"]
     y = max(r, key=int)
     order = sorted(r[y], key=lambda t: r[y][t][1])
+    last = json.load(open(os.path.join(ROOT, "site", f"sched_{y}.json")))["games"][order[0]][-1]
+    mm, dd = (int(v) for v in last[0].split("-"))
+    kick = f"{int(y) + 1 if mm < 7 else y}-{mm:02d}-{dd:02d}T23:30:00.000Z"
+    home, away = (last[1], order[0]) if last[2] == "A" else (order[0], last[1])
     path = os.path.join(tempfile.mkdtemp(), "s{y}.csv")
     with open(path.format(y=y), "w") as f:
         f.write("game_id,season,week,season_type,start_date,start_time_tbd,completed,neutral_site,conference_game,"
@@ -31,6 +35,8 @@ def schedule_fixture():
         f.write(f"1,{y},14,regular,2030-11-28T01:00:00.000Z,FALSE,FALSE,FALSE,TRUE,{order[9]},{order[70]},NA,NA,NA\n")
         f.write(f"2,{y},15,regular,2030-12-05T17:00:00.000Z,TRUE,FALSE,TRUE,TRUE,{order[0]},{order[9]},NA,NA,Title Game\n")
         f.write(f"3,{y},12,regular,2030-11-21T17:00:00.000Z,FALSE,TRUE,FALSE,TRUE,{order[1]},{order[2]},30,20,NA\n")
+        # Already in the published results, but the public file has not marked it completed yet.
+        f.write(f"4,{y},13,regular,{kick},FALSE,FALSE,FALSE,TRUE,{home},{away},NA,NA,NA\n")
     return "file://" + path, order
 
 
@@ -114,6 +120,10 @@ def test_what_if_runs_the_engine():
     assert "Nothing found" in X.run(BOOK, "what_if", {"team": ORDER[50]})           # no game left, no opponent
     fcs = X.run(BOOK, "what_if", {"team": a, "opponent": "Montana State", "site": "home"})   # an FCS opponent
     assert "If Montana State wins by 3:" in fcs and "Montana State #" not in fcs, fcs
+    last = BOOK.games(ORDER[0], y)[-1][1]                    # an opponent already played: said, not hidden
+    again = X.run(BOOK, "what_if", {"team": ORDER[0], "opponent": last})
+    assert f"{ORDER[0]} and {last} already played on" in again, again
+    assert "already played" not in text
 
 
 def test_polls_beside_truecfb():
