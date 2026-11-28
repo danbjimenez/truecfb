@@ -1,16 +1,16 @@
 """TrueCFB rating engine, version 1.1, 27 Nov 2026  (results only; team-blind; reproducible)
 Any change to a rule or number below is a new version, with every season re-run.
-v1.1 changed rule 2 (margin: 1 point per 4 points of margin instead of a curve, and overtime games
+v1.1 changed the margin rule (1 point per 4 points of margin instead of a curve, and overtime games
 count by their real final score). Every other rule is as in v1.0 (21 Nov 2026).
 
 GAME RATING, computed for each FBS team in each game:
   1. Start: a win is 70, a loss is 30.
-  2. Margin: 1 point for every 4 points of final margin, up to a 40-point margin.
+  2. Opponent: + (opponent's rating - 50), the opponent's "bonus".  Any FCS opponent counts as a 25.
+  3. Margin: 1 point for every 4 points of final margin, up to a 40-point margin.
         win  = 70 + min(m, 40) / 4        loss = 30 - min(m, 40) / 4
      m is the final score margin, overtime included.
-  3. Venue: road team +V, home team -V, neutral site 0.  V is the measured edge of home teams in
+  4. Venue: road team +V, home team -V, neutral site 0.  V is the measured edge of home teams in
      conference games on this same scale (about 3).
-  4. Opponent: + (opponent's rating - 50), the opponent's "bonus".  Any FCS opponent counts as a 25.
   5. Keep the result between 0 and 100.
   6. Postseason games are worth more, added on top of step 5 (so they can exceed 100):
         regular bowl   +10 to both teams

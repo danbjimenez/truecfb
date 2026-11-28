@@ -10,15 +10,15 @@ TrueCFB measures the season that was played. It does not predict games. It knows
 
 ## The rules
 
-1. Every game has a **Matchup Rating**: 100 plus both teams' bonuses. Two average teams make a 100. The two best teams make about 155. That is the pot the two teams split.
-2. The winner's share starts at 70 and the loser's at 30.
-3. Margin adds 1 point for every 4 points of final margin, up to a 40-point margin: a 1-point win is 70.25, a 14-point win is 73.5, a 40-point win or bigger is 80. A loss mirrors that: a 1-point loss is 29.75, a loss by 40 or more is 20. Overtime games count by their final score.
+1. A win starts at 70 and a loss at 30.
+2. Add your opponent's **bonus**, win or lose. The bonus is how far the opponent is rated above or below 50. An FCS opponent counts as a 25, so its bonus is −25.
+3. Add 1 point for every 4 points you win by, up to a 40-point margin (+10). A loss takes off the same: 1 point for every 4 points you lose by, down to −10. A 14-point win adds 3.5. Overtime games count by their final score.
 4. Add 3 on the road, subtract 3 at home, nothing at a neutral site. The exact figure is 2.75.
-5. Add your opponent's **bonus**, win or lose. The bonus is how far the opponent is rated above or below 50. An FCS opponent counts as a 25, so its bonus is −25.
-6. Keep the result between 0 and 100. That is the team's **Game Rating**. A **Team Rating** is the average of its Game Ratings.
-7. Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.
+5. Keep the result between 0 and 100. That is the team's **Game Rating**. A **Team Rating** is the average of its Game Ratings.
+6. Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.
+7. Every game has a **Matchup Rating**: 100 plus both teams' bonuses, which is the same as the two Team Ratings added together. Two average teams make a 100. The two best teams make about 155. It is the pot the two teams split: rules 1, 3 and 4 divide the 100 between the winner and the loser, and each team takes the other team's bonus.
 
-Rules 2 to 5 are how the pot in rule 1 is split: the 100 is divided between the winner and the loser, and each team takes the other team's bonus.
+In short: **Game Rating = win 70 (or loss 30) + opponent's bonus + margin + venue**, kept between 0 and 100.
 
 A **Conference Rating** is the plain average of its members' Team Ratings. It is published, not used as an input.
 
@@ -27,7 +27,7 @@ A **Conference Rating** is the plain average of its members' Team Ratings. It is
 - **Start.** A team starts at last season's final rating, after all bowl and playoff games. Think of it as six placeholder games at that rating.
 - **Each game.** Each real game replaces one placeholder. After six games the placeholders are gone and the Team Rating is the plain average of this season's Game Ratings. Weeks 1 to 6 are provisional. A team new to FBS starts at 25.
 - **Re-rating.** Bonuses update as results come in, so an old game is worth more if that opponent keeps winning. A team's rating can move in a week it does not play.
-- **Postseason.** Every bowl and playoff game counts like any other game, plus the extra points in rule 7.
+- **Postseason.** Every bowl and playoff game counts like any other game, plus the extra points in rule 6.
 - **Solving it.** A team's rating depends on its opponents' ratings, and theirs depend on its rating. So start every team at 50, rate every game, average, and repeat with the new ratings until no rating moves.
 - **Tiebreak.** In the two end-of-season rankings only (regular season final and season final): if two neighbors are within 1 point and the lower one beat the higher one, without also losing to it, they swap.
 
