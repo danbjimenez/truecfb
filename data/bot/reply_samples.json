@@ -85,6 +85,12 @@
   {"post": "@truecfb what's the biggest game this weekend by your numbers?", "above": "", "expect": "reply"},
   {"post": "@truecfb who's in the best spot in the Big 12 race?", "above": "", "expect": "reply", "core": true},
   {"post": "Hey @truecfb what does BYU need to do to get into the CFP?", "above": "", "expect": "reply"},
-  {"post": "@truecfb can Oregon still make the playoff?", "above": "", "expect": "reply"}
+  {"post": "@truecfb can Oregon still make the playoff?", "above": "", "expect": "reply"},
+  {"post": "@truecfb what would it take for Miami to pass Notre Dame?", "above": "", "expect": "reply"},
+  {"post": "@truecfb how much does Texas need to win by to get to #1?", "above": "", "expect": "reply"},
+  {"post": "@truecfb if Georgia loses to Georgia Tech, who moves up to #1?", "above": "", "expect": "reply"},
+  {"post": "@truecfb what if Alabama beats Auburn by 30?", "above": "", "expect": "reply"},
+  {"post": "@truecfb does Utah lose its top 4 spot if it loses the Big 12 title game to Texas Tech?", "above": "", "expect": "reply"},
+  {"post": "@truecfb what would Indiana need to crack your top 10?", "above": "", "expect": "reply"}
  ]
 }
