@@ -1,6 +1,6 @@
 """TrueCFB: what one game changed.
 
-For a finished game this works out, with the frozen v1.0 engine:
+For a finished game this works out, with the engine:
   - the Matchup Rating (the pot the two teams split) and each team's Game Rating
   - each team's Team Rating and rank before and after the game
   - the ripple: how every other team's rating moved because of this one result, with the biggest

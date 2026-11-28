@@ -11,7 +11,7 @@ Thanks for looking. TrueCFB is an open formula, so the code is here to be read, 
 
 ## Changes to the formula
 
-TrueCFB v1.0 is frozen. The rules and numbers in `src/engine.py` are fixed like a rulebook, so a pull request that changes one will not be merged as a fix.
+TrueCFB's formula (now 2026.2) is fixed between versions. The rules and numbers in `src/engine.py` are fixed like a rulebook, so a pull request that changes one will not be merged as a fix.
 
 If you think a rule should change:
 

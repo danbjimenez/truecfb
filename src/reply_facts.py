@@ -1,11 +1,11 @@
 """TrueCFB reply bot: the lookups the model can make, and which numbers a reply may use.
 
-  primer(readme_path) -> the README's rules, word for word (the system prompt's knowledge of v1.0)
+  primer(readme_path) -> the README's rules, word for word (the system prompt's knowledge of the rules)
   LOOKUPS, run(book, name, args) -> the tools the model calls and their text answers
   parts(book, line) -> one schedule line's Game Rating split into the rule's parts
   allowed(*texts), unsupported(reply, ...) -> the number check
 
-Every number a lookup returns comes from files the frozen v1.0 engine wrote (reply_book.Book).
+Every number a lookup returns comes from files the engine wrote (reply_book.Book).
 Nothing here computes a rating.
 The parts of a Game Rating are split the same way the site's How it works page does it (site/js/how.js),
 from the engine's published settings and margin curve; they are display only, and the published Game
@@ -17,9 +17,9 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from reply_book import Unanswerable, UNRELIABLE, INDEPENDENTS, r1, date  # noqa: E402
+from reply_book import Unanswerable, UNRELIABLE, INDEPENDENTS, VERSION, r1, date  # noqa: E402
 
-# The README sections the model learns v1.0 from, in order. Read at run time, so the model always
+# The README sections the model learns the rules from, in order. Read at run time, so the model always
 # knows the version the engine runs, never an older copy.
 PRIMER_FROM = "## The rules"
 PRIMER_UNTIL = "## Version policy"
@@ -74,17 +74,17 @@ def game_line(book, team, g, y):
         who = f"{opp} (FCS, rated {r1(book.data['settings']['fcs'])})"
     else:
         rank = ranks.get(opp, [None, None])[1]
-        # The opponent's rank and rating now: the rating is what its bonus uses, the rank is not where it
+        # The opponent's rank and rating now: the rating is what its strength uses, the rank is not where it
         # stood on the day of the game, so it is labeled "now".
         who = f"{opp} (now #{rank}, {r1(g[7])})" if rank else f"{opp} ({r1(g[7])})"
     where = {"H": "vs", "A": "at"}.get(g[2], "vs")
     site = "" if g[2] in ("H", "A") else ", neutral site"
     res = "won" if p["won"] else "lost"
-    ot = " in OT (counts as a 1-point margin)" if p["ot"] else ""
+    ot = " in OT" if p["ot"] else ""
     venue = {"H": f"home {signed(p['venue'])}", "A": f"road {signed(p['venue'])}"}.get(g[2], "neutral 0.0")
     kind = "win" if p["won"] else "loss"
-    split = (f"{r1(p['result'])} for a {p['margin']}-point {kind}, {venue}, "
-             f"{opp}'s bonus {signed(p['bonus'])}")
+    split = (f"{r1(p['result'])} for a {p['margin']}-point {kind}, {opp}'s strength {signed(p['bonus'])}, "
+             f"{venue}")
     if p["limited"]:
         split += f", kept between 0 and 100 ({r1(p['before_limit'])} before the limit)"
     if p["post"]:
@@ -103,7 +103,7 @@ def team_block(book, t, y):
     gs = book.games(t, y)
     lines = [f"{t}: #{info['rank']} · Team Rating {r1(info['rating'])} · {info['wins']}-{info['losses']}"
              + (f" · {conf}" if conf else "")
-             + f" · bonus {signed(info['rating'] - 50)} (what {t} adds to an opponent's Game Rating)"]
+             + f" · strength {signed(info['rating'] - 50)} (what {t} adds to an opponent's Game Rating)"]
     carry = book.data["settings"]["carry"]
     start = load_start(book, y).get(t)
     if len(gs) < carry:
@@ -180,7 +180,7 @@ def game_impact_block(book, a, b, y):
 # ---------- the lookups ----------
 
 def header(book, y):
-    lines = [f"TrueCFB v1.0, {y} season, numbers {book.when(y)}."]
+    lines = [f"TrueCFB {VERSION}, {y} season, numbers {book.when(y)}."]
     if y in UNRELIABLE:
         lines.append("2020 is flagged unreliable: most conferences played only themselves, so nothing ties "
                      "one conference's level to another's. Say so if you use 2020 numbers.")
@@ -324,7 +324,7 @@ LOOKUPS = [
          "start": {"type": "integer", "description": "First rank to list (default 1)."},
          "count": {"type": "integer", "description": f"How many teams (default 10, at most {MAX_LIST})."}}}},
     {"name": "team", "fn": look_team,
-     "description": "One team's season: rank, Team Rating, record, conference, its bonus, where it started, "
+     "description": "One team's season: rank, Team Rating, record, conference, its strength, where it started, "
                     "every game with its Game Rating split into the rule's parts and the Team Rating after it, "
                     "its highest and lowest Game Rating, and the teams ranked around it.",
      "parameters": {"type": "object", "properties": {
@@ -382,8 +382,8 @@ NUMBER = re.compile(r"(?<![\w.])([+\-−]?)(\d+(?:\.\d+)?)")
 
 def numbers(text):
     """The numbers in a text as (sign, digits): "−25.0" -> ("−", "25.0"), "28-20" -> ("", "28"), ("", "20").
-    "v1.0" is the version, not a number."""
-    text = text.replace("v1.0", " ")
+    "2026.2" is the version, not a number."""
+    text = text.replace(VERSION, " ")
     out = []
     for m in NUMBER.finditer(text):
         sign, digits = m.group(1), m.group(2)

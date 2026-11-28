@@ -88,15 +88,15 @@ Dan taps Post reply ─► Worker /hooks/telegram ─► post-reply.yml
 | Model (Grok 4.7 by default; tool calls) | Engine and code |
 |---|---|
 | **Reads** the post and the post above it, decides what TrueCFB's numbers can say about it, and **looks them up** (`reply_facts.LOOKUPS`): `rankings`, `team` (a season game by game, each Game Rating split into its parts), `matchup` (two teams, the gap, their game), `conference`, `polls` (the CFP ranking or AP poll beside TrueCFB's ranking at the same point, and the biggest differences), `games` (a season's highest or lowest Game Ratings, in wins, losses or all games) | Every number, from the engine's files only (`reply_book.Book`): rank, Team Rating, Game Rating and its parts, Matchup Rating, Conference Rating, record, the CFP and AP ranks the engine published beside its own (`site/rank_*.json`), gaps and changes |
-| **Writes** the reply, with the README's rules word for word as its knowledge of v1.0 (`reply_facts.primer`, read from the README on every run). May use general football knowledge in words; may not add a number of its own | **Checks** the reply (`reply_agent.problems`): every number must be written in something a lookup returned for this question, or in the rules, sign included; brand and X rules; no prediction wording. One rewrite, then no draft (Telegram shows the attempt and why) |
-| Never calculates: the lookups already split each Game Rating into its parts (result, venue, opponent's bonus, postseason, the 0 to 100 limit) and give every gap | Splits each Game Rating the way the site's How it works page does, from the engine's published settings and margin curve; the split matches every published Game Rating of every season to rounding (`tests/test_reply_bot.py`) |
+| **Writes** the reply, with the README's rules word for word as its knowledge of the rules (`reply_facts.primer`, read from the README on every run). May use general football knowledge in words; may not add a number of its own | **Checks** the reply (`reply_agent.problems`): every number must be written in something a lookup returned for this question, or in the rules, sign included; brand and X rules; no prediction wording. One rewrite, then no draft (Telegram shows the attempt and why) |
+| Never calculates: the lookups already split each Game Rating into its parts (result, opponent's strength, margin, venue, postseason, the 0 to 100 limit) and give every gap | Splits each Game Rating the way the site's How it works page does, from the engine's published settings and margin curve; the split matches every published Game Rating of every season to rounding (`tests/test_reply_bot.py`) |
 
 What the check cannot catch: a number used for the wrong thing (calling a Game Rating the Team Rating, or quoting a real 8-point margin as "8 points better"), a claim made from general knowledge in words, and wording that predicts without the usual words. Dan reads every draft, with what the model looked up and what it says the reply rests on.
 
 **Why lookups instead of fixed question types (25 Nov 2026):** the first live test, "where does the CFP committee diverge the most from your rankings, and why?", fit none of the eight types and got no draft. Adding a type for each new kind of question doesn't scale; giving the model lookups does, and the number check works the same on whatever it looked up. The fixed templates went with the types.
 
 Rules for every reply, enforced in code like `game_impact.post_text`:
-- **TrueCFB** spelling, **v1.0**, **Rating** (never "score" for a TrueCFB number; "score" only for points, as in 28-20).
+- **TrueCFB** spelling, the current version (**2026.2**, from `engine.VERSION`), **Rating** (never "score" for a TrueCFB number; "score" only for points, as in 28-20).
 - One decimal on ratings; signed changes with a real minus sign (−); "NR" for unranked.
 - Describes, never predicts; no hype, no emoji; fan terms.
 - No links, no hashtags, no @mentions in the text. `exclude_reply_user_ids` keeps the other account in the thread from being mentioned automatically.
@@ -151,7 +151,7 @@ The Worker only checks whether there is anything new (up to 5 posts); the draft 
 7. **Predictions.** TrueCFB describes, never predicts. The model is told so, and the check rejects common prediction wording ("will beat", "favored", "odds"). Wording that predicts without those words is on Dan's review.
 8. **Bowl games.** Until the final 2026 CFP ranking is added on selection day (6 Dec), bowl results don't count. The lookups only hold games the engine has counted, so a question about a bowl game gets the two teams side by side, not that game.
 9. **Token expiry.** `GITHUB_DISPATCH_TOKEN` expires about Nov 2027; the reply bot depends on it too.
-10. **A wrong explanation of the formula in public.** The writer learns v1.0 from the README's own text, not a summary, and the model test includes how-it-works questions to read before going live.
+10. **A wrong explanation of the formula in public.** The writer learns the rules from the README's own text, not a summary, and the model test includes how-it-works questions to read before going live.
 
 ## Turning it on
 
