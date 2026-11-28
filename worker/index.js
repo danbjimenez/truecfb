@@ -7,9 +7,10 @@
 //    GitHub (or mark it skipped). Only Dan's chat is accepted, and only with the bot's secret header.
 //
 // 3. Reply bot (docs/REPLY-BOT.md): /hooks/x receives X's push (Activity API, post.mention.create) the
-//    moment someone tags @truecfb, and starts the "Reply drafts" job on GitHub. A slower check of the
-//    mentions (every 30 minutes once push is set up) is the backup in case X ever turns the webhook
-//    off. "Post reply" taps start "Post a reply".
+//    moment someone tags @truecfb, and starts the "Reply drafts" job on GitHub. A check of the mentions
+//    every 5 minutes catches what push misses: X pushes posts that type @truecfb, but not replies under
+//    @truecfb's own posts, and it turns the webhook off after failed checks. "Post reply" taps start
+//    "Post a reply".
 //
 // The Worker never holds the X write keys and never computes a rating. Posting happens on GitHub,
 // from the draft the engine wrote. For the reply bot it holds only a read-only X token.
@@ -101,11 +102,12 @@ async function dispatch(env, workflow, inputs) {
 // ---------- 3. mentions of @truecfb ----------
 
 // Without push: every run on Saturdays (and early Sunday), every third run (15 minutes) the rest of the
-// week. With push set up (X_CLIENT_SECRET), the check is only the backup: every 30 minutes. A check that
-// finds nothing costs nothing on X's pay-per-use plan (it bills per post returned).
+// week. With push set up (X_CLIENT_SECRET): every run (5 minutes), because X does not push replies under
+// @truecfb's own posts (28 Nov 2026: a reply to a result post was not pushed). A check that finds
+// nothing costs nothing on X's pay-per-use plan (it bills per post returned).
 export function shouldCheckMentions(d, push = false) {
   const h = d.getUTCHours(), day = d.getUTCDay(), m = d.getUTCMinutes();
-  if (push) return m % 30 < 5;
+  if (push) return true;
   const saturday = (day === 6 && h >= 16) || (day === 0 && h < 9);
   return saturday || m % 15 < 5;
 }
