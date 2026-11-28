@@ -3746,5 +3746,246 @@
    }
   },
   "created": "2026-11-28T04:16:16Z"
+ },
+ "401856880": {
+  "post": "Utah keeps its #3 spot in the TrueCFB ranking with a 52-28 win over #76-ranked West Virginia. Utah's Team Rating falls 0.3 to 74.3. West Virginia moves up to #75 despite the loss.\n#GoUtes #HailWV",
+  "length": 195,
+  "alt": "FINAL: Utah 52, West Virginia 28 · home win\nMatchup Rating 122\nUtah: Game Rating 71.2 · Team Rating 74.3 (-0.3) · #3\nWest Virginia: Game Rating 51.3 · Team Rating 48.2 (+0.3) · #76 → #75",
+  "day": "2026-11-27",
+  "matchup_rating": 122,
+  "teams": [
+   "Utah",
+   "West Virginia"
+  ],
+  "impact": {
+   "game_id": 401856880,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 122,
+   "matchup_pct": 88,
+   "winner": "Utah",
+   "teams": [
+    {
+     "team": "Utah",
+     "fbs": true,
+     "points": 52,
+     "won": true,
+     "site": "home",
+     "parts": {
+      "result": 70.0,
+      "strength": -1.8,
+      "margin": 6.0,
+      "venue": -3.0,
+      "limit": 0.0,
+      "post": 0.0
+     },
+     "record": [
+      12,
+      0
+     ],
+     "game_rating_pct": 83,
+     "game_rating": 71.2,
+     "rating_before": 74.6,
+     "rating_after": 74.3,
+     "change": -0.3,
+     "rank_before": 3,
+     "rank_after": 3,
+     "bonus": 24.3,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "West Virginia",
+     "fbs": true,
+     "points": 28,
+     "won": false,
+     "site": "road",
+     "parts": {
+      "result": 30.0,
+      "strength": 24.3,
+      "margin": -6.0,
+      "venue": 3.0,
+      "limit": 0.0,
+      "post": 0.0
+     },
+     "record": [
+      5,
+      7
+     ],
+     "game_rating_pct": 53,
+     "game_rating": 51.3,
+     "rating_before": 47.9,
+     "rating_after": 48.2,
+     "change": 0.3,
+     "rank_before": 76,
+     "rank_after": 75,
+     "bonus": -1.8,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Virginia",
+      "change": 0.03,
+      "rating_after": 50.1,
+      "rank_before": 63,
+      "rank_after": 63,
+      "link": [
+       {
+        "vs": "West Virginia",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Coastal Carolina",
+      "change": 0.03,
+      "rating_after": 35.7,
+      "rank_before": 115,
+      "rank_after": 115,
+      "link": [
+       {
+        "vs": "West Virginia",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Oklahoma State",
+      "change": 0.03,
+      "rating_after": 59.3,
+      "rank_before": 30,
+      "rank_after": 30,
+      "link": [
+       {
+        "vs": "West Virginia",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Utah State",
+      "change": -0.03,
+      "rating_after": 40.6,
+      "rank_before": 103,
+      "rank_after": 103,
+      "link": [
+       {
+        "vs": "Utah",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Arkansas",
+      "change": -0.03,
+      "rating_after": 51.7,
+      "rank_before": 54,
+      "rank_after": 54,
+      "link": [
+       {
+        "vs": "Utah",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "BYU",
+      "change": -0.03,
+      "rating_after": 67.1,
+      "rank_before": 11,
+      "rank_after": 11,
+      "link": [
+       {
+        "vs": "Utah",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Utah State",
+      "change": -0.03,
+      "rating_after": 40.6,
+      "rank_before": 103,
+      "rank_after": 103,
+      "link": [
+       {
+        "vs": "Utah",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Virginia",
+      "change": 0.03,
+      "rating_after": 50.1,
+      "rank_before": 63,
+      "rank_after": 63,
+      "link": [
+       {
+        "vs": "West Virginia",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Coastal Carolina",
+      "change": 0.03,
+      "rating_after": 35.7,
+      "rank_before": 115,
+      "rank_after": 115,
+      "link": [
+       {
+        "vs": "West Virginia",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Arkansas",
+      "change": -0.03,
+      "rating_after": 51.7,
+      "rank_before": 54,
+      "rank_after": 54,
+      "link": [
+       {
+        "vs": "Utah",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "BYU",
+      "change": -0.03,
+      "rating_after": 67.1,
+      "rank_before": 11,
+      "rank_after": 11,
+      "link": [
+       {
+        "vs": "Utah",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 0
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "2026.2"
+   }
+  },
+  "created": "2026-11-28T05:46:28Z"
  }
 }
