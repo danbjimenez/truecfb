@@ -20,4 +20,8 @@ const d = (iso) => new Date(iso);
 if (!W.shouldCheckMentions(d("2026-11-26T10:30:00Z"), true) || !W.shouldCheckMentions(d("2026-11-26T10:05:00Z"), true))
   throw new Error("backup schedule: every run with push");
 if (!W.shouldCheckMentions(d("2026-11-26T10:15:00Z"), false)) throw new Error("old schedule changed");
+const link = W.postLink("https://x.com/BuildModeBen/status/2126535613541503182?s=20 focus on the playoff angle");
+if (!link || link.id !== "2126535613541503182" || link.note !== "focus on the playoff angle") throw new Error("post link");
+if (W.postLink("https://twitter.com/i/web/status/123")?.id !== "123" || W.postLink("no link") !== null
+    || W.postLink("https://evil.com/x.com/a/status/1") !== null) throw new Error("post link forms");
 console.log("worker x hook ok");

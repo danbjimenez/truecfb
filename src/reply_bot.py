@@ -10,9 +10,13 @@
   send:   reply_bot.py send <outbox.json>
           Sends each draft to Telegram with Post reply and Skip buttons (Skip only while posting is
           off). Run it after replies.json is committed: the post job reads the draft from the repo.
-  post:   reply_bot.py post <bot_dir> <mention id> [telegram message id]
-          Posts one approved draft as a reply to the post that tagged @truecfb. Only when REPLIES_LIVE
-          is "true".
+  post:   reply_bot.py post <bot_dir> <mention id> [telegram message id] [reply|quote]
+          Posts one approved draft as a reply to the post that tagged @truecfb, or as a quote post of a
+          post Dan picked that does not tag @truecfb (X allows API replies only to posts that do). Only
+          when REPLIES_LIVE is "true".
+
+A post Dan picks: he shares its link with the Telegram bot (with a note, if he likes); the Worker starts
+the draft job with REPLY_POST (the post id) and REPLY_NOTE, and the job drafts an answer to that one post.
 
 Environment: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET (OAuth 1.0a, @truecfb);
 X_USER_ID (optional; looked up once if missing); TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID;
@@ -126,13 +130,34 @@ def my_id(a):
     return uid
 
 
+FIELDS = {"tweet.fields": "author_id,conversation_id,created_at,referenced_tweets,entities,possibly_sensitive,in_reply_to_user_id,attachments",
+          "expansions": "referenced_tweets.id,attachments.media_keys,referenced_tweets.id.attachments.media_keys",
+          "media.fields": "type,url,preview_image_url"}
+
+
+def with_images(posts, above, media):
+    for t in posts + list(above.values()):   # the photos (or a video's still) in each post, as URLs
+        keys = (t.get("attachments") or {}).get("media_keys", [])
+        t["images"] = [u for u in (media.get(k, {}).get("url") or media.get(k, {}).get("preview_image_url") for k in keys) if u]
+
+
+def one_post(a, pid):
+    """A post Dan picked, with the post it replies to or quotes, in the shape mentions() returns."""
+    r = requests.get(f"{API}/tweets/{pid}", params=FIELDS, auth=a, timeout=30)
+    if r.status_code != 200 or not r.json().get("data"):
+        raise RuntimeError(f"X post {pid}: {r.status_code} {x_error(r)}")
+    j = r.json()
+    above = {t["id"]: t for t in j.get("includes", {}).get("tweets", [])}
+    media = {m["media_key"]: m for m in j.get("includes", {}).get("media", [])}
+    posts = [j["data"]]
+    with_images(posts, above, media)
+    return posts, above
+
+
 def mentions(a, uid, since_id):
     """New posts that mention @truecfb, oldest first, with the posts they reply to or quote. Each post gets
     "images": the URLs of its photos (a video's still image), for the model to read."""
-    params = {"max_results": 100,
-              "tweet.fields": "author_id,conversation_id,created_at,referenced_tweets,entities,possibly_sensitive,in_reply_to_user_id,attachments",
-              "expansions": "referenced_tweets.id,attachments.media_keys,referenced_tweets.id.attachments.media_keys",
-              "media.fields": "type,url,preview_image_url"}
+    params = {"max_results": 100, **FIELDS}
     if since_id:
         params["since_id"] = since_id
     else:
@@ -152,9 +177,7 @@ def mentions(a, uid, since_id):
         token = j.get("meta", {}).get("next_token")
         if not token:
             break
-    for t in posts + list(above.values()):   # the photos (or a video's still) in each post, as URLs
-        keys = (t.get("attachments") or {}).get("media_keys", [])
-        t["images"] = [u for u in (media.get(k, {}).get("url") or media.get(k, {}).get("preview_image_url") for k in keys) if u]
+    with_images(posts, above, media)
     return sorted(posts, key=lambda p: int(p["id"])), above
 
 
@@ -179,20 +202,46 @@ def draft(site_dir, bot_dir, outbox_path):
     optout = set(load(optout_path, {"users": []})["users"])
     a = auth()
     uid = my_id(a)
-    posts, above = mentions(a, uid, state.get("newest"))
-    print(f"{len(posts)} new mention(s)")
+    pick = os.environ.get("REPLY_POST", "").strip()
+    note = os.environ.get("REPLY_NOTE", "").strip()[:300]
+    if pick:
+        if not re.fullmatch(r"\d{1,20}", pick):
+            sys.exit("REPLY_POST must be a post id")
+        try:
+            posts, above = one_post(a, pick)
+        except RuntimeError as err:
+            save(outbox_path, [{"id": None, "text": f"Could not read that post: {scrub(err)}"}])
+            print(err)
+            return
+        print(f"picked post {pick}")
+    else:
+        posts, above = mentions(a, uid, state.get("newest"))
+        print(f"{len(posts)} new mention(s)")
     book = R.Book(site_dir, bot_dir)
     seen_threads = {(i.get("user"), i.get("thread")) for i in state["items"].values() if i.get("status") in ("drafted", "posted")}
     outbox, skipped, drafted = [], [], 0
 
     for p in posts:
         pid, user = p["id"], who(p.get("author_id", ""))
-        state["newest"] = pid if not state.get("newest") or int(pid) > int(state["newest"]) else state["newest"]
-        if pid in state["items"] or p.get("author_id") == uid:
-            continue
-        if any(ref["type"] == "retweeted" for ref in p.get("referenced_tweets", [])):
-            continue   # a repost of someone else's mention: they did not tag @truecfb themselves
+        picked = None
+        if pick:
+            old = state["items"].get(pid, {})
+            if old.get("status") in ("drafted", "posted") or p.get("author_id") == uid:
+                why = "that post is @truecfb's own" if p.get("author_id") == uid else (
+                    "already replied" if old.get("status") == "posted" else "a draft for it is already in Telegram")
+                outbox.append({"id": None, "text": f"Not drafted: {why}. https://x.com/i/status/{pid}"})
+                continue
+            tagged = uid in {m.get("id") for m in p.get("entities", {}).get("mentions", [])}
+            picked = {"mode": "reply" if tagged else "quote", "note": note}
+        else:
+            state["newest"] = pid if not state.get("newest") or int(pid) > int(state["newest"]) else state["newest"]
+            if pid in state["items"] or p.get("author_id") == uid:
+                continue
+            if any(ref["type"] == "retweeted" for ref in p.get("referenced_tweets", [])):
+                continue   # a repost of someone else's mention: they did not tag @truecfb themselves
         item = {"at": now(), "user": user, "thread": p.get("conversation_id")}
+        if picked:
+            item.update({"picked": True, "mode": picked["mode"]})
         state["items"][pid] = item
         text = question_text(p.get("text", ""))
         link = f"https://x.com/i/status/{pid}"
@@ -202,12 +251,14 @@ def draft(site_dir, bot_dir, outbox_path):
             continue
         if user in optout:
             item["status"] = "skipped"; item["why"] = "opted out"
+            if picked:
+                skipped.append(f"they asked the bot to stop: {link}")
             continue
         if p.get("possibly_sensitive"):
             item["status"] = "skipped"; item["why"] = "marked sensitive"
             skipped.append(f"marked sensitive: {link}")
             continue
-        if (user, item["thread"]) in seen_threads and MAX_PER_USER_PER_THREAD == 1:
+        if not picked and (user, item["thread"]) in seen_threads and MAX_PER_USER_PER_THREAD == 1:
             item["status"] = "skipped"; item["why"] = "already answered them in this thread"
             skipped.append(f"already answered them in this thread: {link}")
             continue
@@ -218,11 +269,13 @@ def draft(site_dir, bot_dir, outbox_path):
         par = parent_of(p, above)
         par_text = question_text(par.get("text", "")) if par else ""
         images = p.get("images", []) + (par.get("images", []) if par else [])
-        res = A.answer(book, text, par_text, images=images)
+        res = A.answer(book, text, par_text, images=images, picked=picked)
         # Only the lookup names go in the public file: their fields are the model's words, shaped by the post.
         item.update({"model": res["by"], "lookups": [x.split("(")[0] for x in res["lookups"]][:12]})
-        top = ["Reply draft" + ("" if live() else " (draft mode: posting is off)"), "",
-               f"Asked: {text[:500]}", *([f"Above: {par_text[:500]}"] if par_text else []),
+        kind = ("Quote post draft (the post does not tag @truecfb, and X allows replies only to posts that do)"
+                if picked and picked["mode"] == "quote" else "Reply draft (a post you picked)" if picked else "Reply draft")
+        top = [kind + ("" if live() else " (draft mode: posting is off)"), "",
+               f"Asked: {text[:500]}", *([f"Your note: {note}"] if picked and note else []), *([f"Above: {par_text[:500]}"] if par_text else []),
                *([f"Images read: {len(images)}"] if images else []), link]
         looked = "Looked up: " + (", ".join(res["lookups"]) or "nothing")
         if res["status"] == "declined":
@@ -239,7 +292,8 @@ def draft(site_dir, bot_dir, outbox_path):
         item.update({"status": "drafted", "reply": res["reply"], "by": res["by"]})
         seen_threads.add((user, item["thread"]))
         drafted += 1
-        outbox.append({"id": pid, "text": "\n".join(top + [
+        outbox.append({"id": pid, "mode": item.get("mode", "reply"), "picked": bool(picked), "reply": res["reply"],
+                       "text": "\n".join(top + [
             "", f"Reply (written by {res['by']}, every number checked against the engine):", res["reply"],
             "", *([f"Based on: {res['note']}"] if res["note"] else []), looked])})
 
@@ -251,9 +305,16 @@ def draft(site_dir, bot_dir, outbox_path):
     save(state_path, state)
     save(optout_path, {"about": "Hashes of users who asked @truecfb's reply bot to stop (reply_bot.who).",
                        "users": sorted(optout)})
-    save(os.path.join(site_dir, "replies.json"), {"newest": state.get("newest"), "updated": now()})
+    if not pick:   # the Worker's record of the newest mention handled; a picked post is not a mention
+        save(os.path.join(site_dir, "replies.json"), {"newest": state.get("newest"), "updated": now()})
     save(outbox_path, outbox)
     print(f"{drafted} draft(s), {len(skipped)} not drafted")
+
+
+def intent_link(post_id, text):
+    """X's web intent: opens the reply box under post_id with text filled in."""
+    from urllib.parse import urlencode
+    return "https://x.com/intent/post?" + urlencode({"in_reply_to": str(int(post_id)), "text": text})
 
 
 def send(outbox_path):
@@ -264,8 +325,15 @@ def send(outbox_path):
         if m["id"]:
             buttons = [{"text": "Skip", "callback_data": f"rskip:{m['id']}"}]
             if live():
-                buttons.insert(0, {"text": "Post reply", "callback_data": f"rpost:{m['id']}"})
-            body["reply_markup"] = {"inline_keyboard": [buttons]}
+                quote = m.get("mode") == "quote"
+                buttons.insert(0, {"text": "Post as quote" if quote else "Post reply",
+                                   "callback_data": f"{'rquote' if quote else 'rpost'}:{m['id']}"})
+            rows = [buttons]
+            if m.get("picked") and m.get("reply"):
+                # X's own reply box with the text filled in: Dan sends it himself, logged in as @truecfb,
+                # so it can go under a post that does not tag @truecfb. Not recorded as posted.
+                rows.insert(0, [{"text": "Reply on X (you send it)", "url": intent_link(m["id"], m["reply"])}])
+            body["reply_markup"] = {"inline_keyboard": rows}
         try:
             tg("sendMessage", body)
         except Exception as err:
@@ -275,7 +343,7 @@ def send(outbox_path):
 
 # ---------- post ----------
 
-def post(bot_dir, mention_id, msg_id=None):
+def post(bot_dir, mention_id, msg_id=None, mode=None):
     mention_id = str(int(mention_id))
     if not live():
         tell("Not posted: posting is off (set the GitHub variable REPLIES_LIVE to true).", msg_id)
@@ -296,35 +364,40 @@ def post(bot_dir, mention_id, msg_id=None):
 
     a = auth()
     uid = my_id(a)
-    # The post must still be there, and it must tag @truecfb (X only allows replies when it does).
+    quote = (mode or item.get("mode")) == "quote"
     r = requests.get(f"{API}/tweets/{mention_id}", auth=a, timeout=30,
                      params={"tweet.fields": "author_id,entities,in_reply_to_user_id"})
     data = r.json().get("data") if r.status_code == 200 else None
     if not data:
         item["status"] = "gone"; save(state_path, state)
-        tell("Not posted: the post that tagged @truecfb is gone.", msg_id)
+        tell("Not posted: that post is gone.", msg_id)
         return
-    tagged = {m.get("id") for m in data.get("entities", {}).get("mentions", [])}
-    if uid not in tagged:
-        tell("Not posted: that post no longer tags @truecfb.", msg_id)
-        sys.exit("not tagged")
-    # Reply to the asker only: leave out everyone else the thread would mention by default.
-    others = (tagged | {data.get("in_reply_to_user_id")}) - {data.get("author_id"), uid, None}
-    body = {"text": item["reply"], "reply": {"in_reply_to_tweet_id": mention_id}}
-    if others:
-        body["reply"]["exclude_reply_user_ids"] = sorted(others)
+    if quote:
+        # A quote post of a post Dan picked: it shows on @truecfb's timeline above their post.
+        body = {"text": item["reply"], "quote_tweet_id": mention_id}
+    else:
+        # A reply: the post must tag @truecfb (X only allows API replies when it does).
+        tagged = {m.get("id") for m in data.get("entities", {}).get("mentions", [])}
+        if uid not in tagged:
+            tell("Not posted: that post does not tag @truecfb, so X will not take a reply.", msg_id)
+            sys.exit("not tagged")
+        # Reply to the asker only: leave out everyone else the thread would mention by default.
+        others = (tagged | {data.get("in_reply_to_user_id")}) - {data.get("author_id"), uid, None}
+        body = {"text": item["reply"], "reply": {"in_reply_to_tweet_id": mention_id}}
+        if others:
+            body["reply"]["exclude_reply_user_ids"] = sorted(others)
     r = requests.post(f"{API}/tweets", json=body, auth=a, timeout=30)
     if r.status_code not in (200, 201):
         why = x_error(r)
         item["status"] = "refused"; item["why"] = f"{r.status_code} {why}"[:200]; save(state_path, state)
-        tell(f"X refused the reply ({r.status_code}): {why}. Check the account before posting more.", msg_id)
+        tell(f"X refused the {'quote post' if quote else 'reply'} ({r.status_code}): {why}. Check the account before posting more.", msg_id)
         sys.exit(f"X API error {r.status_code}: {why}")
     reply_id = r.json()["data"]["id"]
     item.update({"status": "posted", "reply_id": reply_id, "posted": now()})
     save(state_path, state)
     url = f"https://x.com/{HANDLE}/status/{reply_id}"
-    print("replied:", url)
-    tell(f"Replied: {url}", msg_id)
+    print("quoted:" if quote else "replied:", url)
+    tell(f"{'Quote posted' if quote else 'Replied'}: {url}", msg_id)
 
 
 def main():
@@ -334,7 +407,8 @@ def main():
     elif cmd == "send":
         send(sys.argv[2])
     elif cmd == "post":
-        post(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] else None)
+        post(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] else None,
+             sys.argv[5] if len(sys.argv) > 5 and sys.argv[5] else None)
     else:
         sys.exit(__doc__)
 

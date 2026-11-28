@@ -1,7 +1,7 @@
 name: Reply drafts
 
-# Started by the Cloudflare Worker when someone new has tagged @truecfb (it can also be started by hand
-# from the Actions tab). Reads the new mentions and has the model answer each one, looking up the
+# Started by the Cloudflare Worker when someone new has tagged @truecfb, or when Dan shares a post's link
+# with the Telegram bot (post and note; it can also be started by hand from the Actions tab). Reads the new mentions and has the model answer each one, looking up the
 # engine's published numbers as it needs them; code checks every number in the reply
 # (src/reply_agent.py). Saves the drafts and sends them to Telegram. Nothing is posted here: a reply goes out only after Dan taps "Post reply" (post-reply.yml),
 # and only while the repo variable REPLIES_LIVE is "true". Plan: docs/REPLY-BOT.md.
@@ -12,15 +12,23 @@ on:
         description: "Newest mention the Worker had seen handled (optional; the job uses its own record)"
         required: false
         default: ""
+      post:
+        description: "A post Dan picked in Telegram (its id): draft an answer to that post only"
+        required: false
+        default: ""
+      note:
+        description: "Dan's note on what to cover (optional, with a picked post)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
 
-# One run at a time. A waiting run that GitHub cancels loses nothing: the next run reads every
-# mention newer than the last one handled.
+# One run at a time, every waiting run kept (`queue: max`): a run for a post Dan picked must not be
+# dropped. Extra mention runs find nothing new and stop.
 concurrency:
   group: replies
-  cancel-in-progress: false
+  queue: max
 
 jobs:
   draft:
@@ -52,6 +60,8 @@ jobs:
           REPLY_PROVIDER: ${{ vars.REPLY_PROVIDER }}
           REPLY_MODEL: ${{ vars.REPLY_MODEL }}
           REPLIES_LIVE: ${{ vars.REPLIES_LIVE }}
+          REPLY_POST: ${{ inputs.post }}
+          REPLY_NOTE: ${{ inputs.note }}
         run: python src/reply_bot.py draft site data/bot "$RUNNER_TEMP/outbox.json"
 
       - name: Save the drafts
