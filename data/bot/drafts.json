@@ -2832,5 +2832,223 @@
    }
   },
   "created": "2026-11-28T00:16:10Z"
+ },
+ "401864549": {
+  "post": "FINAL: North Dakota State 38, San José State 31\nMatchup Rating 92\nNorth Dakota State #43 → #42 · San José State #112\n#SpartanUp #GoBison",
+  "length": 137,
+  "alt": "FINAL: North Dakota State 38, San José State 31 · road win\nMatchup Rating 92\nNorth Dakota State: Game Rating 62.2 · Team Rating 55.3 (+0.6)\nSan José State: Game Rating 29.4 · Team Rating 36.3 (-0.6)\nRipple: Jacksonville State +0.1 (lost to North Dakota State)",
+  "day": "2026-11-27",
+  "matchup_rating": 92,
+  "teams": [
+   "San José State",
+   "North Dakota State"
+  ],
+  "impact": {
+   "game_id": 401864549,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 92,
+   "winner": "North Dakota State",
+   "teams": [
+    {
+     "team": "San José State",
+     "fbs": true,
+     "points": 31,
+     "won": false,
+     "site": "home",
+     "game_rating": 29.4,
+     "rating_before": 36.9,
+     "rating_after": 36.3,
+     "change": -0.6,
+     "rank_before": 112,
+     "rank_after": 112,
+     "bonus": -13.7,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "North Dakota State",
+     "fbs": true,
+     "points": 38,
+     "won": true,
+     "site": "road",
+     "game_rating": 62.2,
+     "rating_before": 54.7,
+     "rating_after": 55.3,
+     "change": 0.6,
+     "rank_before": 43,
+     "rank_after": 42,
+     "bonus": 5.3,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Jacksonville State",
+      "change": 0.07,
+      "rating_after": 48.1,
+      "rank_before": 78,
+      "rank_after": 78,
+      "link": [
+       {
+        "vs": "North Dakota State",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Sacramento State",
+      "change": 0.05,
+      "rating_after": 21.4,
+      "rank_before": 136,
+      "rank_after": 136,
+      "link": [
+       {
+        "vs": "North Dakota State",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Hawai'i",
+      "change": 0.01,
+      "rating_after": 31.1,
+      "rank_before": 125,
+      "rank_after": 125,
+      "link": [
+       {
+        "vs": "San José State",
+        "result": "lost to"
+       },
+       {
+        "vs": "North Dakota State",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "USC",
+      "change": -0.07,
+      "rating_after": 63.2,
+      "rank_before": 22,
+      "rank_after": 22,
+      "link": [
+       {
+        "vs": "San José State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Fresno State",
+      "change": -0.07,
+      "rating_after": 47.3,
+      "rank_before": 80,
+      "rank_after": 80,
+      "link": [
+       {
+        "vs": "San José State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Eastern Michigan",
+      "change": -0.05,
+      "rating_after": 34.1,
+      "rank_before": 118,
+      "rank_after": 118,
+      "link": [
+       {
+        "vs": "San José State",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "USC",
+      "change": -0.07,
+      "rating_after": 63.2,
+      "rank_before": 22,
+      "rank_after": 22,
+      "link": [
+       {
+        "vs": "San José State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Jacksonville State",
+      "change": 0.07,
+      "rating_after": 48.1,
+      "rank_before": 78,
+      "rank_after": 78,
+      "link": [
+       {
+        "vs": "North Dakota State",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Fresno State",
+      "change": -0.07,
+      "rating_after": 47.3,
+      "rank_before": 80,
+      "rank_after": 80,
+      "link": [
+       {
+        "vs": "San José State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Eastern Michigan",
+      "change": -0.05,
+      "rating_after": 34.1,
+      "rank_before": 118,
+      "rank_after": 118,
+      "link": [
+       {
+        "vs": "San José State",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Sacramento State",
+      "change": 0.05,
+      "rating_after": 21.4,
+      "rank_before": 136,
+      "rank_after": 136,
+      "link": [
+       {
+        "vs": "North Dakota State",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 3
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-28T00:31:31Z"
  }
 }
