@@ -11,14 +11,14 @@ TrueCFB measures the season that was played. It does not predict games. It knows
 ## The rules
 
 1. A win starts at 70 and a loss at 30.
-2. Add your opponent's **bonus**, win or lose. The bonus is how far the opponent is rated above or below 50. An FCS opponent counts as a 25, so its bonus is −25.
+2. Add your opponent's **strength**, win or lose. Strength is how far a team is rated above or below 50: its Team Rating minus 50. An FCS opponent counts as a 25, so its strength is −25.
 3. Add 1 point for every 4 points you win by, up to a 40-point margin (+10). A loss takes off the same: 1 point for every 4 points you lose by, down to −10. A 14-point win adds 3.5. Overtime games count by their final score.
 4. Add 3 on the road, subtract 3 at home, nothing at a neutral site. The exact figure is 2.75.
 5. Keep the result between 0 and 100. That is the team's **Game Rating**. A **Team Rating** is the average of its Game Ratings.
 6. Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.
-7. Every game has a **Matchup Rating**: 100 plus both teams' bonuses, which is the same as the two Team Ratings added together. Two average teams make a 100. The two best teams make about 155. It is the pot the two teams split: rules 1, 3 and 4 divide the 100 between the winner and the loser, and each team takes the other team's bonus.
+7. Every game has a **Matchup Rating**: 100 plus both teams' strengths, which is the same as the two Team Ratings added together. Two average teams make a 100. The two best teams make about 155. It is the pot the two teams split: rules 1, 3 and 4 divide the 100 between the winner and the loser, and each team takes the other team's strength.
 
-In short: **Game Rating = win 70 (or loss 30) + opponent's bonus + margin + venue**, kept between 0 and 100.
+In short: **Game Rating = win 70 (or loss 30) + opponent's strength + margin + venue**, kept between 0 and 100.
 
 A **Conference Rating** is the plain average of its members' Team Ratings. It is published, not used as an input.
 
@@ -26,14 +26,14 @@ A **Conference Rating** is the plain average of its members' Team Ratings. It is
 
 - **Start.** A team starts at last season's final rating, after all bowl and playoff games. Think of it as six placeholder games at that rating.
 - **Each game.** Each real game replaces one placeholder. After six games the placeholders are gone and the Team Rating is the plain average of this season's Game Ratings. Weeks 1 to 6 are provisional. A team new to FBS starts at 25.
-- **Re-rating.** Bonuses update as results come in, so an old game is worth more if that opponent keeps winning. A team's rating can move in a week it does not play.
+- **Re-rating.** Strengths update as results come in, so an old game is worth more if that opponent keeps winning. A team's rating can move in a week it does not play.
 - **Postseason.** Every bowl and playoff game counts like any other game, plus the extra points in rule 6.
 - **Solving it.** A team's rating depends on its opponents' ratings, and theirs depend on its rating. So start every team at 50, rate every game, average, and repeat with the new ratings until no rating moves.
 - **Tiebreak.** In the two end-of-season rankings only (regular season final and season final): if two neighbors are within 1 point and the lower one beat the higher one, without also losing to it, they swap.
 
 ### Worked example
 
-Utah, 2026. Home win 66-14 over Idaho (FCS): 75 + 5 − 3 − 25 = 52. Home win 28-20 over BYU, rated 68.5 through week 12: 73.6 for an 8-point win, −2.9 at home, +18.5 for BYU's bonus = 89.3 (the parts are rounded). That number moves whenever BYU's rating does.
+Utah, 2026. Home win 66-14 over Idaho (FCS): 70 − 25 + 10 − 2.75 = 52.25. Home win 28-20 over BYU, rated 67.4 through week 12: 70 for the win, +17.4 for BYU's strength, +2 for an 8-point margin, −2.75 at home = 86.6 (the parts are rounded). That number moves whenever BYU's rating does.
 
 ### The postseason, round by round
 
@@ -65,7 +65,7 @@ Example, the 2025 season: Indiana went from 78.8 before the playoff to 98.0 afte
 | Loss, before adjustments | 30 − min(m, 40) ÷ 4 |
 | m | The final score margin, overtime included |
 | Venue | 2.75 (road +, home −, neutral 0) |
-| Opponent bonus | opponent's rating − 50 |
+| Opponent strength | opponent's rating − 50 |
 | FCS opponent rating | 25 |
 | Game Rating limits | 0 to 100, applied before postseason points |
 | Regular bowl | +10 to both teams |
@@ -119,7 +119,7 @@ A gap from the committee is not an error in either direction. It is only a measu
 
 - **2020 is unreliable.** Most conferences played only themselves, so nothing ties one conference's level to another's. In five late-season snapshots the ratings depend on the starting point. The formula is not adjusted for that season.
 - **A blowout of a weak team can lower a top team's rating.** A Team Rating is an average. A home blowout of an FCS team earns a Game Rating of about 52, and a top team's average is in the mid-70s. The game takes nothing away; it earns less than the team's usual game.
-- **Year-end ratings run high.** Postseason points pass through opponents' bonuses, so ratings drift up by about 8 points for a typical top-40 team during the postseason.
+- **Year-end ratings run high.** Postseason points pass through opponents' strengths, so ratings drift up by about 8 points for a typical top-40 team during the postseason.
 - **The playoff field is chosen by the committee,** so playoff points go to teams the committee picked.
 - **Poll comparison has gaps.** Weekly poll ranks come from that week's games, so a ranked team on a bye is missing that week. Final AP polls, after the bowls, are not in the data.
 - **Overtime flags are missing for some older games** (2013, 2015, 2016, 2018 and 2022). Since v1.1 the flag only adds "(OT)" to the score; every game counts by its final score.
@@ -133,7 +133,7 @@ The rules and numbers are fixed like a rulebook. They are not tuned to playoff r
 | v1.0 | 21 Nov 2026 | First public version. |
 | v1.1 | 27 Nov 2026 | Margin is 1 point for every 4 points of final margin, up to 40 (v1.0 used the share of 2014 to 2025 games decided by fewer points, which gave a similar curve). Overtime games count by their final score (v1.0 counted them as a 1-point margin). Venue, measured on the new scale, is 2.75 (was 2.86). Every season re-run. |
 
-Before the public release the formula went through two drafts, numbered 1.0 and 1.1 while it was being built. Older commits use those numbers; they are not the released v1.0 and v1.1. The first draft set the opponent bonus at 0.9 × (rating − 50). The second set it at the full value, and that second draft is what was released as v1.0.
+Before the public release the formula went through two drafts, numbered 1.0 and 1.1 while it was being built. Older commits use those numbers; they are not the released v1.0 and v1.1. The first draft set the opponent's strength (then called the bonus) at 0.9 × (rating − 50). The second set it at the full value, and that second draft is what was released as v1.0.
 
 ## Run it yourself
 

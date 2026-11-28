@@ -3,7 +3,7 @@ engines, AI assistants and anyone without JavaScript can read the ranking.
 Usage: build_pages.py <site_dir>        (run_all.py also calls build() at the end of every run)
 
 It only reads site/data.json, site/rank_{year}.json and site/sched_{year}.json, and it computes no rating.
-The few display figures it derives (bonus, Matchup Rating, average opponent) use the same arithmetic and
+The few display figures it derives (strength, Matchup Rating, average opponent) use the same arithmetic and
 rounding as site/js/site.js and site/js/team.js, so the page reads the same before and after the script runs.
 
 Writes to <site_dir>:
@@ -184,12 +184,12 @@ def team_page(S, t, tpl):
         after = "" if g[11] is None else fixed(g[11]) + '<span class="sub2">' + move_chip(g[11], prev) + (f" #{g[12]}" if g[12] else "") + "</span>"
         if g[11] is not None:
             prev = g[11]
-        rows.append(f'<tr><td>{where(g)}{opp}<span class="sub2"><span>{day(g[0])} · bonus {S.bonus(g[7])} ·</span> '
+        rows.append(f'<tr><td>{where(g)}{opp}<span class="sub2"><span>{day(g[0])} · strength {S.bonus(g[7])} ·</span> '
                     f'<span>Matchup Rating {pot}{post}</span></span></td><td>{result_text(g)}</td><td>{fixed(g[6])}</td>'
                     f'<td class="rt">{after}</td></tr>')
     game_rows = first + ("".join(rows) or '<tr><td colspan="4">No games played yet this season.</td></tr>')
 
-    tiles = [[S.bonus(rating), f"Bonus: what {t} is worth to anyone who plays it"]]
+    tiles = [[S.bonus(rating), f"Strength: what {t} adds to anyone who plays it, win or lose"]]
     if games:
         best = low = games[0]
         for g in games[1:]:
@@ -304,7 +304,7 @@ def rankings_json(S):
         "season": int(y), "point": S.snap["label"], "games_through": cur["through"],
         "season_complete": cur["default"] == "final",
         "fields": {"rank": "TrueCFB rank among FBS teams", "rating": "Team Rating: the average of the team's Game Ratings, 0 to 100 (above 100 is possible after the postseason)",
-                   "bonus": "What the team is worth to anyone who plays it, win or lose: Team Rating minus 50",
+                   "bonus": "Strength: what the team adds to anyone who plays it, win or lose: Team Rating minus 50 (the key is still named bonus, its name before 27 Nov 2026)",
                    "cfp_rank": "College Football Playoff committee rank at this point, or null", "ap_rank": "AP poll rank at this point, or null"},
         "teams": [{"rank": r[0], "team": r[1], "conference": D["team_conf"][y].get(r[1]), "rating": r[2], "wins": r[3], "losses": r[4],
                    "bonus": js_round(S.b * (r[2] - 50)), "cfp_rank": r[5], "ap_rank": r[6], "url": SITE + team_href(r[1])} for r in S.ranking],
@@ -321,17 +321,17 @@ def llms_txt(S):
 
 TrueCFB numbers are ratings, not points. A score is points on the scoreboard (28-20); a rating is TrueCFB's measure.
 
-- Game Rating: what one team earns for one game, 0 to 100 (above 100 in the postseason). A win is worth 70 to 80 by margin and a loss 20 to 30; add the opponent's bonus, add 3 on the road or subtract 3 at home, and keep it within 0 to 100.
+- Game Rating: what one team earns for one game, 0 to 100 (above 100 in the postseason). A win starts at 70 and a loss at 30; add the opponent's strength; add 1 point for every 4 points of margin (up to 10) for a win, or take it off for a loss; add 3 on the road or subtract 3 at home; and keep it within 0 to 100.
 - Team Rating: the average of a team's Game Ratings. Teams are ranked by it.
-- Bonus: what a team is worth to anyone who plays it, win or lose: its Team Rating minus 50.
-- Matchup Rating: the pot the two teams in a game split, 100 plus both teams' bonuses.
+- Strength: what a team adds to anyone who plays it, win or lose: its Team Rating minus 50.
+- Matchup Rating: the pot the two teams in a game split, 100 plus both teams' strengths.
 - Conference Rating: the plain average of its members' Team Ratings. Published, not used in the formula.
 
 ## Current ranking: {y} season, {S.snap['label'].lower()}{f" (games through {day(D['current']['through'])})" if D['current']['through'] else ""}
 
 {top}
 
-All {len(S.ranking)} FBS teams, with conference, record, bonus and the AP and CFP ranks: [rankings.json]({SITE}/rankings.json)
+All {len(S.ranking)} FBS teams, with conference, record, strength (the key `bonus`) and the AP and CFP ranks: [rankings.json]({SITE}/rankings.json)
 
 ## Pages
 

@@ -5,7 +5,7 @@ count by their real final score). Every other rule is as in v1.0 (21 Nov 2026).
 
 GAME RATING, computed for each FBS team in each game:
   1. Start: a win is 70, a loss is 30.
-  2. Opponent: + (opponent's rating - 50), the opponent's "bonus".  Any FCS opponent counts as a 25.
+  2. Opponent: + (opponent's rating - 50), the opponent's "strength" (called the bonus before v1.1).  Any FCS opponent counts as a 25.
   3. Margin: 1 point for every 4 points of final margin, up to a 40-point margin.
         win  = 70 + min(m, 40) / 4        loss = 30 - min(m, 40) / 4
      m is the final score margin, overtime included.
@@ -33,7 +33,7 @@ NAME = "TrueCFB"              # named 22 Nov 2026; the name is not part of the f
 VERSION = "1.1"
 WIN_RANGE = (70.0, 80.0)      # a win before margin .. a win by MARGIN_CAP or more; losses mirror it (30 .. 20)
 MARGIN_CAP = 40               # margin stops counting here: 1 point per 4 points, at most 10 (v1.0 used a curve)
-OPP_WEIGHT = 1.0              # the opponent's bonus at full value (0.9 in a draft before the public release)
+OPP_WEIGHT = 1.0              # the opponent's strength at full value (0.9 in a draft before the public release)
 FCS_RATING = 25.0
 CARRY = 6
 H2H_WINDOW = 1.0

@@ -74,7 +74,7 @@ def game_line(book, team, g, y):
         who = f"{opp} (FCS, rated {r1(book.data['settings']['fcs'])})"
     else:
         rank = ranks.get(opp, [None, None])[1]
-        # The opponent's rank and rating now: the rating is what its bonus uses, the rank is not where it
+        # The opponent's rank and rating now: the rating is what its strength uses, the rank is not where it
         # stood on the day of the game, so it is labeled "now".
         who = f"{opp} (now #{rank}, {r1(g[7])})" if rank else f"{opp} ({r1(g[7])})"
     where = {"H": "vs", "A": "at"}.get(g[2], "vs")
@@ -83,8 +83,8 @@ def game_line(book, team, g, y):
     ot = " in OT" if p["ot"] else ""
     venue = {"H": f"home {signed(p['venue'])}", "A": f"road {signed(p['venue'])}"}.get(g[2], "neutral 0.0")
     kind = "win" if p["won"] else "loss"
-    split = (f"{r1(p['result'])} for a {p['margin']}-point {kind}, {venue}, "
-             f"{opp}'s bonus {signed(p['bonus'])}")
+    split = (f"{r1(p['result'])} for a {p['margin']}-point {kind}, {opp}'s strength {signed(p['bonus'])}, "
+             f"{venue}")
     if p["limited"]:
         split += f", kept between 0 and 100 ({r1(p['before_limit'])} before the limit)"
     if p["post"]:
@@ -103,7 +103,7 @@ def team_block(book, t, y):
     gs = book.games(t, y)
     lines = [f"{t}: #{info['rank']} · Team Rating {r1(info['rating'])} · {info['wins']}-{info['losses']}"
              + (f" · {conf}" if conf else "")
-             + f" · bonus {signed(info['rating'] - 50)} (what {t} adds to an opponent's Game Rating)"]
+             + f" · strength {signed(info['rating'] - 50)} (what {t} adds to an opponent's Game Rating)"]
     carry = book.data["settings"]["carry"]
     start = load_start(book, y).get(t)
     if len(gs) < carry:
@@ -324,7 +324,7 @@ LOOKUPS = [
          "start": {"type": "integer", "description": "First rank to list (default 1)."},
          "count": {"type": "integer", "description": f"How many teams (default 10, at most {MAX_LIST})."}}}},
     {"name": "team", "fn": look_team,
-     "description": "One team's season: rank, Team Rating, record, conference, its bonus, where it started, "
+     "description": "One team's season: rank, Team Rating, record, conference, its strength, where it started, "
                     "every game with its Game Rating split into the rule's parts and the Team Rating after it, "
                     "its highest and lowest Game Rating, and the teams ranked around it.",
      "parameters": {"type": "object", "properties": {
