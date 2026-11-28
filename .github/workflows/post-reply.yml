@@ -13,6 +13,10 @@ on:
         description: "Telegram message to reply to (optional)"
         required: false
         default: ""
+      mode:
+        description: "reply, or quote for a picked post that does not tag @truecfb (optional; the draft says)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -44,6 +48,7 @@ jobs:
         env:
           MENTION: ${{ inputs.mention }}
           MESSAGE_ID: ${{ inputs.message_id }}
+          MODE: ${{ inputs.mode }}
           REPLIES_LIVE: ${{ vars.REPLIES_LIVE }}
           X_USER_ID: ${{ vars.X_USER_ID }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
@@ -52,7 +57,7 @@ jobs:
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python src/reply_bot.py post data/bot "$MENTION" "$MESSAGE_ID"
+        run: python src/reply_bot.py post data/bot "$MENTION" "$MESSAGE_ID" "$MODE"
 
       - name: Record it
         if: always()

@@ -115,6 +115,14 @@ Rules for every reply, enforced in code like `game_impact.post_text`:
 
 Same bot and chat as the result posts. The message shows what they asked, the post above, a link to the mention (the handle is on X; looking it up through the API costs $0.010), the drafted reply and the model that wrote it, what the reply rests on, and what it looked up. A mention whose reply failed the checks twice gets its own message with the model's attempt and why, and no buttons; mentions the model chose to skip are listed in one message per run, with its reason. Buttons: **Post reply** (only while `REPLIES_LIVE` is `true`) and **Skip**, as `rpost:<id>` / `rskip:<id>` taps beside the result posts' `post:` / `skip:`. Tap behavior is the same as today: buttons come off first, so a double tap can't post twice.
 
+### Answering a post Dan picks (28 Nov 2026)
+
+When Dan sees a post @truecfb should answer, he shares its link with the Telegram bot; any words after the link are his note on what to cover ("focus on the playoff angle"). The Worker (Dan's chat only) starts "Reply drafts" with that post id, and the draft arrives like any other.
+- **Quote post or reply.** X allows API replies only to posts that tag @truecfb, so a picked post that doesn't is drafted as a **quote post** ("Post as quote" button): it shows on @truecfb's timeline above their post, and the model is told to write it to stand on its own. A picked post that does tag @truecfb gets a normal reply ("Post reply").
+- The same checks as a mention: the author's opt-out, posts marked sensitive, every number checked against the engine. Not drafted twice, and never @truecfb's own posts.
+- A picked post is not a mention: it does not move the Worker's record of the newest mention handled.
+- Each quote post is approved by Dan, like every reply; X's automation rules still apply (no bulk or keyword-driven posting).
+
 ### The pieces
 
 | File | What |

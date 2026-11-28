@@ -137,8 +137,19 @@ def problems(reply, plain, signed_forms):
     return out
 
 
-def user_text(mention, parent, book):
-    parts = [f"Today TrueCFB's {book.current} numbers are {book.when(book.current)}.", f"<post>\n{mention}\n</post>"]
+def user_text(mention, parent, book, picked=None):
+    """picked: for a post Dan chose in Telegram (it did not tag @truecfb): {"mode": "reply" or "quote",
+    "note": Dan's own words, if any}."""
+    parts = [f"Today TrueCFB's {book.current} numbers are {book.when(book.current)}."]
+    if picked:
+        parts.append("Nobody tagged @truecfb here: Dan, who runs TrueCFB, picked this post for @truecfb to answer. "
+                     + ("Your text will be posted as a quote post, shown above their post to @truecfb's followers: "
+                        "write it to stand on its own (\"BYU can't climb on its own this week...\"), about the "
+                        "post's question or claim, without \"you\"." if picked["mode"] == "quote" else
+                        "Your text will be posted as a reply under it."))
+        if picked.get("note"):
+            parts.append(f"Dan's note on what to cover (his words, not the poster's): {picked['note']}")
+    parts.append(f"<post>\n{mention}\n</post>")
     if parent:
         parts.append(f"<post_above>\n{parent}\n</post_above>")
     return "\n\n".join(parts)
@@ -152,7 +163,7 @@ def lookup_label(name, args):
 MAX_IMAGES = 4
 
 
-def answer(book, mention, parent="", readme_path=README, provider=None, model=None, images=()):
+def answer(book, mention, parent="", readme_path=README, provider=None, model=None, images=(), picked=None):
     """images: URLs of the photos in the two posts (the mention's and the post above it), read as part of them."""
     out = {"status": "failed", "reply": "", "note": "", "by": "", "lookups": [], "problems": [],
            "rejected": None, "usage": []}
@@ -162,7 +173,7 @@ def answer(book, mention, parent="", readme_path=README, provider=None, model=No
         out["problems"] = [f"model error: {str(err)[:150]}"]
         return out
     out["by"], out["usage"] = c.model, c.usage
-    c.say(user_text(mention, parent, book), list(images)[:MAX_IMAGES])
+    c.say(user_text(mention, parent, book, picked), list(images)[:MAX_IMAGES])
     seen = [X.primer(readme_path), user_text("", "", book)]   # what the reply's numbers may come from
     rewrites = 0
     for _ in range(MAX_CALLS):

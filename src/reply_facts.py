@@ -124,9 +124,17 @@ def team_block(book, t, y):
         lines.append(f"{t}'s highest Game Rating: {r1(best[6])} ({'won' if best[3] > best[4] else 'lost'} "
                      f"{'vs' if best[2] != 'A' else 'at'} {best[1]}); lowest: {r1(worst[6])} "
                      f"({'won' if worst[3] > worst[4] else 'lost'} {'vs' if worst[2] != 'A' else 'at'} {worst[1]})")
-        if len(gs) > 1 and gs[-2][11] is not None and gs[-1][11] is not None:
-            lines.append(f"{t}'s Team Rating moved {signed(gs[-1][11] - gs[-2][11])} with its latest game "
-                         f"({r1(gs[-2][11])} to {r1(gs[-1][11])}).")
+        last = gs[-1]
+        imp = book.impact(t, last[1], y, last[0])
+        side = next((x for x in (imp or {}).get("teams", []) if x["team"] == t and x.get("fbs")), None)
+        if side:
+            b, a = round(side["rating_before"], 1), round(side["rating_after"], 1)
+            lines.append(f"What {t}'s latest game did, as its result card shows: Team Rating {r1(b)} without that "
+                         f"game, {r1(a)} with it ({signed(a - b)}); rank #{side['rank_before']} to #{side['rank_after']}.")
+        if len(gs) > 1 and gs[-2][11] is not None and last[11] is not None:
+            lines.append(f"Since its previous game, other teams' results included, {t}'s Team Rating has moved "
+                         f"{signed(last[11] - gs[-2][11])} ({r1(gs[-2][11])} to {r1(last[11])}). This is not what "
+                         "the latest game alone did" + ("; use the line above for that." if side else "."))
     return lines
 
 

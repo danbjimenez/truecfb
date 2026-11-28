@@ -247,7 +247,8 @@ async function telegramHook(request, env, ctx) {
     const msg = cb.message || {};
     if (String(msg.chat?.id) !== chat || String(cb.from?.id) !== chat) return ok;
     // post/skip: a game's result post. rpost/rskip: a reply draft (the id of the post that tagged us).
-    const m = /^(post|skip):(\d{1,12})$/.exec(cb.data || "") || /^(rpost|rskip):(\d{1,20})$/.exec(cb.data || "");
+    // rquote: a draft for a post Dan picked that does not tag us, posted as a quote post.
+    const m = /^(post|skip):(\d{1,12})$/.exec(cb.data || "") || /^(rpost|rquote|rskip):(\d{1,20})$/.exec(cb.data || "");
     if (!m) return ok;
     const [, action, game] = m;
     const isReply = action.startsWith("r");
@@ -267,7 +268,8 @@ async function telegramHook(request, env, ctx) {
     // Take the buttons off first, so a second tap cannot post twice.
     await setText(`${original}\n\nPosting...`);
     const started = isReply
-      ? await dispatch(env, "post-reply.yml", { mention: game, message_id: String(msg.message_id) })
+      ? await dispatch(env, "post-reply.yml", { mention: game, message_id: String(msg.message_id),
+                                                mode: action === "rquote" ? "quote" : "reply" })
       : await dispatch(env, "post-to-x.yml", { game, message_id: String(msg.message_id) });
     ctx.waitUntil(tg("answerCallbackQuery", {
       callback_query_id: cb.id,
@@ -275,7 +277,7 @@ async function telegramHook(request, env, ctx) {
     }));
     if (!started) {
       ctx.waitUntil(setText(`${original}\n\nNot posted: the post job did not start.`, {
-        reply_markup: { inline_keyboard: [[{ text: "Try again", callback_data: `${isReply ? "rpost" : "post"}:${game}` },
+        reply_markup: { inline_keyboard: [[{ text: "Try again", callback_data: `${isReply ? action : "post"}:${game}` },
                                            { text: "Skip", callback_data: `${isReply ? "rskip" : "skip"}:${game}` }]] },
       }));
     }
@@ -283,8 +285,27 @@ async function telegramHook(request, env, ctx) {
   }
 
   const message = update.message;
-  if (message && String(message.chat?.id) === chat && message.text) {
-    ctx.waitUntil(tg("sendMessage", { chat_id: chat, text: "TrueCFB drafts bot is running. Drafts arrive here after each final." }));
+  if (message && String(message.chat?.id) === chat && String(message.from?.id) === chat && message.text) {
+    // A post's link from Dan: draft an answer to that post (any words after the link are his note).
+    const pick = postLink(message.text);
+    if (pick) {
+      const started = await dispatch(env, "reply-draft.yml", { post: pick.id, note: pick.note });
+      ctx.waitUntil(tg("sendMessage", { chat_id: chat, reply_to_message_id: message.message_id,
+        text: started ? "Drafting an answer to that post. The draft will arrive here in a few minutes."
+                      : "Could not start the draft job. Check GitHub Actions." }));
+      return ok;
+    }
+    ctx.waitUntil(tg("sendMessage", { chat_id: chat,
+      text: "TrueCFB drafts bot is running. Drafts arrive here after each final. Share a post's link (x.com/.../status/...) to have the bot draft an answer to it; words after the link are your note." }));
   }
   return ok;
+}
+
+// A post link in a Telegram message: { id, note } (note: the message's other words, at most 300
+// characters), or null. Accepts x.com, twitter.com and mobile links.
+export function postLink(text) {
+  const m = /https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/(?:[A-Za-z0-9_]{1,15}|i(?:\/web)?)\/status\/(\d{1,20})\S*/.exec(String(text || ""));
+  if (!m) return null;
+  const note = String(text).replace(m[0], " ").replace(/\s+/g, " ").trim().slice(0, 300);
+  return { id: m[1], note };
 }
