@@ -66,6 +66,76 @@ def parts(book, g):
             "game_rating": g[6], "fcs": bool(g[8])}
 
 
+PART_NAMES = (("result", "win/loss"), ("strength", "opponent strength"), ("margin", "margin"), ("venue", "venue"),
+              ("limit", "the 0-100 limit"), ("post", "postseason points"), ("other", "last season's carryover"))
+
+
+def breakdown(book, t, y):
+    """A Team Rating split into its average parts, the same four (plus the limit and postseason points) that
+    every Game Rating adds up: win/loss (70 a win, 30 a loss), opponent strength, margin, venue. "other" is
+    what the season's own games do not cover (last season's carryover early on, and rounding)."""
+    gs = book.games(t, y)
+    if not gs:
+        return None
+    tot = dict.fromkeys(("result", "strength", "margin", "venue", "limit", "post"), 0.0)
+    for g in gs:
+        p = parts(book, g)
+        base = 70.0 if p["won"] else 30.0
+        tot["result"] += base
+        tot["margin"] += p["result"] - base
+        tot["strength"] += p["bonus"]
+        tot["venue"] += p["venue"]
+        tot["post"] += p["post"]
+        if p["limited"]:
+            tot["limit"] += min(100.0, max(0.0, p["before_limit"])) - p["before_limit"]
+    n = len(gs)
+    out = {k: v / n for k, v in tot.items()}
+    out["other"] = book.team(t, y)["rating"] - sum(out.values())
+    out["games"] = n
+    return out
+
+
+def breakdown_line(book, t, y):
+    d = breakdown(book, t, y)
+    if not d:
+        return None
+    shown = [f"{name} {r1(d[k]) if k == 'result' else signed(d[k])}" for k, name in PART_NAMES
+             if k in ("result", "strength", "margin", "venue") or abs(d[k]) >= 0.05]
+    return (f"{t}'s Team Rating {r1(book.team(t, y)['rating'])}, split into its average parts over {d['games']} games: "
+            + " · ".join(shown) + " (win/loss averages 70 for a win and 30 for a loss).")
+
+
+def gap_parts(book, hi, lo, y):
+    """Why hi is above lo, part by part: hi's average part minus lo's, and the part that decides it."""
+    a, b = breakdown(book, hi, y), breakdown(book, lo, y)
+    if not a or not b:
+        return []
+    diff = {k: a[k] - b[k] for k, _ in PART_NAMES}
+    shown = [(k, name) for k, name in PART_NAMES
+             if k in ("result", "strength", "margin", "venue") or abs(diff[k]) >= 0.05]
+    lines = [f"Why {hi} is above {lo}, part by part ({hi}'s average minus {lo}'s; they add up to the gap): "
+             + " · ".join(f"{name} {signed(diff[k])}" for k, name in shown) + "."]
+    pro = sorted((k for k, _ in shown if diff[k] >= 0.05), key=lambda k: -diff[k])
+    con = sorted((k for k, _ in shown if diff[k] <= -0.05), key=lambda k: diff[k])
+    names = dict(PART_NAMES)
+    gap = sum(diff.values())
+    against = sum(diff[k] for k in con)
+    if pro:
+        top = pro[0]
+        if against > -0.5:
+            share = "most of the gap" if diff[top] >= 0.5 * gap else "the biggest part"
+        else:
+            share = f"the biggest part in its favor; together the parts in {hi}'s favor outweigh those in {lo}'s"
+        lines.append(f"The part that puts {hi} ahead: {names[top]} ({signed(diff[top])}), {share}."
+                     + (f" Also in {hi}'s favor: " + ", ".join(f"{names[k]} ({signed(diff[k])})" for k in pro[1:]) + "."
+                        if pro[1:] else ""))
+    if con:
+        lines.append(f"Parts that favor {lo}: " + ", ".join(f"{names[k]} ({signed(diff[k])})" for k in con) + ".")
+    lines.append(f"What each part means: win/loss is the record (70 for a win, 30 for a loss, averaged), opponent "
+                 f"strength is who they played, margin is how much they won or lost by, venue is where they played.")
+    return lines
+
+
 def game_line(book, team, g, y):
     p = parts(book, g)
     opp = g[1]
@@ -289,6 +359,9 @@ def look_team(book, team, season=None):
     y = book.season(season)
     t = team_name(book, team, y)
     lines = header(book, y) + team_block(book, t, y) + [neighbors(book, t, y)]
+    split = breakdown_line(book, t, y)
+    if split:
+        lines.append(split)
     c = book.data["team_conf"].get(str(y), {}).get(t)
     if c and c != INDEPENDENTS:
         rec = next(((w, l) for x, w, l in conf_records(book, c, y) if x == t), None)
@@ -315,6 +388,8 @@ def look_matchup(book, team_a, team_b, season=None):
                                for t in (hi, lo)]
     lines.append(f"Gap: {hi['team']} (#{hi['rank']}) {r1(hi['rating'] - lo['rating'])} above "
                  f"{lo['team']} (#{lo['rank']}) in Team Rating.")
+    lines += [x for x in (breakdown_line(book, hi["team"], y), breakdown_line(book, lo["team"], y)) if x]
+    lines += gap_parts(book, hi["team"], lo["team"], y)
     m = book.meeting(a, b, y)
     if m:
         lines.append(f"Their game in {y}:")
@@ -632,7 +707,7 @@ def look_stakes(book, start=9, count=6):
     lines = header(book, y) + [
         f"The picture from TrueCFB #{start} to #{start + len(order) - 1}: each team's next game and what it would do "
         "to its TrueCFB rank, with that one game added and nothing else changed. CFP ranks are the committee's "
-        f"latest ({'going into week ' + cfp_key[1:] if cfp_key and cfp_key.startswith('w') else cfp_key or 'none yet'}). TrueCFB does not pick a playoff field."]
+        f"latest ({'going into week ' + cfp_key[1:] if cfp_key and cfp_key.startswith('w') else cfp_key or 'none yet'}). Ranks are TrueCFB's; the committee's field also gives spots to conference champions."]
     for t in order:
         tag = f"#{base[t]} {t} ({r1(pub[t][0])}" + (f", CFP #{cfp[t]})" if cfp.get(t) else ", not in the CFP ranking)")
         g = next(iter(next_games(book, t) or []), None)

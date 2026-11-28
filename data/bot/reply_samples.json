@@ -61,6 +61,8 @@
   {"post": "@truecfb where do teams start in week 1? is it just last year's ranking?", "above": "", "expect": "reply"},
   {"post": "@truecfb how is Utah that far ahead of BYU?", "above": "", "expect": "reply"},
   {"post": "@truecfb why is BYU only #11?", "above": "", "expect": "reply"},
+  {"post": "@truecfb why is Georgia ahead of Texas?", "above": "", "expect": "reply"},
+  {"post": "@truecfb how is Notre Dame ahead of Miami? Same record", "above": "", "expect": "reply"},
   {"post": "@truecfb what was Utah's best win this year?", "above": "", "expect": "reply"},
   {"post": "@truecfb Georgia lost a game and is still #1?? explain", "above": "", "expect": "reply"},
   {"post": "@truecfb Ohio State at #19 is a joke. explain yourself", "above": "", "expect": "reply"},
