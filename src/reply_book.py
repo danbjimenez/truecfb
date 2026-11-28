@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from game_impact import weighted_length, MAX_POST  # noqa: E402
 from engine import VERSION as ENGINE_VERSION  # noqa: E402
 
-VERSION = f"v{ENGINE_VERSION}"   # how the version is written, e.g. v1.1
+VERSION = ENGINE_VERSION   # how the version is written: year.release, e.g. 2026.2, no "v"
 
 INDEPENDENTS = "FBS Independents"
 UNRELIABLE = {2020}            # flagged on the site; never special-cased in the formula
@@ -153,7 +153,7 @@ def check(text):
     for m in re.finditer(r"true\s*cfb", text, re.I):
         if m.group(0) != "TrueCFB":
             problems.append(f'name written "{m.group(0)}"')
-    if any(m.group(0) != VERSION for m in re.finditer(r"\bv\d+(?:\.\d+)*", text)) or re.search(r"\bversion \d", text):
+    if re.search(r"\bv\d+(?:\.\d+)*\b", text) or re.search(r"\bversion (?!" + re.escape(VERSION) + r"\b)\d", text):
         problems.append(f"version not written {VERSION}")
     if re.search(r"https?://|www\.|\.(com|org|net|io)\b", text, re.I):
         problems.append("has a link (X charges $0.20 a post)")

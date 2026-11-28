@@ -48,7 +48,7 @@
       <li>A win starts at 70 and a loss at 30.</li>
       <li>Add your opponent's strength, win or lose. Strength is listed beside every team: it is how far the team is rated above or below 50. An FCS opponent counts as a 25, so its strength is −25.</li>
       <li>Add 1 point for every 4 points you win by, up to a 40-point margin (+10). A loss takes off the same: 1 point for every 4 points you lose by, down to −10. A 14-point win adds 3.5. Overtime games count by their final score.</li>
-      <li>Add 3 on the road, subtract 3 at home, nothing at a neutral site. The exact figure is 2.75.</li>
+      <li>Add 3 on the road, subtract 3 at home, nothing at a neutral site.</li>
       <li>Keep the result between 0 and 100. That is the team's Game Rating. A Team Rating is the average of its Game Ratings.</li>
       <li>Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.</li>
       <li>Every game has a Matchup Rating: 100 plus both teams' strengths, which is the same as the two Team Ratings added together. Two average teams make a 100. The two best teams make about 155. It is the pot the two teams split: rules 1, 3 and 4 divide the 100 between the winner and the loser, and each team takes the other team's strength.</li>
@@ -84,8 +84,8 @@
   <section class="panel" id="example">
     <h2>A worked example</h2>
     <div class="prose">
-      <p>Utah beats Idaho, an FCS team, 66-14 at home. A win starts at 70. Idaho's strength is −25. A 52-point margin adds the most margin can, 10. Playing at home takes off 2.75. Utah's Game Rating is 52.25.</p>
-      <p>Utah beats BYU 28-20 at home. A win starts at 70. BYU is rated <span id="ex-opp">68.5</span>, so its strength is <span id="ex-bonus">+18.5</span>. An 8-point margin adds 2. Home takes off 2.75. Utah's Game Rating is <span id="ex-gr">89.2</span>.</p>
+      <p>Utah beats Idaho, an FCS team, 66-14 at home. A win starts at 70. Idaho's strength is −25. A 52-point margin adds the most margin can, 10. Playing at home takes off 3. Utah's Game Rating is 52.</p>
+      <p>Utah beats BYU 28-20 at home. A win starts at 70. BYU is rated <span id="ex-opp">68.5</span>, so its strength is <span id="ex-bonus">+18.5</span>. An 8-point margin adds 2. Home takes off 3. Utah's Game Rating is <span id="ex-gr">89.2</span>.</p>
       <p>Both are wins. The second is worth far more because of who it was against. BYU's rating moves with every game BYU plays, so the second number moves with it until the 2026 season is over. The first never changes, because an FCS opponent always counts as a 25.</p>
     </div>
   </section>
@@ -151,8 +151,8 @@
         <tbody>
           <tr><td>Beat the best team on the road by a lot</td><td class="rt">100</td></tr>
           <tr><td>Typical win over an average team (by 14), neutral site</td><td class="rt">73.5</td></tr>
-          <tr><td>Lose to the best team on the road by 1</td><td class="rt">60</td></tr>
-          <tr><td>Beat the worst team at home by 1</td><td class="rt">36</td></tr>
+          <tr><td>Lose to the best team on the road by 1</td><td class="rt">59</td></tr>
+          <tr><td>Beat the worst team at home by 1</td><td class="rt">35</td></tr>
           <tr><td>Typical loss to an average team (by 14)</td><td class="rt">26.5</td></tr>
           <tr><td>Lose to the worst team at home by a lot</td><td class="rt">0</td></tr>
         </tbody>
@@ -176,7 +176,7 @@
   <div class="in">
     <span class="wordmark">True<b>CFB</b></span>
     <p>Every FBS team rated on results alone. Every game counts. Open source formula.</p>
-    <p>TrueCFB v1.1. <a href="/how-it-works">How it works</a> · <a href="/about">About</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
+    <p>TrueCFB 2026.2. <a href="/how-it-works">How it works</a> · <a href="/about">About</a> · <a href="https://github.com/danbjimenez/truecfb">Code on GitHub</a></p>
     <p>Game data from CollegeFootballData.com and ESPN. TrueCFB is not affiliated with the College Football Playoff, the Associated Press, ESPN or any school or conference.</p>
   </div>
 </footer>

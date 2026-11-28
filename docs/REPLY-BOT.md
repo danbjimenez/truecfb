@@ -96,7 +96,7 @@ What the check cannot catch: a number used for the wrong thing (calling a Game R
 **Why lookups instead of fixed question types (25 Nov 2026):** the first live test, "where does the CFP committee diverge the most from your rankings, and why?", fit none of the eight types and got no draft. Adding a type for each new kind of question doesn't scale; giving the model lookups does, and the number check works the same on whatever it looked up. The fixed templates went with the types.
 
 Rules for every reply, enforced in code like `game_impact.post_text`:
-- **TrueCFB** spelling, the current version (**v1.1**, from `engine.VERSION`), **Rating** (never "score" for a TrueCFB number; "score" only for points, as in 28-20).
+- **TrueCFB** spelling, the current version (**2026.2**, from `engine.VERSION`), **Rating** (never "score" for a TrueCFB number; "score" only for points, as in 28-20).
 - One decimal on ratings; signed changes with a real minus sign (−); "NR" for unranked.
 - Describes, never predicts; no hype, no emoji; fan terms.
 - No links, no hashtags, no @mentions in the text. `exclude_reply_user_ids` keeps the other account in the thread from being mentioned automatically.

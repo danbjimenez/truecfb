@@ -1,16 +1,17 @@
-"""TrueCFB rating engine, version 1.1, 27 Nov 2026  (results only; team-blind; reproducible)
+"""TrueCFB rating engine, version 2026.2, 27 Nov 2026  (results only; team-blind; reproducible)
+Versions are numbered year.release: 2026.1 was the first public version (released as "v1.0" on
+21 Nov 2026); 2026.2 changed the margin rule (1 point per 4 points of margin instead of a curve,
+overtime games count by their final score) and fixed venue at 3. Every other rule is as in 2026.1.
 Any change to a rule or number below is a new version, with every season re-run.
-v1.1 changed the margin rule (1 point per 4 points of margin instead of a curve, and overtime games
-count by their real final score). Every other rule is as in v1.0 (21 Nov 2026).
 
 GAME RATING, computed for each FBS team in each game:
   1. Start: a win is 70, a loss is 30.
-  2. Opponent: + (opponent's rating - 50), the opponent's "strength" (called the bonus before v1.1).  Any FCS opponent counts as a 25.
+  2. Opponent: + (opponent's rating - 50), the opponent's "strength" (called the bonus before 2026.2).  Any FCS opponent counts as a 25.
   3. Margin: 1 point for every 4 points of final margin, up to a 40-point margin.
         win  = 70 + min(m, 40) / 4        loss = 30 - min(m, 40) / 4
      m is the final score margin, overtime included.
-  4. Venue: road team +V, home team -V, neutral site 0.  V is the measured edge of home teams in
-     conference games on this same scale (about 3).
+  4. Venue: road team +3, home team -3, neutral site 0 (the measured edge of home teams in
+     conference games on this scale, 2.75, rounded).
   5. Keep the result between 0 and 100.
   6. Postseason games are worth more, added on top of step 5 (so they can exceed 100):
         regular bowl   +10 to both teams
@@ -21,8 +22,8 @@ TEAM RATING = average of its Game Ratings this season. Every game counts. Until 
   yet played.
 Opponent ratings come from this same calculation: start everyone at 50 and repeat until no
   rating moves. Starting at 50 is part of the rule. In every season except 2020 any starting point
-  gives the same answer (checked on all 191 snapshots for v1.0,
-  and on 179 weekly and end-of-season snapshots for v1.1). In late 2020, with conference-only schedules,
+  gives the same answer (checked on all 191 snapshots for 2026.1,
+  and on 179 weekly and end-of-season snapshots for 2026.2). In late 2020, with conference-only schedules,
   nothing ties one conference's level to another's, so that season's ratings depend on the start
   and are treated as unreliable.
 """
@@ -30,9 +31,10 @@ import numpy as np
 import pandas as pd
 
 NAME = "TrueCFB"              # named 22 Nov 2026; the name is not part of the formula
-VERSION = "1.1"
+VERSION = "2026.2"          # year.release; 2026.1 was released as "v1.0"
 WIN_RANGE = (70.0, 80.0)      # a win before margin .. a win by MARGIN_CAP or more; losses mirror it (30 .. 20)
-MARGIN_CAP = 40               # margin stops counting here: 1 point per 4 points, at most 10 (v1.0 used a curve)
+VENUE = 3.0                   # road +3, home -3, neutral 0 (the measured edge, 2.75, rounded; 2.86 measured before 2026.2)
+MARGIN_CAP = 40               # margin stops counting here: 1 point per 4 points, at most 10 (2026.1 used a curve)
 OPP_WEIGHT = 1.0              # the opponent's strength at full value (0.9 in a draft before the public release)
 FCS_RATING = 25.0
 CARRY = 6
@@ -45,7 +47,7 @@ FIRST_PLAYOFF_SEASON = 2014
 
 
 def load_games(path):
-    """Every game with its final score margin (overtime included since v1.1). Ties are dropped."""
+    """Every game with its final score margin (overtime included since 2026.2). Ties are dropped."""
     g = pd.read_csv(path, low_memory=False)
     g["margin_home"] = (g.home_pts - g.away_pts).astype(int)
     return g[g.margin_home != 0].copy()
@@ -79,7 +81,7 @@ def postseason_bonus(season_type, note, season):
 
 def margin_curve(games, cap=MARGIN_CAP):
     """F[m]: how much of the margin range a win by m points uses, min(m, cap) / cap, for every margin up to
-    the largest in `games`. raw_rating turns it into 70 + m / 4 for a win (v1.1). v1.0 used the share of
+    the largest in `games`. raw_rating turns it into 70 + m / 4 for a win (2026.2). 2026.1 used the share of
     2014-2025 games decided by fewer than m points instead."""
     mx = max(int(games.margin_home.abs().max()), cap)
     return np.minimum(np.arange(mx + 1), cap) / cap
@@ -90,9 +92,17 @@ def raw_rating(margin, F, win=WIN_RANGE):
     return np.where(margin > 0, w, 100.0 - w)
 
 
-def home_edge(games, F, win=WIN_RANGE, seasons=REF_SEASONS):
+def measured_home_edge(games, F, win=WIN_RANGE, seasons=REF_SEASONS):
+    """The average edge of home teams in FBS conference games on this scale (2.75 under the 2026.2 rules)."""
     ref = games[games.season.isin(seasons) & games.home_fbs & games.away_fbs & games.conf_game & ~games.neutral]
     return float(raw_rating(ref.margin_home.to_numpy(), F, win).mean() - 50.0)
+
+
+def home_edge(games=None, F=None):
+    """The venue points: a fixed VENUE (3.0), the measured home edge rounded to a whole number. The rules
+    before 2026.2 used the measured edge itself (2.86). Arguments are accepted and ignored, so callers that
+    measured it still work."""
+    return VENUE
 
 
 def rate(games, F, v, win=WIN_RANGE, b=OPP_WEIGHT, prior=None, carry=CARRY, fcs=FCS_RATING,

@@ -3,7 +3,7 @@
 Every FBS team rated on results alone. Every game counts. Open source formula.
 
 - Site: [truecfb.com](https://truecfb.com)
-- Formula: v1.1, 27 November 2026 (first released as v1.0 on 21 November 2026)
+- Formula: 2026.2, 27 November 2026 (versions are numbered year.release; 2026.1 was released as v1.0 on 21 November 2026)
 - Covers every FBS season from 2014 to now
 
 TrueCFB measures the season that was played. It does not predict games. It knows nothing about a team except its results: no reputation, no recruiting rankings, no preseason poll.
@@ -13,7 +13,7 @@ TrueCFB measures the season that was played. It does not predict games. It knows
 1. A win starts at 70 and a loss at 30.
 2. Add your opponent's **strength**, win or lose. Strength is how far a team is rated above or below 50: its Team Rating minus 50. An FCS opponent counts as a 25, so its strength is −25.
 3. Add 1 point for every 4 points you win by, up to a 40-point margin (+10). A loss takes off the same: 1 point for every 4 points you lose by, down to −10. A 14-point win adds 3.5. Overtime games count by their final score.
-4. Add 3 on the road, subtract 3 at home, nothing at a neutral site. The exact figure is 2.75.
+4. Add 3 on the road, subtract 3 at home, nothing at a neutral site.
 5. Keep the result between 0 and 100. That is the team's **Game Rating**. A **Team Rating** is the average of its Game Ratings.
 6. Postseason games are worth more, and their Game Ratings can go above 100. A regular bowl adds 10 for both teams. A playoff game adds 15 for both teams, and the winner adds 10 more in the first round, 20 in a quarterfinal, 30 in a semifinal and 40 in the final.
 7. Every game has a **Matchup Rating**: 100 plus both teams' strengths, which is the same as the two Team Ratings added together. Two average teams make a 100. The two best teams make about 155. It is the pot the two teams split: rules 1, 3 and 4 divide the 100 between the winner and the loser, and each team takes the other team's strength.
@@ -33,7 +33,7 @@ A **Conference Rating** is the plain average of its members' Team Ratings. It is
 
 ### Worked example
 
-Utah, 2026. Home win 66-14 over Idaho (FCS): 70 − 25 + 10 − 2.75 = 52.25. Home win 28-20 over BYU, rated 67.4 through week 12: 70 for the win, +17.4 for BYU's strength, +2 for an 8-point margin, −2.75 at home = 86.6 (the parts are rounded). That number moves whenever BYU's rating does.
+Utah, 2026. Home win 66-14 over Idaho (FCS): 70 − 25 + 10 − 3 = 52. Home win 28-20 over BYU, rated 67.1 through week 12: 70 for the win, +17.1 for BYU's strength, +2 for an 8-point margin, −3 at home = 86.1 (the parts are rounded). That number moves whenever BYU's rating does.
 
 ### The postseason, round by round
 
@@ -64,7 +64,7 @@ Example, the 2025 season: Indiana went from 78.8 before the playoff to 98.0 afte
 | Win, before adjustments | 70 + min(m, 40) ÷ 4 |
 | Loss, before adjustments | 30 − min(m, 40) ÷ 4 |
 | m | The final score margin, overtime included |
-| Venue | 2.75 (road +, home −, neutral 0) |
+| Venue | 3 (road +, home −, neutral 0) |
 | Opponent strength | opponent's rating − 50 |
 | FCS opponent rating | 25 |
 | Game Rating limits | 0 to 100, applied before postseason points |
@@ -76,7 +76,7 @@ Example, the 2025 season: Indiana went from 78.8 before the playoff to 98.0 afte
 | Starting point for the calculation | Every team at 50 |
 
 - Margin, selected values for a win: 1 pt 70.25, 7 pts 71.75, 14 pts 73.5, 21 pts 75.25, 28 pts 77, 40 pts or more 80. A loss is 100 minus the same number.
-- Venue is measured, not chosen: it is the average edge of home teams in conference games on this scale (home teams won 55.5% of 6,131 conference games).
+- Venue is the measured edge of home teams in conference games on this scale, 2.75, rounded to 3 (home teams won 55.5% of 6,131 conference games).
 - Opponent ratings come from the same calculation. Start every team at 50 and repeat until nothing moves. Starting at 50 is part of the rule.
 - Only FBS teams are rated.
 
@@ -86,9 +86,9 @@ Example, the 2025 season: Indiana went from 78.8 before the playoff to 98.0 afte
 |---|---|
 | Typical win over an average team (by 14), neutral site | 73.5 |
 | Beat the best team on the road by a lot | 100 |
-| Beat the worst team at home by 1 | 36 |
+| Beat the worst team at home by 1 | 35 |
 | Typical loss to an average team (by 14) | 26.5 |
-| Lose to the best team on the road by 1 | 60 |
+| Lose to the best team on the road by 1 | 59 |
 | Lose to the worst team at home by a lot | 0 |
 
 ## How it compares with the committee
@@ -97,18 +97,18 @@ Regular-season final TrueCFB ranking against the final College Football Playoff 
 
 | Season | Avg gap (spots) | CFP 25 in TrueCFB 25 | TrueCFB top 4 | CFP top 4 |
 |---|---|---|---|---|
-| 2014 | 2.8 | 24 | Oregon, Alabama, Florida State, Ohio State | Alabama, Oregon, Florida State, Ohio State |
-| 2015 | 2.6 | 23 | Alabama, Oklahoma, Michigan State, Clemson | Clemson, Alabama, Michigan State, Oklahoma |
-| 2016 | 3.3 | 20 | Alabama, Ohio State, Washington, Clemson | Alabama, Clemson, Ohio State, Washington |
+| 2014 | 2.9 | 24 | Oregon, Alabama, Florida State, Ohio State | Alabama, Oregon, Florida State, Ohio State |
+| 2015 | 2.8 | 23 | Alabama, Oklahoma, Michigan State, Clemson | Clemson, Alabama, Michigan State, Oklahoma |
+| 2016 | 3.1 | 21 | Alabama, Ohio State, Washington, Clemson | Alabama, Clemson, Ohio State, Washington |
 | 2017 | 3.4 | 23 | Clemson, Georgia, Ohio State, Wisconsin | Clemson, Oklahoma, Georgia, Alabama |
 | 2018 | 3.2 | 22 | Alabama, Clemson, Notre Dame, Georgia | Alabama, Clemson, Notre Dame, Oklahoma |
 | 2019 | 3.6 | 23 | Ohio State, LSU, Clemson, Oklahoma | LSU, Ohio State, Clemson, Oklahoma |
-| 2020 (unreliable) | 9.1 | 17 | Ohio State, Alabama, USC, Oregon | Alabama, Clemson, Ohio State, Notre Dame |
+| 2020 (unreliable) | 9.0 | 17 | Alabama, Ohio State, USC, Oregon | Alabama, Clemson, Ohio State, Notre Dame |
 | 2021 | 2.9 | 21 | Michigan, Georgia, Alabama, Ohio State | Alabama, Michigan, Georgia, Cincinnati |
 | 2022 | 2.3 | 23 | Georgia, TCU, Michigan, Ohio State | Georgia, Michigan, TCU, Ohio State |
-| 2023 | 2.6 | 22 | Michigan, Washington, Texas, Ohio State | Michigan, Washington, Texas, Alabama |
+| 2023 | 2.6 | 23 | Michigan, Washington, Texas, Ohio State | Michigan, Washington, Texas, Alabama |
 | 2024 | 3.4 | 22 | Oregon, Notre Dame, Ohio State, Georgia | Oregon, Georgia, Texas, Penn State |
-| 2025 | 3.0 | 23 | Indiana, Ohio State, Texas Tech, Georgia | Indiana, Ohio State, Georgia, Texas Tech |
+| 2025 | 2.9 | 23 | Indiana, Ohio State, Texas Tech, Georgia | Indiana, Ohio State, Georgia, Texas Tech |
 
 - The same four teams as the committee in 6 of 12 seasons. The average gap is 3.0 spots without 2020.
 - After the postseason, the champion finishes 1st in every season. The runner-up finishes 2nd in all but one (in 2019, 13-1 Ohio State stays ahead of Clemson).
@@ -122,18 +122,18 @@ A gap from the committee is not an error in either direction. It is only a measu
 - **Year-end ratings run high.** Postseason points pass through opponents' strengths, so ratings drift up by about 8 points for a typical top-40 team during the postseason.
 - **The playoff field is chosen by the committee,** so playoff points go to teams the committee picked.
 - **Poll comparison has gaps.** Weekly poll ranks come from that week's games, so a ranked team on a bye is missing that week. Final AP polls, after the bowls, are not in the data.
-- **Overtime flags are missing for some older games** (2013, 2015, 2016, 2018 and 2022). Since v1.1 the flag only adds "(OT)" to the score; every game counts by its final score.
+- **Overtime flags are missing for some older games** (2013, 2015, 2016, 2018 and 2022). Since 2026.2 the flag only adds "(OT)" to the score; every game counts by its final score.
 
 ## Version policy
 
-The rules and numbers are fixed like a rulebook. They are not tuned to playoff results and not re-fit each year. Any change is a new version, with every season re-run so ratings stay comparable across years.
+The rules and numbers are fixed like a rulebook. They are not tuned to playoff results and not re-fit each year. Any change is a new version, with every season re-run so ratings stay comparable across years. Versions are numbered year.release: the year a version came out, then its number within that year.
 
 | Version | Date | Change |
 |---|---|---|
-| v1.0 | 21 Nov 2026 | First public version. |
-| v1.1 | 27 Nov 2026 | Margin is 1 point for every 4 points of final margin, up to 40 (v1.0 used the share of 2014 to 2025 games decided by fewer points, which gave a similar curve). Overtime games count by their final score (v1.0 counted them as a 1-point margin). Venue, measured on the new scale, is 2.75 (was 2.86). Every season re-run. |
+| 2026.1 | 21 Nov 2026 | First public version (released as v1.0). |
+| 2026.2 | 27 Nov 2026 | Margin is 1 point for every 4 points of final margin, up to 40 (2026.1 used the share of 2014 to 2025 games decided by fewer points, which gave a similar curve). Overtime games count by their final score (2026.1 counted them as a 1-point margin). Venue is 3 (2026.1 used the measured 2.86; on the new scale it measures 2.75). The opponent's "bonus" is renamed strength. Every season re-run. |
 
-Before the public release the formula went through two drafts, numbered 1.0 and 1.1 while it was being built. Older commits use those numbers; they are not the released v1.0 and v1.1. The first draft set the opponent's strength (then called the bonus) at 0.9 × (rating − 50). The second set it at the full value, and that second draft is what was released as v1.0.
+Before the public release the formula went through two drafts, numbered 1.0 and 1.1 while it was being built. Older commits use those numbers; they are not releases. The first draft set the opponent's strength (then called the bonus) at 0.9 × (rating − 50). The second set it at the full value, and that second draft is what was released as v1.0 (now called 2026.1).
 
 ## Run it yourself
 

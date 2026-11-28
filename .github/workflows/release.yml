@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version tag, for example v1.0"
+        description: "Version tag, for example v2026.2"
         required: true
         type: string
       title:
-        description: "Release title, for example TrueCFB v1.0"
+        description: "Release title, for example TrueCFB 2026.2"
         required: true
         type: string
       notes:
@@ -38,7 +38,7 @@ jobs:
           NOTES: ${{ inputs.notes }}
         run: |
           if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "::error::The version must look like v1.0 or v1.0.1, not '$VERSION'."
+            echo "::error::The version must look like v2026.2 (or v1.0), not '$VERSION'."
             exit 1
           fi
           if [ "$GITHUB_REF" != "refs/heads/main" ]; then

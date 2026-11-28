@@ -1,4 +1,4 @@
-"""TrueCFB engine: the v1.1 margin rule and overtime. Run: python tests/test_engine.py"""
+"""TrueCFB engine: the 2026.2 margin rule and overtime. Run: python tests/test_engine.py"""
 import os
 import sys
 import tempfile
@@ -21,7 +21,11 @@ def games(rows):
 
 
 def test_version():
-    assert E.VERSION == "1.1"
+    assert E.VERSION == "2026.2"
+
+
+def test_venue():
+    assert E.home_edge() == 3.0
 
 
 def test_margin_rule():

@@ -382,7 +382,7 @@ NUMBER = re.compile(r"(?<![\w.])([+\-−]?)(\d+(?:\.\d+)?)")
 
 def numbers(text):
     """The numbers in a text as (sign, digits): "−25.0" -> ("−", "25.0"), "28-20" -> ("", "28"), ("", "20").
-    "v1.1" is the version, not a number."""
+    "2026.2" is the version, not a number."""
     text = text.replace(VERSION, " ")
     out = []
     for m in NUMBER.finditer(text):
