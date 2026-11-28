@@ -2618,5 +2618,219 @@
    }
   },
   "created": "2026-11-28T00:01:57Z"
+ },
+ "401856759": {
+  "post": "FINAL: Florida 26, Florida State 10\nMatchup Rating 116\nFlorida #16 → #14 · Florida State #65 → #73\n#GoNoles #GoGators",
+  "length": 119,
+  "alt": "FINAL: Florida 26, Florida State 10 · road win\nMatchup Rating 116\nFlorida: Game Rating 77.4 · Team Rating 66.5 (+1.2) · #16 → #14\nFlorida State: Game Rating 38.1 · Team Rating 49.0 (-1.1) · #65 → #73\nRipple: Georgia +0.2 (beat Florida) · SMU -0.2 (beat Florida State)",
+  "day": "2026-11-27",
+  "matchup_rating": 116,
+  "teams": [
+   "Florida State",
+   "Florida"
+  ],
+  "impact": {
+   "game_id": 401856759,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 116,
+   "winner": "Florida",
+   "teams": [
+    {
+     "team": "Florida State",
+     "fbs": true,
+     "points": 10,
+     "won": false,
+     "site": "home",
+     "game_rating": 38.1,
+     "rating_before": 50.1,
+     "rating_after": 49.0,
+     "change": -1.1,
+     "rank_before": 65,
+     "rank_after": 73,
+     "bonus": -1.0,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Florida",
+     "fbs": true,
+     "points": 26,
+     "won": true,
+     "site": "road",
+     "game_rating": 77.4,
+     "rating_before": 65.3,
+     "rating_after": 66.5,
+     "change": 1.2,
+     "rank_before": 16,
+     "rank_after": 14,
+     "bonus": 16.5,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Georgia",
+      "change": 0.23,
+      "rating_after": 78.6,
+      "rank_before": 1,
+      "rank_after": 1,
+      "link": [
+       {
+        "vs": "Florida",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Oklahoma",
+      "change": 0.23,
+      "rating_after": 65.1,
+      "rank_before": 17,
+      "rank_after": 17,
+      "link": [
+       {
+        "vs": "Florida",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Missouri",
+      "change": 0.22,
+      "rating_after": 62.8,
+      "rank_before": 24,
+      "rank_after": 24,
+      "link": [
+       {
+        "vs": "Florida",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "SMU",
+      "change": -0.22,
+      "rating_after": 55.8,
+      "rank_before": 38,
+      "rank_after": 38,
+      "link": [
+       {
+        "vs": "Florida State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Pittsburgh",
+      "change": -0.21,
+      "rating_after": 51.8,
+      "rank_before": 57,
+      "rank_after": 57,
+      "link": [
+       {
+        "vs": "Florida State",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Miami",
+      "change": -0.21,
+      "rating_after": 73.9,
+      "rank_before": 5,
+      "rank_after": 5,
+      "link": [
+       {
+        "vs": "Florida State",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Georgia",
+      "change": 0.23,
+      "rating_after": 78.6,
+      "rank_before": 1,
+      "rank_after": 1,
+      "link": [
+       {
+        "vs": "Florida",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Oklahoma",
+      "change": 0.23,
+      "rating_after": 65.1,
+      "rank_before": 17,
+      "rank_after": 17,
+      "link": [
+       {
+        "vs": "Florida",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Missouri",
+      "change": 0.22,
+      "rating_after": 62.8,
+      "rank_before": 24,
+      "rank_after": 24,
+      "link": [
+       {
+        "vs": "Florida",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "SMU",
+      "change": -0.22,
+      "rating_after": 55.8,
+      "rank_before": 38,
+      "rank_after": 38,
+      "link": [
+       {
+        "vs": "Florida State",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Texas",
+      "change": 0.22,
+      "rating_after": 77.4,
+      "rank_before": 2,
+      "rank_after": 2,
+      "link": [
+       {
+        "vs": "Florida",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 33
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "1.0"
+   }
+  },
+  "created": "2026-11-28T00:16:10Z"
  }
 }
