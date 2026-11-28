@@ -189,6 +189,21 @@ def upcoming_line(book, g, y):
             + (", neutral site" if g["neutral"] else "") + (f" · {what}" if what else ""))
 
 
+def finished(book, t, y=None):
+    """A team with no game left on the schedule file, said so it can't be read as idle this week: "has played
+    every game on its schedule (the last: won 48-27 vs TCU on Nov 26; title games and bowls are added only
+    once set)"."""
+    y = y or book.current
+    gs = book.games(t, y)
+    last = ""
+    if gs:
+        g = gs[-1]
+        last = (f"the last: {'won' if g[3] > g[4] else 'lost'} {max(g[3], g[4])}-{min(g[3], g[4])} "
+                f"{'at' if g[2] == 'A' else 'vs'} {g[1]} on {MONTHS[int(g[0][:2]) - 1]} {int(g[0][3:])}; ")
+    return (f"has played every game on its schedule ({last}title games and bowls are added only once set). "
+            "It is done, not idle this week")
+
+
 def next_games(book, t):
     ups = book.upcoming()
     return None if ups is None else [g for g in ups if t in (g["home"], g["away"])]
@@ -285,7 +300,7 @@ def look_team(book, team, season=None):
             lines.append(f"{t} still to play:")
             lines += [upcoming_line(book, g, y) for g in ups]
         elif ups is not None:
-            lines.append(f"{t} has no games left on the schedule file.")
+            lines.append(f"{t} {finished(book, t, y)}.")
     return lines
 
 
@@ -387,7 +402,7 @@ def look_upcoming(book, team=None, count=12):
         t = team_name(book, team, y)
         mine = [g for g in ups if t in (g["home"], g["away"])]
         if not mine:
-            return header(book, y) + [f"{t} has no games left on the schedule file."]
+            return header(book, y) + [f"{t} {finished(book, t, y)}."]
         return header(book, y) + [f"{t}'s games still to play:"] + [upcoming_line(book, g, y) for g in mine]
     soon = [g for g in ups if (g["when"] - ups[0]["when"]).days < 8]
     r = book.data["ratings"][str(y)]
@@ -508,13 +523,13 @@ def look_help(book, t):
     pub = book.data["ratings"][str(y)]
     base = w.base_rank
     lines = header(book, y) + [
-        f"{t} has no game left on the schedule file (title games and bowls are added only once set), so for now "
-        f"only other results can move it. Now: {t} #{base[t]}, Team Rating {r1(pub[t][0])}."]
+        f"{t} {finished(book, t, y)}, so for now only other results can move it. "
+        f"Now: {t} #{base[t]}, Team Rating {r1(pub[t][0])}."]
     losses = []
     for a in sorted((x for x in base if base[t] - HELP_ABOVE - 1 <= base[x] < base[t]), key=base.get):
         g = next(iter(next_games(book, a) or []), None)
         if not g:
-            lines.append(f"#{base[a]} {a} has no game left either.")
+            lines.append(f"#{base[a]} {a} {finished(book, a, y)}.")
             continue
         b = g["away"] if g["home"] == a else g["home"]
         a_site = "neutral" if g["neutral"] else ("home" if g["home"] == a else "away")
@@ -563,8 +578,7 @@ def what_it_takes(book, w, t, o, site, pub):
             continue                       # any win already passes it: no help needed
         g = next((g for g in (next_games(book, a) or []) if t not in (g["home"], g["away"])), None)
         if not g:
-            out.append(f"#{base[a]} {a} has no game left on the schedule file (title games and bowls are added only "
-                       f"once set), so for now {t} can only pass it on its own results.")
+            out.append(f"#{base[a]} {a} {finished(book, a)}, so for now {t} can only pass it on its own results.")
             continue
         b = g["away"] if g["home"] == a else g["home"]
         a_site = "neutral" if g["neutral"] else ("home" if g["home"] == a else "away")
@@ -623,7 +637,7 @@ def look_stakes(book, start=9, count=6):
         tag = f"#{base[t]} {t} ({r1(pub[t][0])}" + (f", CFP #{cfp[t]})" if cfp.get(t) else ", not in the CFP ranking)")
         g = next(iter(next_games(book, t) or []), None)
         if not g:
-            lines.append(f"{tag}: no game left on the schedule file (title games and bowls are added only once set).")
+            lines.append(f"{tag}: {finished(book, t, y)}.")
             continue
         o = g["away"] if g["home"] == t else g["home"]
         site = "neutral" if g["neutral"] else ("home" if g["home"] == t else "away")
