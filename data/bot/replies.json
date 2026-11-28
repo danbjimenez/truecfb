@@ -165,9 +165,11 @@
     "what_if",
     "conference"
    ],
-   "status": "drafted",
+   "status": "posted",
    "reply": "TrueCFB rates results, not predictions, so it cannot say what gets BYU into the playoff. They are #11 at 67.1, 1 spot lower than the committee, and beating Cincinnati at home would keep them #11 while a loss would drop them to #17.",
-   "by": "grok-4.7"
+   "by": "grok-4.7",
+   "reply_id": "2126693915227042075",
+   "posted": "2026-11-28T15:05:16Z"
   }
  }
 }
