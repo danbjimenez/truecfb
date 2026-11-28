@@ -243,23 +243,69 @@ def team_tags(res, path=None):
     if not os.path.exists(path):
         return []
     tags = json.load(open(path)).get("teams", {})
-    return [tags[s["team"]]["tag"] for s in res["teams"] if s["fbs"] and s["team"] in tags]
+    order = sorted(res["teams"], key=lambda s: not s["won"])   # the winner's first
+    return [tags[s["team"]]["tag"] for s in order if s["fbs"] and s["team"] in tags]
+
+
+UPSET_GAP = 5   # a win is called an upset when the loser was ranked at least this many spots higher
+
+
+def _shown_change(s):
+    """A Team Rating change as the card shows it: the rounded rating after minus the rounded one before."""
+    return round(round(s["rating_after"], 1) - round(s["rating_before"], 1), 1)
+
+
+def headline(res):
+    """The result as one or more headline sentences, the winner first: its new TrueCFB rank, the score
+    and who it beat, then its Team Rating, then the loser's rank if it moved. A fixed template: every
+    number comes from the result. Returns the sentences, most important first."""
+    w = next(s for s in res["teams"] if s["won"]); l = next(s for s in res["teams"] if not s["won"])
+    score = f"{w['points']}-{l['points']}"
+    road = w["site"] == "road"
+    opp = f"#{l['rank_before']}-ranked {l['team']}" if l["fbs"] else f"FCS {l['team']}"
+    out = []
+    if not w["fbs"]:
+        out.append(f"FCS {w['team']} beats {opp} {score}{' in overtime' if res['overtime'] else ''}"
+                   f"{' on the road' if road else ''}.")
+    else:
+        a, b = w["rank_after"], w["rank_before"]
+        rank = "TrueCFB ranking"
+        upset = l["fbs"] and l["rank_before"] <= b - UPSET_GAP
+        if upset:
+            how = (" in overtime" if res["overtime"] else "") + (" on the road" if road else "")
+            move = (f"and moves up to #{a} in the {rank}" if a < b else
+                    f"and keeps its #{a} spot in the {rank}" if a == b else f"but slips to #{a} in the {rank}")
+            out.append(f"{w['team']} upsets {opp} {score}{how} {move}.")
+        else:
+            kind = ("overtime " if res["overtime"] else "") + ("road " if road else "") + "win"
+            if a < b:
+                out.append(f"{w['team']} moves up to #{a} in the {rank} with a {score} {kind} over {opp}.")
+            elif a == b:
+                out.append(f"{w['team']} keeps its #{a} spot in the {rank} with a {score} {kind} over {opp}.")
+            else:
+                out.append(f"{w['team']} slips to #{a} in the {rank} despite a {score} {kind} over {opp}.")
+        c = _shown_change(w)
+        out.append(f"{w['team']}'s Team Rating " + (f"rises {c:.1f} to {w['rating_after']:.1f}." if c > 0 else
+                                                    f"falls {-c:.1f} to {w['rating_after']:.1f}." if c < 0 else
+                                                    f"stays level at {w['rating_after']:.1f}."))
+    if l["fbs"] and l["rank_after"] != l["rank_before"]:
+        out.append(f"{l['team']} falls to #{l['rank_after']}." if l["rank_after"] > l["rank_before"] else
+                   f"{l['team']} moves up to #{l['rank_after']} despite the loss.")
+    return out
 
 
 def short_post(res, hashtags=None):
-    """The post that goes with the result card: the score, the Matchup Rating, the rank moves and
-    each team's hashtag. The card holds the rest; the long post_text() becomes the image's alt text."""
-    w = next(s for s in res["teams"] if s["won"]); l = next(s for s in res["teams"] if not s["won"])
-    tag = " (OT)" if res["overtime"] else ""
-    lines = [f"FINAL: {w['team']} {w['points']}, {l['team']} {l['points']}{tag}"]
-    if res["note"] and res["season_type"] == "postseason":
-        lines.insert(0, game_title(res["note"]))
-    lines.append(f"Matchup Rating {res['matchup_rating']}")
-    moves = [f"{s['team']} {_rank_move(s)}" for s in (w, l) if s["fbs"]]
-    lines.append(" \u00b7 ".join(moves))
-    if hashtags:
-        lines.append(" ".join(hashtags))
-    return "\n".join(lines)
+    """The post that goes with the result card: a headline (headline()) and each team's hashtag. The
+    card holds the numbers; the long post_text() becomes the image's alt text. Sentences are dropped from
+    the end until it fits in 280."""
+    first = game_title(res["note"]) + "\n" if res["note"] and res["season_type"] == "postseason" else ""
+    tail = "\n" + " ".join(hashtags) if hashtags else ""
+    sents = headline(res)
+    while True:
+        text = first + " ".join(sents) + tail
+        if weighted_length(text) <= MAX_POST or len(sents) == 1:
+            return text[:MAX_POST]
+        sents = sents[:-1]
 
 
 # ---------- command line ----------

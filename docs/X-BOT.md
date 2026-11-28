@@ -7,11 +7,11 @@ Live since 23 Nov 2026. After every FBS final, Dan gets a draft in Telegram: the
 ## The post
 
 ```
-FINAL: Tennessee 27, LSU 13
-Matchup Rating 135
-Tennessee #8 → #7 · LSU #18 → #21
-#GoVols #GeauxTigers
+Texas keeps its #2 spot in the TrueCFB ranking with a 16-6 win over #62-ranked Texas A&M. Texas's Team Rating stays level at 76.1.
+#HookEm #GigEm
 ```
+
+A headline since 28 Nov 2026 (`game_impact.headline`), the winner first: its new TrueCFB rank ("moves up to", "keeps its … spot", "slips to … despite"), the score and the loser's rank going in ("upsets" when the loser was ranked at least 5 spots higher; "road win", "overtime win" where they apply), then the winner's Team Rating change as the card shows it, then the loser's new rank if it moved. FCS teams are named as FCS. Bowl and playoff games put the game's name on the first line. Sentences drop from the end if a post would go over 280. The winner's hashtag comes first.
 
 No links (a link raises the X fee to $0.20) and no account mentions (X's automation rules do not allow automated mentions of accounts that did not opt in), so teams get hashtags instead. The card holds the detail; the long text version (`game_impact.post_text`) is the image's alt text.
 
