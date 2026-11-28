@@ -117,6 +117,13 @@ def test_what_if_runs_the_engine():
     assert home[17] > home[3] > home[-3] > home[-17] and road[3] > home[3]
     text = X.run(BOOK, "what_if", {"team": a})
     assert f"What-if: {a} at home against {b}" in text and text.count("If ") == 4, text
+    assert "How much a win needs: " in text and f"#{w.base_rank[ORDER[8]]} {ORDER[8]} has no game left" in text, text
+    steps = w.margin_steps(a, b, "home")                 # bigger wins never rank lower, ratings only rise
+    assert steps[0][0] == 1
+    assert all(y[1] < x[1] and y[2] > x[2] for x, y in zip(steps, steps[1:])), steps
+    _, both = w.with_games([(a, b, "home", 17), (ORDER[8], ORDER[100], "away", -3)])
+    _, alone = w.with_game(a, b, "home", 17)
+    assert both[a] <= alone[a]                           # a loss above can only help
     assert "Nothing found" in X.run(BOOK, "what_if", {"team": ORDER[50]})           # no game left, no opponent
     fcs = X.run(BOOK, "what_if", {"team": a, "opponent": "Montana State", "site": "home"})   # an FCS opponent
     assert "If Montana State wins by 3:" in fcs and "Montana State #" not in fcs, fcs

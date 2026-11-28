@@ -83,6 +83,8 @@
   {"post": "@truecfb what's at stake for Utah this week?", "above": "", "expect": "reply"},
   {"post": "@truecfb how far would Georgia drop if they lose to Georgia Tech?", "above": "", "expect": "reply"},
   {"post": "@truecfb what's the biggest game this weekend by your numbers?", "above": "", "expect": "reply"},
-  {"post": "@truecfb who's in the best spot in the Big 12 race?", "above": "", "expect": "reply", "core": true}
+  {"post": "@truecfb who's in the best spot in the Big 12 race?", "above": "", "expect": "reply", "core": true},
+  {"post": "Hey @truecfb what does BYU need to do to get into the CFP?", "above": "", "expect": "reply"},
+  {"post": "@truecfb can Oregon still make the playoff?", "above": "", "expect": "reply"}
  ]
 }

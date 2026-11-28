@@ -452,7 +452,53 @@ def look_what_if(book, team, opponent=None, site=None):
         if behind:
             extra += f" · {t} falls behind " + ", ".join(sorted(behind, key=base.get)[:4])
         lines.append(f"If {winner} wins by {abs(m)}: " + " · ".join(parts) + extra)
+    lines += what_it_takes(book, w, t, o, site, pub)
     return lines
+
+
+HELP_ABOVE = 3      # teams just above that the what-if checks for help from other games
+HELP_MARGIN = 17    # the win used when asking what other results would add (a two-score win)
+
+
+def what_it_takes(book, w, t, o, site, pub):
+    """How big a win team t needs to move up, and which other results (teams just above losing their next
+    game) would move it further. Display only: the engine re-run with those games added."""
+    import reply_whatif as WI
+    base = w.base_rank
+    steps = w.margin_steps(t, o, site)
+    cap = WI.E.MARGIN_CAP
+    out = []
+    if len(steps) == 1:
+        out.append(f"How much a win needs: any win leaves {t} at #{steps[0][1]}, even one by {cap} or more "
+                   f"(margin stops counting at {cap}).")
+    else:
+        out.append(f"How much a win needs: " + " · ".join(
+            f"by {m} or more, #{r}" if i else f"by 1 or more, #{r}" for i, (m, r, _) in enumerate(steps))
+            + f" (margin stops counting at {cap}).")
+    table, rank = w.with_game(t, o, site, cap)
+    best = rank[t]
+    if best > 1:
+        ahead = next(x for x in rank if rank[x] == best - 1)
+        gap = round(float(table.rating[ahead]) - float(table.rating[t]), 1)
+        if gap > 0:
+            out.append(f"Even after a win by {cap}, {t} would be {r1(gap)} below #{best - 1} {ahead} in Team Rating.")
+    _, alone = w.with_game(t, o, site, HELP_MARGIN)
+    above = sorted((x for x in base if base[t] - HELP_ABOVE <= base[x] < base[t]), key=base.get)
+    for a in above:
+        g = next((g for g in (next_games(book, a) or []) if t not in (g["home"], g["away"])), None)
+        if not g:
+            out.append(f"#{base[a]} {a} has no game left on the schedule file, so {t} can only pass it on its own results.")
+            continue
+        b = g["away"] if g["home"] == a else g["home"]
+        a_site = "neutral" if g["neutral"] else ("home" if g["home"] == a else "away")
+        _, both = w.with_games([(t, o, site, HELP_MARGIN), (a, b, a_site, -3)])
+        if both[t] != alone[t]:
+            out.append(f"Help from elsewhere: if {t} wins by {HELP_MARGIN} and #{base[a]} {a} loses to {b} by 3 "
+                       f"({when(g)}), {t} would be #{both[t]} (#{alone[t]} with the win alone).")
+        else:
+            out.append(f"#{base[a]} {a} losing to {b} by 3 would not move {t} past it with a {HELP_MARGIN}-point win "
+                       f"(still #{alone[t]}).")
+    return out
 
 
 SEASON = {"type": "integer", "description": "A season from 2014 on. Leave it out for the current season."}
@@ -508,7 +554,10 @@ LOOKUPS += [
     {"name": "what_if", "fn": look_what_if,
      "description": "What one game not yet played would do: the engine re-run with that game added, for a "
                     "close and a two-score result each way. Gives both teams' new Team Rating, the change, the "
-                    "new rank and who they pass or fall behind. With no opponent, it uses the team's next game.",
+                    "new rank and who they pass or fall behind; how big a win it takes to move up (by 1 to 40, "
+                    "where margin stops counting); and which losses by the teams just above would move it further. "
+                    "With no opponent, it uses the team's next game. Use it for playoff and \"what do they need\" "
+                    "questions too.",
      "parameters": {"type": "object", "properties": {
          "team": {"type": "string"},
          "opponent": {"type": "string", "description": "Leave it out for the team's next game."},
