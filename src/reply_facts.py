@@ -53,7 +53,7 @@ def parts(book, g):
     S, F = book.data["settings"], book.data["F"]
     pf, pa, ot = g[3], g[4], bool(g[5])
     won = pf > pa
-    margin = 1 if ot else abs(pf - pa)
+    margin = abs(pf - pa)          # overtime games count by their final score (since 2026.2)
     w = S["win"][0] + (S["win"][1] - S["win"][0]) * F[min(margin, len(F) - 1)]
     result = w if won else 100.0 - w
     venue = {"H": -S["venue"], "A": S["venue"]}.get(g[2], 0.0)

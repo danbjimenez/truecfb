@@ -1,26 +1,43 @@
 """TrueCFB result card: a 1200 x 675 image for X, drawn from one game_impact result.
 
-Brand (claude/truecfb-brand.md): light theme, field green header band, Barlow Condensed for display,
-IBM Plex Sans for body, blue for up and orange for down (never red or green as a verdict), one decimal
-on ratings, a real minus sign, no team logos or colors. The name is always written TrueCFB.
+Layout (designed 27 Nov 2026, docs/BRAND.md "Result card"):
+  scoreboard band   visitor left, home right: logo, name, record, score; FINAL and the date between
+  Matchup Rating    the two Team Ratings as a sum, "55.2 + 65.6 = 120.8", and its percentile
+  Game Rating       the two Game Ratings (higher blue, lower orange), a split bar, and each team's sum
+                    in rule order: win or loss + opponent + margin + venue (+ postseason, limit)
+  Team Rating       before, change chip, -> after
+  TrueCFB rank      before -> after, with a change chip
+Section labels sit in the center column; the visitor's numbers are flush left, the home team's flush
+right. Colors and type are the design system's: up blue / down orange (never red or green), field
+green band, Barlow Condensed for display, IBM Plex Sans for text, one decimal on ratings, a real minus.
 
-The card is drawn only from the result dict, so the same result always gives the same image.
+Logos: assets/logos/<slug>.png when present (slug as the site's team pages); otherwise a plain
+monogram circle. The card is drawn only from the result dict, so the same result always gives the
+same image. A result saved before 27 Nov 2026 (no "parts") is drawn without the sums and percentiles.
 Usage: card.py <impact.json> <out_dir>   (one PNG per game in the file)
 """
 import json
 import os
+import re
 import sys
+import unicodedata
 from datetime import date
 
 from PIL import Image, ImageDraw, ImageFont
 
+S = 2                                   # drawn at 2x, then scaled down, so shapes are smooth
 W, H = 1200, 675
 BG, PANEL, CHIP, LINE = "#f3f5f2", "#ffffff", "#e9eeea", "#d9dfd9"
-INK, MUTED, ACCENT, ON_ACCENT = "#17201b", "#5d6b63", "#1f6b45", "#ffffff"
+INK, MUTED, ACCENT, ON_ACCENT, ON_MUTED = "#17201b", "#5d6b63", "#1f6b45", "#ffffff", "#cfe3d7"
 UP, DOWN = "#1d5fa8", "#b0561a"
-UP_BG, DOWN_BG = "#e3ecf7", "#f6e9df"
-TAGLINE = "Unbiased, Deterministic, Open Source Rankings"
-FONT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "fonts")
+UP_TINT, DOWN_TINT = "#e3ecf7", "#f6e9df"
+LOST = "#8fb5a0"                        # the loser's score: white at 55% on the band
+MONO_FILL, MONO_RING = "#e6ebe7", "#aab6ad"
+MINUS = "−"
+TAGLINE = "Unbiased, Deterministic, Open Source Rankings"   # used by cfp_card.py
+HERE = os.path.dirname(os.path.abspath(__file__))
+FONT_DIR = os.path.join(HERE, "..", "assets", "fonts")
+LOGO_DIR = os.path.join(HERE, "..", "assets", "logos")
 _fonts = {}
 
 
@@ -28,164 +45,347 @@ def font(kind, weight, size):
     name = {"display": "barlow-condensed", "body": "ibm-plex-sans"}[kind]
     key = (name, weight, size)
     if key not in _fonts:
-        _fonts[key] = ImageFont.truetype(os.path.join(FONT_DIR, f"{name}-latin-{weight}-normal.ttf"), size)
+        _fonts[key] = ImageFont.truetype(os.path.join(FONT_DIR, f"{name}-latin-{weight}-normal.ttf"), int(size * S))
     return _fonts[key]
 
 
-def fit(d, text, kind, weight, size, max_w, min_size=18):
-    """The largest font at or below `size` that fits `text` in `max_w`."""
-    while size > min_size and d.textlength(text, font=font(kind, weight, size)) > max_w:
-        size -= 2
-    return font(kind, weight, size)
+def slug(team):
+    """Same as build_pages.slug: 'Texas A&M' -> 'texas-am'."""
+    s = "".join(c for c in unicodedata.normalize("NFKD", team) if not unicodedata.combining(c)).lower()
+    return re.sub(r"[^a-z0-9]+", "-", re.sub(r"['&]", "", s)).strip("-")
 
 
-def num(x):
-    """One decimal, with a real minus sign."""
-    s = f"{x:.1f}"
-    return s.replace("-", "−")
+def num(x, nd=1):
+    """One decimal (or nd), with a real minus sign."""
+    return f"{x:.{nd}f}".replace("-", MINUS)
 
 
-def signed(x):
-    v = round(x, 1)
-    return ("+" if v > 0 else "") + num(v) if v != 0 else "0.0"
+def compact(x):
+    """A rule's exact value: 6, 3, 5.25, 0.5."""
+    s = f"{abs(x):.2f}".rstrip("0").rstrip(".")
+    return s or "0"
 
 
-def arrow(d, x, y, color, w=22):
-    """A right arrow drawn as shapes (the brand fonts' Latin subset has no arrow glyph). y = center."""
-    d.line([(x, y), (x + w - 6, y)], fill=color, width=3)
-    d.polygon([(x + w, y), (x + w - 9, y - 7), (x + w - 9, y + 7)], fill=color)
-    return x + w
+def ordinal(n):
+    n = min(max(int(n), 1), 99)           # a percentile reads 1st to 99th
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
-def chip(d, x, y, text, up):
-    f = font("body", 600, 22)
-    tw = d.textlength(text, font=f)
-    d.rounded_rectangle([x, y, x + tw + 20, y + 34], radius=999, fill=UP_BG if up else DOWN_BG)
-    d.text((x + 10, y + 17), text, font=f, fill=UP if up else DOWN, anchor="lm")
-    return x + tw + 20
+class Card:
+    def __init__(self):
+        self.img = Image.new("RGB", (W * S, H * S), BG)
+        self.d = ImageDraw.Draw(self.img)
+
+    # --- primitives, all in 1x coordinates ---
+    def text(self, xy, s, f, fill, anchor="la"):
+        self.d.text((xy[0] * S, xy[1] * S), s, font=f, fill=fill, anchor=anchor)
+
+    def width(self, s, f):
+        return self.d.textlength(s, font=f) / S
+
+    def rect(self, box, fill, radius=0):
+        b = [v * S for v in box]
+        if radius:
+            self.d.rounded_rectangle(b, radius=radius * S, fill=fill)
+        else:
+            self.d.rectangle(b, fill=fill)
+
+    def hline(self, y, x0=48, x1=W - 48, color=LINE, w=2):
+        self.rect((x0, y - w / 2, x1, y + w / 2), color)
+
+    def arrow(self, x, y, color=MUTED, w=34):
+        """A right arrow drawn as shapes (the fonts' Latin subset has no arrow). y = center. Returns its right edge."""
+        self.rect((x, y - 2, x + w - 8, y + 2), color)
+        self.d.polygon([((x + w) * S, y * S), ((x + w - 12) * S, (y - 9) * S), ((x + w - 12) * S, (y + 9) * S)], fill=color)
+        return x + w
+
+    def triangle(self, x, y, up, color, size=13):
+        """An up or down triangle centered at x, y."""
+        h = size * 0.85
+        pts = [(x, y - h / 2), (x - size / 2, y + h / 2), (x + size / 2, y + h / 2)] if up else \
+              [(x, y + h / 2), (x - size / 2, y - h / 2), (x + size / 2, y - h / 2)]
+        self.d.polygon([(a * S, b * S) for a, b in pts], fill=color)
+
+    def chip(self, x, y, label, up, size=26, tri=False, align="l"):
+        """A change chip: the signed change in a pill, centered on y. align 'l' starts at x, 'r' ends at x.
+        up: True / False / None (no change). Returns (left, right)."""
+        f = font("body", 600, size)
+        color, fill = (UP, UP_TINT) if up else (DOWN, DOWN_TINT) if up is False else (MUTED, CHIP)
+        tw = self.width(label, f) + (size * 0.75 if tri else 0)
+        pad = size * 0.55
+        w, h = tw + 2 * pad, size * 1.45
+        x0 = x if align == "l" else x - w
+        self.rect((x0, y - h / 2, x0 + w, y + h / 2), fill, radius=h / 2)
+        tx = x0 + pad
+        if tri:
+            self.triangle(tx + size * 0.3, y, up, color, size * 0.55)
+            tx += size * 0.75
+        self.text((tx, y), label, f, color, "lm")
+        return x0, x0 + w
+
+    def label(self, x, y, lines, size=17):
+        """A section label in the center column: uppercase by style, except the name TrueCFB."""
+        f = font("body", 600, size)
+        for i, ln in enumerate(lines):
+            s = ln if ln == "TrueCFB" else ln.upper()
+            self.text((x, y + (i - (len(lines) - 1) / 2) * size * 1.35), s, f, MUTED, "mm")
+
+    def logo(self, team, cx, cy, d, on_band):
+        p = os.path.join(LOGO_DIR, slug(team) + ".png")
+        r = d / 2
+        if os.path.exists(p):
+            if on_band:   # a white disc keeps dark logos readable on the green band
+                self.d.ellipse([(cx - r) * S, (cy - r) * S, (cx + r) * S, (cy + r) * S], fill="#ffffff")
+                inner = d * 0.74
+            else:
+                inner = d
+            im = Image.open(p).convert("RGBA")
+            im.thumbnail((int(inner * S), int(inner * S)), Image.LANCZOS)
+            self.img.paste(im, (int(cx * S - im.width / 2), int(cy * S - im.height / 2)), im)
+            return
+        fill, ring, ink = ("#3c7f5b", "#a5c8b5", "#e8f1ec") if on_band else (MONO_FILL, MONO_RING, MUTED)
+        self.d.ellipse([(cx - r) * S, (cy - r) * S, (cx + r) * S, (cy + r) * S], fill=fill, outline=ring, width=max(2, int(d / 28)) * S)
+        words = [w for w in re.split(r"[\s\-]+", team) if w]
+        mono = (words[0][:4] if len(words) == 1 else "".join(w[0] for w in words[:3])).upper()
+        self.text((cx, cy), mono, font("display", 700, d * 0.3), ink, "mm")
+
+    def save_png(self):
+        return self.img.resize((W, H), Image.LANCZOS)
 
 
-def label(d, xy, text, fill=MUTED, size=17, anchor="la"):
-    d.text(xy, text.upper(), font=font("body", 600, size), fill=fill, anchor=anchor)
+# --- the card ---
 
-
-def team_panel(d, x, y, w, h, s, opp_pts):
-    d.rounded_rectangle([x, y, x + w, y + h], radius=10, fill=PANEL, outline=LINE)
-    pad = 28
-    result = f"{'W' if s['won'] else 'L'} {s['points']}–{opp_pts}"
-    rf = font("body", 500, 24)
-    rw = d.textlength(result, font=rf)
-    d.text((x + w - pad, y + 30), result, font=rf, fill=MUTED, anchor="ra")
-    d.text((x + pad, y + 22), s["team"], font=fit(d, s["team"], "display", 600, 44, w - 2 * pad - rw - 20), fill=INK)
-    if not s["fbs"]:
-        d.text((x + pad, y + 100), "FCS", font=font("display", 700, 80), fill=MUTED)
-        d.text((x + pad, y + 195), "Not rated. Counts as a 25 for its opponent.", font=font("body", 400, 22), fill=MUTED)
-        return
-    d.text((x + pad, y + 70), num(s["game_rating"]), font=font("display", 700, 96), fill=INK)
-    label(d, (x + pad + 4, y + 176), "Game Rating")
-    # Team Rating, before -> after, with the change
-    ry = y + 222
-    label(d, (x + pad, ry), "Team Rating", anchor="lm")
-    vx = x + pad + 150
-    f = font("body", 500, 24)
-    d.text((vx, ry), num(s["rating_before"]), font=f, fill=MUTED, anchor="lm")
-    vx += d.textlength(num(s["rating_before"]), font=f) + 10
-    vx = arrow(d, vx, ry, MUTED) + 10
-    d.text((vx, ry), num(s["rating_after"]), font=font("body", 600, 24), fill=INK, anchor="lm")
-    vx += d.textlength(num(s["rating_after"]), font=font("body", 600, 24)) + 14
-    if round(s["change"], 1) != 0:
-        chip(d, vx, ry - 17, signed(s["change"]), s["change"] > 0)
-    # Rank
-    ky = ry + 44
-    label(d, (x + pad, ky), "Rank", anchor="lm")
-    kx = x + pad + 150
-    if s["rank_before"] == s["rank_after"]:
-        d.text((kx, ky), f"{s['rank_after']}  (no change)", font=f, fill=INK, anchor="lm")
-    else:
-        d.text((kx, ky), str(s["rank_before"]), font=f, fill=MUTED, anchor="lm")
-        kx += d.textlength(str(s["rank_before"]), font=f) + 10
-        kx = arrow(d, kx, ky, MUTED) + 10
-        better = s["rank_after"] < s["rank_before"]
-        d.text((kx, ky), str(s["rank_after"]), font=font("body", 600, 24), fill=UP if better else DOWN, anchor="lm")
-
-
-def headline(res):
-    w = next(s for s in res["teams"] if s["won"]); l = next(s for s in res["teams"] if not s["won"])
-    return w, l, f"{w['team']} {w['points']}, {l['team']} {l['points']}"
-
-
-def kicker(res, w):
-    parts = ["Final" + (" (OT)" if res["overtime"] else "")]
-    if res.get("season_type") == "postseason" and res.get("note"):
-        from game_impact import game_title
-        parts.append(game_title(res["note"]))
-    parts.append("Neutral site" if res["neutral"] else ("Home win" if w["site"] == "home" else "Road win"))
+def kicker(res):
     dt = date.fromisoformat(res["day"])
-    parts.append(f"{dt.strftime('%b')} {dt.day}, {dt.year}")
-    return "  ·  ".join(parts)
+    top = "FINAL" + (" (OT)" if res["overtime"] else "")
+    return top, f"{dt.strftime('%b').upper()} {dt.day}"
 
 
-def ripple_rows(d, x, y, w, entries, up):
-    color = UP if up else DOWN
-    f = font("body", 500, 22); fb = font("body", 600, 22)
-    shown = [e for e in entries if abs(e["change"]) >= 0.05][:3]
-    if not shown:
-        d.text((x, y + 4), "None moved by 0.1 or more", font=font("body", 400, 21), fill=MUTED)
-        return
-    for i, e in enumerate(shown):
-        yy = y + i * 32
-        d.text((x, yy), signed(e["change"]), font=fb, fill=color)
-        tx = x + 76
-        name = e["team"]
-        d.text((tx, yy), name, font=fb, fill=INK)
-        tx += d.textlength(name, font=fb) + 10
-        link = e["link"][0]
-        why = f"{link['result']} {link['vs']}"
-        room = x + w - tx
-        if d.textlength(why, font=f) > room:
-            while why and d.textlength(why + "…", font=f) > room:
-                why = why[:-1]
-            why += "…"
-        d.text((tx, yy), why, font=f, fill=MUTED)
+def band(c, res, away, home):
+    c.rect((0, 0, W, 140), ACCENT)
+    mid_top, mid_day = kicker(res)
+    f_mid = font("body", 600, 20)
+    mid_w = max(c.width(mid_top, f_mid), c.width(mid_day, f_mid))
+    c.text((W / 2, 56), mid_top, f_mid, ON_MUTED, "mm")
+    c.text((W / 2, 84), mid_day, f_mid, ON_MUTED, "mm")
+    f_pts = font("display", 700, 100)
+    gap = mid_w / 2 + 30
+    for s, side in ((away, "l"), (home, "r")):
+        lost = not s["won"]
+        x_logo = 48 + 42 if side == "l" else W - 48 - 42
+        c.logo(s["team"], x_logo, 70, 84, True)
+        rec = f"{s['record'][0]}–{s['record'][1]}" if s.get("record") else ("FCS" if not s["fbs"] else "")
+        name_max = W / 2 - gap - c.width(str(s["points"]), f_pts) - 28 - (48 + 84 + 22)
+        f_name = font("display", 700, 54)
+        size = 54
+        while c.width(s["team"], f_name) > name_max and size > 32:
+            size -= 2; f_name = font("display", 700, size)
+        if side == "l":
+            c.text((48 + 84 + 22, 64), s["team"], f_name, ON_ACCENT, "ls")
+            c.text((48 + 84 + 22, 96), rec, font("body", 500, 22), ON_MUTED, "ls")
+            c.text((W / 2 - gap, 72), str(s["points"]), f_pts, LOST if lost else ON_ACCENT, "rm")
+        else:
+            c.text((W - 48 - 84 - 22, 64), s["team"], f_name, ON_ACCENT, "rs")
+            c.text((W - 48 - 84 - 22, 96), rec, font("body", 500, 22), ON_MUTED, "rs")
+            c.text((W / 2 + gap, 72), str(s["points"]), f_pts, LOST if lost else ON_ACCENT, "lm")
+
+
+def team_rating(s):
+    return float(s["rating_after"]) if s["fbs"] else 25.0
+
+
+def matchup(c, res, away, home):
+    """Row 1: Team Rating + Team Rating (+ postseason) = Matchup Rating, centered."""
+    c.label(W / 2, 156, ["Matchup Rating"])
+    ra, rh = round(team_rating(away), 1), round(team_rating(home), 1)
+    fbs = away if away["fbs"] else home
+    post = 2 * fbs.get("post_both", 0.0) + fbs.get("post_win", 0.0)
+    total = ra + rh + post
+    f_n, f_op, f_tot, f_pc = font("body", 600, 40), font("body", 400, 40), font("display", 700, 60), font("body", 500, 22)
+    items = [("logo", away["team"]), ("n", num(ra)), ("op", "+"), ("logo", home["team"]), ("n", num(rh))]
+    if post:
+        items += [("op", "+"), ("n", compact(post)), ("small", "postseason")]
+    items += [("op", "="), ("tot", num(total))]
+    pct = res.get("matchup_pct")
+    if pct is not None:
+        items.append(("pc", f"{ordinal(pct)} percentile"))
+    widths = {"logo": lambda v: 46, "n": lambda v: c.width(v, f_n), "op": lambda v: c.width(v, f_op) + 8,
+              "tot": lambda v: c.width(v, f_tot), "pc": lambda v: c.width(v, f_pc) + 8, "small": lambda v: c.width(v, f_pc)}
+    gap = 14
+    total_w = sum(widths[k](v) for k, v in items) + gap * (len(items) - 1)
+    x, y = W / 2 - total_w / 2, 202
+    for k, v in items:
+        w = widths[k](v)
+        if k == "logo":
+            c.logo(v, x + 23, y, 46, False)
+        elif k == "n":
+            c.text((x, y), v, f_n, INK, "lm")
+        elif k == "op":
+            c.text((x + w / 2, y), v, f_op, MUTED, "mm")
+        elif k == "tot":
+            c.text((x, y + 2), v, f_tot, INK, "lm")
+        else:
+            c.text((x + (8 if k == "pc" else 0), y + 3), v, f_pc, MUTED, "lm")
+        x += w + gap
+
+
+def part_terms(s):
+    """A Game Rating's parts, in rule order, as (sign, value text, word)."""
+    p = s["parts"]
+    terms = [("", compact(p["result"]), "win" if s["won"] else "loss"),
+             ("+" if p["strength"] >= 0 else MINUS, num(abs(p["strength"])), "opponent"),
+             ("+" if p["margin"] >= 0 else MINUS, compact(p["margin"]), "margin"),
+             ("+" if p["venue"] >= 0 else MINUS, compact(p["venue"]), "venue")]
+    if abs(p.get("limit", 0)) >= 0.05:
+        terms.append(("+" if p["limit"] > 0 else MINUS, num(abs(p["limit"])), "limit"))
+    if p.get("post"):
+        terms.append(("+", compact(p["post"]), "postseason"))
+    return terms
+
+
+SUM_ROOM = (W - 96 - 200) / 2 - 8     # each team's half, beside the center label
+
+
+def sum_line(c, terms, x, y, align):
+    """One team's Game Rating sum, each number over its word. Shrinks to fit its half of the card
+    (a playoff game can have six parts)."""
+    for size in (28, 26, 24, 22, 20):
+        f_n, f_w, f_op = font("body", 600, size), font("body", 500, max(14, size * 4 // 7)), font("body", 400, size)
+        pad = size * 6 // 7
+        cols = []
+        for sign, v, word in terms:
+            if sign:
+                cols.append(("op", sign, c.width(sign, f_op) + pad))
+            cols.append(("t", (v, word), max(c.width(v, f_n), c.width(word, f_w))))
+        total = sum(w for _, _, w in cols)
+        if total <= SUM_ROOM:
+            break
+    cx = x if align == "l" else x - total
+    for k, v, w in cols:
+        if k == "op":
+            c.text((cx + w / 2, y), v, f_op, MUTED, "mm")
+        else:
+            c.text((cx + w / 2, y), v[0], f_n, INK, "mm")
+            c.text((cx + w / 2, y + size * 0.93), v[1], f_w, MUTED, "mm")
+        cx += w
+
+
+def game_ratings(c, res, away, home):
+    y = 292
+    f_n, f_pc = font("display", 700, 80), font("body", 500, 18)
+    gr = [s.get("game_rating") if s["fbs"] else None for s in (away, home)]
+    hi = max(g for g in gr if g is not None) if any(g is not None for g in gr) else None
+    edges = []
+    for s, g, side in ((away, gr[0], "l"), (home, gr[1], "r")):
+        if g is None:
+            text, color, cap = "FCS", MUTED, "not rated"
+        else:
+            text = num(g)
+            both = all(v is not None for v in gr) and gr[0] != gr[1]
+            color = (UP if g == hi else DOWN) if both else INK
+            pct = s.get("game_rating_pct")
+            cap = f"{ordinal(pct)} pct" if pct is not None else ""
+        w = c.width(text, f_n)
+        if side == "l":
+            c.text((48, y + 28), text, f_n, color, "ls")
+            if cap:
+                c.text((48 + w + 10, y + 28), cap, f_pc, MUTED, "ls")
+            edges.append(48 + max(w + 10 + c.width(cap, f_pc), 190))
+        else:
+            c.text((W - 48, y + 28), text, f_n, color, "rs")
+            if cap:
+                c.text((W - 48 - w - 10, y + 28), cap, f_pc, MUTED, "rs")
+            edges.append(W - 48 - max(w + 10 + c.width(cap, f_pc), 190))
+    x0, x1 = edges[0] + 28, edges[1] - 28
+    if all(v is not None for v in gr) and x1 > x0:
+        split = x0 + (x1 - x0) * gr[0] / (gr[0] + gr[1])
+        ca = (UP if gr[0] > gr[1] else DOWN) if gr[0] != gr[1] else MUTED
+        ch = (UP if gr[1] > gr[0] else DOWN) if gr[0] != gr[1] else MUTED
+        c.rect((x0, y - 11, x1, y + 11), ch, radius=11)          # home's share, rounded at the right end
+        c.rect((x0, y - 11, split + 11, y + 11), ca, radius=11)  # visitor's share, rounded at the left end
+        c.rect((split, y - 11, split + 12, y + 11), ch)          # a straight edge where the two meet
+    yb = 360
+    c.label(W / 2, yb + 10, ["Game", "Rating"])
+    for s, side in ((away, "l"), (home, "r")):
+        if s["fbs"] and s.get("parts"):
+            sum_line(c, part_terms(s), 48 if side == "l" else W - 48, yb, side)
+
+
+def team_ratings(c, away, home):
+    y = 456
+    c.label(W / 2, y, ["Team", "Rating"])
+    f_was, f_now = font("body", 400, 38), font("body", 600, 38)
+    for s, side in ((away, "l"), (home, "r")):
+        if not s["fbs"]:
+            f = font("body", 500, 24)
+            c.text((48 if side == "l" else W - 48, y), "Not rated (counts as a 25)", f, MUTED, "lm" if side == "l" else "rm")
+            continue
+        b, a = round(s["rating_before"], 1), round(s["rating_after"], 1)
+        ch = round(a - b, 1)          # the change as shown, so before + change = after on the card
+        ch_txt = ("+" if ch > 0 else MINUS if ch < 0 else "") + num(abs(ch)) if ch else "="
+        up = True if ch > 0 else False if ch < 0 else None
+        f_chip = font("body", 600, 26)
+        chip_w = c.width(ch_txt, f_chip) + 2 * 26 * 0.55
+        widths = [c.width(num(b), f_was), 16 + chip_w, 14 + 34 + 14, c.width(num(a), f_now)]
+        x = 48 if side == "l" else W - 48 - sum(widths)
+        c.text((x, y), num(b), f_was, MUTED, "lm"); x += widths[0] + 16
+        c.chip(x, y, ch_txt, up); x += chip_w + 14
+        x = c.arrow(x, y) + 14
+        c.text((x, y), num(a), f_now, INK, "lm")
+
+
+def ranks(c, away, home):
+    y = 558
+    c.label(W / 2, y, ["TrueCFB", "Rank"])
+    f_was, f_now = font("display", 600, 50), font("display", 700, 92)
+    for s, side in ((away, "l"), (home, "r")):
+        if not s["fbs"]:
+            continue
+        b, a = s["rank_before"], s["rank_after"]
+        moved = b - a
+        up = True if moved > 0 else False if moved < 0 else None
+        color = UP if up else DOWN if up is False else INK
+        lab = str(abs(moved)) if moved else "="
+        f_chip = font("body", 600, 28)
+        chip_w = c.width(lab, f_chip) + 2 * 28 * 0.55 + (28 * 0.75 if moved else 0)
+        widths = [c.width(f"#{b}", f_was), 12 + 34 + 14, c.width(f"#{a}", f_now), 18 + chip_w]
+        x = 48 if side == "l" else W - 48 - sum(widths)
+        c.text((x, y), f"#{b}", f_was, MUTED, "lm"); x += widths[0] + 12
+        x = c.arrow(x, y) + 14
+        c.text((x, y + 3), f"#{a}", f_now, color, "lm"); x += widths[2] + 18
+        c.chip(x, y, lab, up, size=28, tri=bool(moved))
+
+
+def footer(c):
+    c.hline(615)
+    fy = 645
+    wf = font("display", 700, 30)
+    c.text((48, fy), "True", wf, INK, "lm")
+    c.text((48 + c.width("True", wf), fy), "CFB", wf, ACCENT, "lm")
+    c.text((W - 48, fy), "truecfb.com", font("body", 600, 22), INK, "rm")
+
+
+def sides(res):
+    """(visitor, home); at a neutral site the listed away team stays on the left."""
+    t = res["teams"]
+    home = next((s for s in t if s.get("site") == "home"), t[0])
+    away = next(s for s in t if s is not home)
+    return away, home
 
 
 def render(res):
-    img = Image.new("RGB", (W, H), BG)
-    d = ImageDraw.Draw(img)
-    w, l, head = headline(res)
-    # Header band
-    d.rectangle([0, 0, W, 150], fill=ACCENT)
-    mf = font("display", 700, 92)
-    mtxt = str(res["matchup_rating"])
-    mw = max(d.textlength(mtxt, font=mf), d.textlength("MATCHUP RATING", font=font("body", 600, 17)))
-    label(d, (W - 48, 30), "Matchup Rating", fill="#cfe3d7", anchor="ra")
-    d.text((W - 48, 46), mtxt, font=mf, fill=ON_ACCENT, anchor="ra")
-    left_w = W - 48 - mw - 40 - 48
-    d.text((48, 26), kicker(res, w).upper(), font=fit(d, kicker(res, w).upper(), "body", 600, 17, left_w, 12), fill="#cfe3d7")
-    d.text((46, 52), head, font=fit(d, head, "display", 700, 68, left_w, 34), fill=ON_ACCENT)
-    # Team panels (winner on the left)
-    py, ph, gap = 172, 294, 24
-    pw = (W - 2 * 48 - gap) // 2
-    team_panel(d, 48, py, pw, ph, w, l["points"])
-    team_panel(d, 48 + pw + gap, py, pw, ph, l, w["points"])
-    # Ripple
-    ry = py + ph + 18
-    label(d, (48, ry), "Ripple: past opponents of these two teams")
-    rp = res["ripple"]
-    col = (W - 2 * 48 - gap) // 2
-    ripple_rows(d, 48, ry + 28, col, rp["past_opponents_gained"], True)
-    ripple_rows(d, 48 + col + gap, ry + 28, col, rp["past_opponents_lost"], False)
-    # Footer
-    fy = H - 40
-    d.line([(48, fy - 26), (W - 48, fy - 26)], fill=LINE, width=1)
-    wf = font("display", 700, 32)
-    d.text((48, fy), "True", font=wf, fill=INK, anchor="lm")
-    tx = 48 + d.textlength("True", font=wf)
-    d.text((tx, fy), "CFB", font=wf, fill=ACCENT, anchor="lm")
-    tx += d.textlength("CFB", font=wf) + 18
-    d.text((tx, fy + 1), TAGLINE, font=font("body", 400, 19), fill=MUTED, anchor="lm")
-    d.text((W - 48, fy), "truecfb.com", font=font("body", 600, 21), fill=INK, anchor="rm")
-    return img
+    c = Card()
+    away, home = sides(res)
+    band(c, res, away, home)
+    matchup(c, res, away, home)
+    c.hline(240)
+    game_ratings(c, res, away, home)
+    c.hline(412)
+    team_ratings(c, away, home)
+    c.hline(500)
+    ranks(c, away, home)
+    footer(c)
+    return c.save_png()
 
 
 def main():
@@ -198,5 +398,5 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, HERE)
     main()

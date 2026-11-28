@@ -13,7 +13,7 @@ Read before changing things:
 - **The formula is fixed at 2026.2.** No change to a rule or a number without a new version, recorded in the README's version history, with every season re-run. Display, data plumbing and site work are not formula changes, but must leave every published number unchanged; check that before calling it done.
 - **Write the name TrueCFB** (never all capitals) and the version as **2026.2** (year.release, no "v"; code reads it from `engine.VERSION`).
 - **Rating, never score.** Game Rating (one team, one game), Team Rating, Conference Rating, Matchup Rating (the pot two teams split). "Score" means points on the scoreboard only.
-- **Blind to the jersey:** no team logos, mascots or team colors, except each team's line on the Top 25 chart and on the CFP comparison card. Blue = higher, orange = lower; never red/green as a verdict.
+- **Blind to the jersey:** nothing but results goes into a rating. No mascots; team logos only beside team names on the result card (Dan, 27 Nov 2026); team colors only as each team's line on the Top 25 chart and the CFP comparison card. Blue = higher, orange = lower; never red/green as a verdict (the better/worse standard is in `docs/BRAND.md`).
 - **Every number in a post or card comes from the engine.** Result posts and cards use fixed templates. Replies (since 24 Nov 2026, Dan's call) are written by a model that looks up the engine's published numbers (any college football question since 25 Nov), and code rejects any reply with a number those lookups did not return. No model ever decides a number.
 - 2020 is a throwaway year: flagged unreliable, never special-cased.
 

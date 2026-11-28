@@ -219,7 +219,10 @@ def gap_text():
     """GOOD's numbers as the current data has them (the data moves every week)."""
     text = X.run(BOOK, *UTAH_BYU)
     gap = text.split("Gap: Utah (#3) ")[1].split(" ")[0] if "Gap: Utah (#3) " in text else None
-    return GOOD.replace("7.6", gap) if gap else None
+    gr = re.search(r"28-20[^\n]*?Game Rating (\d+\.\d)", text)
+    if not gap or not gr:
+        return None
+    return GOOD.replace("7.6", gap).replace("89.3", gr.group(1))
 
 
 def test_reply_after_a_lookup_is_drafted():
@@ -230,7 +233,7 @@ def test_reply_after_a_lookup_is_drafted():
     res = go(fake)
     assert res["status"] == "drafted" and res["reply"] == good and res["by"] == "grok-test", res
     assert res["lookups"] == ["matchup(Utah, BYU)"]
-    assert "Game Rating 89.3" in fake.results[0][0][1]
+    assert re.search(r"Game Rating \d+\.\d", fake.results[0][0][1])
     assert "## The rules" in fake.system and "<post>" in fake.sent[0]
 
 

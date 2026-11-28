@@ -70,6 +70,17 @@ def _site(row, team):
     return "home" if row.home == team else "road"
 
 
+PCT_MIN = 300         # percentiles are shown once the season has this many values to compare with
+
+
+def _pct(values, x):
+    """Where x falls among values, 0 to 100 (ties count half), or None early in a season."""
+    values = values[~np.isnan(values)]
+    if len(values) < PCT_MIN:
+        return None
+    return int(round(100 * ((values < x).sum() + 0.5 * (values == x).sum()) / len(values)))
+
+
 def impact(asof, game_id, F, V, prior, teams):
     """asof: the season's games through the end of this game's day (including this game).
     Returns one result as a plain dict, ready for JSON."""
@@ -90,7 +101,15 @@ def impact(asof, game_id, F, V, prior, teams):
         if fbs:
             line = gd[gd.team == team].iloc[0]
             b, a = float(before_tab.rating[team]), float(after_tab.rating[team])
-            side.update({"game_rating": round(float(line.game_rating), 1),
+            base = 70.0 if line.margin > 0 else 30.0
+            before_limit = float(line.raw + line.venue + E.OPP_WEIGHT * (line.opp_rating - 50.0))
+            post = float(line.post_both + (line.post_win if line.margin > 0 else 0.0))
+            side.update({"parts": {"result": base, "strength": round(float(E.OPP_WEIGHT * (line.opp_rating - 50.0)), 1),
+                                   "margin": float(line.raw - base), "venue": float(line.venue),
+                                   "limit": round(min(max(before_limit, 0.0), 100.0) - before_limit, 2), "post": post},
+                         "record": [int(after_tab.wins[team]), int(after_tab.losses[team])],
+                         "game_rating_pct": _pct(det.game_rating.to_numpy(), float(line.game_rating)),
+                         "game_rating": round(float(line.game_rating), 1),
                          "rating_before": round(b, 1), "rating_after": round(a, 1), "change": round(a - b, 1),
                          "rank_before": rk_b[team], "rank_after": rk_a[team],
                          "bonus": round(a - 50.0, 1), "post_both": float(line.post_both), "post_win": float(line.post_win)})
@@ -127,11 +146,18 @@ def impact(asof, game_id, F, V, prior, teams):
                 "rank_before": rk_b[t], "rank_after": rk_a[t], "link": past.get(t, [])}
 
     po = delta[list(past)] if past else delta.iloc[:0]
+    # Where this game's Matchup Rating (the two Team Ratings added) falls among the season's FBS games so
+    # far, at today's ratings. Display only.
+    matchup_pct = None
+    if r.home_fbs and r.away_fbs:
+        ff = asof[asof.home_fbs & asof.away_fbs]
+        sums = after_tab.rating.reindex(ff.home).to_numpy() + after_tab.rating.reindex(ff.away).to_numpy()
+        matchup_pct = _pct(sums, float(after_tab.rating[r.home] + after_tab.rating[r.away]))
     return {
         "game_id": int(r.game_id), "season": int(r.season), "week": int(r.week), "day": r.day,
         "season_type": r.season_type, "note": None if pd.isna(r.note) else str(r.note),
         "overtime": bool(r.ot), "neutral": bool(r.neutral),
-        "matchup_rating": round(matchup), "winner": winner, "teams": sides,
+        "matchup_rating": round(matchup), "matchup_pct": matchup_pct, "winner": winner, "teams": sides,
         "ripple": {
             "past_opponents_gained": [entry(t) for t in po.sort_values(ascending=False).index[:RIPPLE_SHOWN] if po[t] > 0],
             "past_opponents_lost": [entry(t) for t in po.sort_values().index[:RIPPLE_SHOWN] if po[t] < 0],
