@@ -184,6 +184,19 @@ def test_numbers_and_signs():
     assert X.unsupported("Team Rating 75.3", plain, signed) == ["75.3"]          # made up
 
 
+def test_gap_splits_into_the_formula_parts():
+    """A Team Rating is its average parts, and the gap between two teams is the sum of the part gaps."""
+    for y in (BOOK.current, 2024):
+        r = BOOK.data["ratings"][str(y)]
+        order = sorted(r, key=lambda t: r[t][1])
+        for t in order[:30]:
+            d = X.breakdown(BOOK, t, y)
+            assert abs(sum(d[k] for k, _ in X.PART_NAMES) - r[t][0]) < 1e-6
+            assert y != 2024 or abs(d["other"]) < 0.11, (t, d)      # a finished season: its own games cover it
+        text = X.run(BOOK, "matchup", {"team_a": order[9], "team_b": order[10], "season": y})
+        assert f"Why {order[9]} is above {order[10]}, part by part" in text and "The part that puts" in text, text
+
+
 def test_no_disclaimers():
     """A reply says what TrueCFB's numbers show, never what TrueCFB can't do."""
     for bad in ["TrueCFB doesn't rate quarterbacks, but Georgia is #1.", "TrueCFB rates results, not predictions.",

@@ -119,6 +119,8 @@ Same bot and chat as the result posts. The message shows what they asked, the po
 
 A perfect analyst for every question isn't possible; showing the math is. Every reply is "here is what TrueCFB's numbers say about your question", in two or three sentences: (1) the TrueCFB answer in words, (2) the math behind it: the one or two results or numbers that drive it, (3) what's next when it helps. Replies never say what TrueCFB can't do, doesn't rate or won't predict: "best QB?" gets "on results alone, Georgia is the team to beat, and here is why". `reply_agent.DISCLAIMS` rejects disclaimer wording ("TrueCFB doesn't…", "can't say", "not predictions") and the model rewrites once, like any other failed check.
 
+**Which part of the formula decides it.** A Team Rating is the average of its Game Ratings, and each Game Rating adds win/loss (70 or 30), opponent strength, margin and venue, so a Team Rating splits exactly into those four averages, and the gap between two teams into four part gaps. The `team` lookup gives the split; `matchup` gives both splits, the part gaps, the part that puts one team ahead and the parts that pull the other way. The prompt asks the model to name the deciding part in fan terms: "the extra win", "a tougher schedule", "bigger wins". Example: Texas Tech is 1.2 above BYU because its record (+3.9) and margins (+1.2) outweigh BYU's tougher schedule (−3.7).
+
 ### Answering a post Dan picks (28 Nov 2026)
 
 When Dan sees a post @truecfb should answer, he shares its link with the Telegram bot; any words after the link are his note on what to cover ("focus on the playoff angle"). The Worker (Dan's chat only) starts "Reply drafts" with that post id, and the draft arrives like any other.
