@@ -3264,5 +3264,246 @@
    }
   },
   "created": "2026-11-28T01:01:46Z"
+ },
+ "401858544": {
+  "post": "FINAL: Wisconsin 28, Minnesota 5\nMatchup Rating 110\nWisconsin #31 → #29 · Minnesota #53 → #61\n#OnWisconsin #Gophers",
+  "length": 117,
+  "alt": "FINAL: Wisconsin 28, Minnesota 5 · home win\nMatchup Rating 110\nWisconsin: Game Rating 73.3 · Team Rating 59.3 (+1.3) · #31 → #29\nMinnesota: Game Rating 36.6 · Team Rating 50.6 (-1.3) · #53 → #61\nRipple: Maryland +0.2 (beat Wisconsin) · Mississippi State -0.1 (beat Minnesota)",
+  "day": "2026-11-27",
+  "matchup_rating": 110,
+  "teams": [
+   "Wisconsin",
+   "Minnesota"
+  ],
+  "impact": {
+   "game_id": 401858544,
+   "season": 2026,
+   "week": 13,
+   "day": "2026-11-27",
+   "season_type": "regular",
+   "note": null,
+   "overtime": false,
+   "neutral": false,
+   "matchup_rating": 110,
+   "matchup_pct": 72,
+   "winner": "Wisconsin",
+   "teams": [
+    {
+     "team": "Wisconsin",
+     "fbs": true,
+     "points": 28,
+     "won": true,
+     "site": "home",
+     "parts": {
+      "result": 70.0,
+      "strength": 0.6,
+      "margin": 5.75,
+      "venue": -3.0,
+      "limit": 0.0,
+      "post": 0.0
+     },
+     "record": [
+      8,
+      4
+     ],
+     "game_rating_pct": 86,
+     "game_rating": 73.3,
+     "rating_before": 58.0,
+     "rating_after": 59.3,
+     "change": 1.3,
+     "rank_before": 31,
+     "rank_after": 29,
+     "bonus": 9.3,
+     "post_both": 0.0,
+     "post_win": 0.0
+    },
+    {
+     "team": "Minnesota",
+     "fbs": true,
+     "points": 5,
+     "won": false,
+     "site": "road",
+     "parts": {
+      "result": 30.0,
+      "strength": 9.3,
+      "margin": -5.75,
+      "venue": 3.0,
+      "limit": 0.0,
+      "post": 0.0
+     },
+     "record": [
+      6,
+      6
+     ],
+     "game_rating_pct": 33,
+     "game_rating": 36.6,
+     "rating_before": 51.9,
+     "rating_after": 50.6,
+     "change": -1.3,
+     "rank_before": 53,
+     "rank_after": 61,
+     "bonus": 0.6,
+     "post_both": 0.0,
+     "post_win": 0.0
+    }
+   ],
+   "ripple": {
+    "past_opponents_gained": [
+     {
+      "team": "Maryland",
+      "change": 0.16,
+      "rating_after": 44.3,
+      "rank_before": 94,
+      "rank_after": 94,
+      "link": [
+       {
+        "vs": "Wisconsin",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Notre Dame",
+      "change": 0.15,
+      "rating_after": 73.2,
+      "rank_before": 4,
+      "rank_after": 4,
+      "link": [
+       {
+        "vs": "Wisconsin",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "USC",
+      "change": 0.13,
+      "rating_after": 62.3,
+      "rank_before": 23,
+      "rank_after": 22,
+      "link": [
+       {
+        "vs": "Wisconsin",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "past_opponents_lost": [
+     {
+      "team": "Mississippi State",
+      "change": -0.13,
+      "rating_after": 50.9,
+      "rank_before": 59,
+      "rank_after": 58,
+      "link": [
+       {
+        "vs": "Minnesota",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Indiana",
+      "change": -0.13,
+      "rating_after": 65.6,
+      "rank_before": 14,
+      "rank_after": 15,
+      "link": [
+       {
+        "vs": "Minnesota",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Michigan",
+      "change": -0.11,
+      "rating_after": 54.4,
+      "rank_before": 42,
+      "rank_after": 43,
+      "link": [
+       {
+        "vs": "Minnesota",
+        "result": "lost to"
+       }
+      ]
+     }
+    ],
+    "biggest_movers": [
+     {
+      "team": "Maryland",
+      "change": 0.16,
+      "rating_after": 44.3,
+      "rank_before": 94,
+      "rank_after": 94,
+      "link": [
+       {
+        "vs": "Wisconsin",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Notre Dame",
+      "change": 0.15,
+      "rating_after": 73.2,
+      "rank_before": 4,
+      "rank_after": 4,
+      "link": [
+       {
+        "vs": "Wisconsin",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "Mississippi State",
+      "change": -0.13,
+      "rating_after": 50.9,
+      "rank_before": 59,
+      "rank_after": 58,
+      "link": [
+       {
+        "vs": "Minnesota",
+        "result": "beat"
+       }
+      ]
+     },
+     {
+      "team": "USC",
+      "change": 0.13,
+      "rating_after": 62.3,
+      "rank_before": 23,
+      "rank_after": 22,
+      "link": [
+       {
+        "vs": "Wisconsin",
+        "result": "lost to"
+       }
+      ]
+     },
+     {
+      "team": "Indiana",
+      "change": -0.13,
+      "rating_after": 65.6,
+      "rank_before": 14,
+      "rank_after": 15,
+      "link": [
+       {
+        "vs": "Minnesota",
+        "result": "beat"
+       }
+      ]
+     }
+    ],
+    "teams_moved": 12
+   },
+   "engine": {
+    "name": "TrueCFB",
+    "version": "2026.2"
+   }
+  },
+  "created": "2026-11-28T04:02:06Z"
  }
 }
