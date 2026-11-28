@@ -7,7 +7,8 @@ it looked up, and what it cost.
 
 Needs XAI_API_KEY for grok and ANTHROPIC_API_KEY for claude (run it from the "Reply bot: try the
 model" job, which has them). A provider whose key is missing is left out. Writes a table to the job
-summary when GITHUB_STEP_SUMMARY is set. SAMPLE_LIMIT=n tries only the first n samples.
+summary when GITHUB_STEP_SUMMARY is set. Each run costs money: by default only the samples marked core
+(SAMPLE_SET=all for every one); SAMPLE_FROM=n starts at the nth, SAMPLE_LIMIT=n stops after n.
 """
 import json
 import os
@@ -99,6 +100,11 @@ def main():
     site_dir, samples_path, wanted = sys.argv[1], sys.argv[2], sys.argv[3:]
     book = R.Book(site_dir, os.path.dirname(samples_path))
     samples = json.load(open(samples_path))["samples"]
+    # Each run costs real money (about $0.012 a sample with Grok 4.7): the core set by default.
+    if os.environ.get("SAMPLE_SET", "core") != "all":
+        samples = [x for x in samples if x.get("core")]
+    if os.environ.get("SAMPLE_FROM", "").isdigit():
+        samples = samples[int(os.environ["SAMPLE_FROM"]) - 1:]
     if os.environ.get("SAMPLE_LIMIT", "").isdigit():
         samples = samples[:int(os.environ["SAMPLE_LIMIT"])]
     done = 0

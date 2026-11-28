@@ -6,6 +6,8 @@ The bot reads only files the engine wrote:
   site/sched_{season}.json every team's games, with each Game Rating and the Team Rating after it
   site/rank_{season}.json  the ranking at each point of the season, with the CFP and AP ranks beside it
   data/bot/drafts.json     recent results worked out by game_impact.py (the Matchup Rating)
+  site/whatif.json         the newest season's engine inputs, for what-ifs (reply_whatif.py)
+and, for games not yet played, the public schedule file the ratings jobs also read.
 Nothing here computes a rating.
 
   Book(site_dir, bot_dir) -> the files above
@@ -23,6 +25,7 @@ from engine import VERSION as ENGINE_VERSION  # noqa: E402
 VERSION = ENGINE_VERSION   # how the version is written: year.release, e.g. 2026.2, no "v"
 
 INDEPENDENTS = "FBS Independents"
+SCHEDULE_URL = "https://raw.githubusercontent.com/sportsdataverse/cfbfastR-data/main/schedules/csv/cfb_schedules_{y}.csv"
 UNRELIABLE = {2020}            # flagged on the site; never special-cased in the formula
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -44,7 +47,7 @@ class Book:
         self.data = load(os.path.join(site_dir, "data.json"))
         self.history = load(os.path.join(site_dir, "history.json"), {"conf": {}})
         self.drafts = load(os.path.join(bot_dir, "drafts.json"), {}) if bot_dir else {}
-        self._sched, self._snaps = {}, {}
+        self._sched, self._snaps, self._upcoming = {}, {}, None
         self.current = int(self.data["current"]["season"])
         self.seasons = sorted(int(y) for y in self.data["ratings"])
 
@@ -81,6 +84,36 @@ class Book:
         if y not in self._snaps:
             self._snaps[y] = load(os.path.join(self.site_dir, f"rank_{y}.json"), {})
         return self._snaps[y]
+
+    def upcoming(self):
+        """The current season's games not yet played, from the public schedule file the ratings jobs read
+        (sportsdataverse/cfbfastR-data; REPLY_SCHEDULE_URL overrides it). Each: {"when" (UTC datetime),
+        "tbd", "home", "away", "neutral", "conference_game", "note"}, soonest first. None when the file
+        cannot be read: the lookups then say the schedule is not available."""
+        if self._upcoming is None:
+            import csv
+            import io
+            import urllib.request
+            from datetime import datetime
+            url = os.environ.get("REPLY_SCHEDULE_URL") or SCHEDULE_URL
+            try:
+                with urllib.request.urlopen(url.format(y=self.current), timeout=60) as r:
+                    rows = list(csv.DictReader(io.StringIO(r.read().decode("utf-8"))))
+            except Exception as err:
+                print(f"::warning::schedule not available: {err}")
+                self._upcoming = []
+                return None
+            yes = lambda x: str(x).strip().upper() == "TRUE"
+            out = []
+            for x in rows:
+                if yes(x.get("completed")) or not x.get("start_date"):
+                    continue
+                out.append({"when": datetime.fromisoformat(x["start_date"].replace("Z", "+00:00")),
+                            "tbd": yes(x.get("start_time_tbd")), "home": x["home_team"], "away": x["away_team"],
+                            "neutral": yes(x.get("neutral_site")), "conference_game": yes(x.get("conference_game")),
+                            "note": "" if x.get("notes") in (None, "", "NA") else x["notes"]})
+            self._upcoming = sorted(out, key=lambda g: g["when"])
+        return self._upcoming or None
 
     def games(self, t, y):
         """[date, opponent, site, points for, points against, ot, Game Rating, opp rating, FCS flag,

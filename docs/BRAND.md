@@ -15,7 +15,7 @@ The full design system (colors, type, components, wordmark files) lives in a Cla
 - **Tagline:** "Unbiased, Deterministic, Open Source Rankings". "Deterministic" is kept on purpose, for the analytics audience.
 - **Site description line:** "Every FBS team rated on results alone. Every game counts. Open source formula."
 - **Chart titles:** "Team Rating History", "Conference Rating History".
-- **Voice:** fan terms; describes, never predicts; no hype, no emoji.
+- **Voice:** fan terms; describes, never predicts; no hype, no emoji. A what-if is not a prediction: the reply bot may say what a win or a loss would do to a team's rating and rank (the v1.0 engine re-run with that one result added), never who will win (Dan's call, 26 Nov 2026). Replies read like an analyst talking, not a stat line.
 
 ## Numbers
 

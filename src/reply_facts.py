@@ -17,7 +17,7 @@ import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from reply_book import Unanswerable, UNRELIABLE, INDEPENDENTS, VERSION, r1, date  # noqa: E402
+from reply_book import Unanswerable, UNRELIABLE, INDEPENDENTS, MONTHS, VERSION, r1, date  # noqa: E402
 
 # The README sections the model learns the rules from, in order. Read at run time, so the model always
 # knows the version the engine runs, never an older copy.
@@ -148,6 +148,44 @@ def neighbors(book, t, y):
     return f"Ranked around {t}: " + " · ".join(f"#{r[x][1]} {x} {r1(r[x][0])}" for x in near)
 
 
+def conf_records(book, c, y):
+    """Each member's record in games against other members (published results), best first. Games
+    after November are left out: they are title games, which do not count in the standings."""
+    tc = book.data["team_conf"].get(str(y), {})
+    r = book.data["ratings"][str(y)]
+    out = []
+    for t in (t for t, k in tc.items() if k == c and t in r):
+        gs = [g for g in book.games(t, y) if tc.get(g[1]) == c and int(g[0].split("-")[0]) not in (12, 1)]
+        w = sum(g[3] > g[4] for g in gs)
+        out.append((t, w, len(gs) - w))
+    return sorted(out, key=lambda x: (-x[1], x[2], r[x[0]][1]))
+
+
+def when(g):
+    """An upcoming game's kickoff in US Eastern time: "Thu Nov 26, 8:00 PM ET" (the date only if TBD)."""
+    from zoneinfo import ZoneInfo
+    t = g["when"].astimezone(ZoneInfo("America/New_York"))
+    day = f"{t.strftime('%a')} {MONTHS[t.month - 1]} {t.day}"
+    return day if g["tbd"] else f"{day}, {t.strftime('%I:%M %p').lstrip('0')} ET"
+
+
+def who_now(book, t, y):
+    r = book.data["ratings"][str(y)].get(t)
+    return f"{t} (now #{r[1]}, {r1(r[0])})" if r else f"{t} (FCS)"
+
+
+def upcoming_line(book, g, y):
+    sep = " vs " if g["neutral"] else " at "
+    what = g["note"] or ("conference game" if g["conference_game"] else "")
+    return (f"- {when(g)}: {who_now(book, g['away'], y)}{sep}{who_now(book, g['home'], y)}"
+            + (", neutral site" if g["neutral"] else "") + (f" · {what}" if what else ""))
+
+
+def next_games(book, t):
+    ups = book.upcoming()
+    return None if ups is None else [g for g in ups if t in (g["home"], g["away"])]
+
+
 def conf_block(book, c, y):
     info = book.conf(c, y)
     r = book.data["ratings"][str(y)]
@@ -155,7 +193,9 @@ def conf_block(book, c, y):
                      key=lambda t: r[t][1])
     return [f"{c}: Conference Rating {r1(info['rating'])} · #{info['rank']} of {info['of']} conferences "
             f"(the plain average of its {len(members)} members' Team Ratings)",
-            f"{c} members: " + " · ".join(f"{t} #{r[t][1]} {r1(r[t][0])}" for t in members)]
+            f"{c} members: " + " · ".join(f"{t} #{r[t][1]} {r1(r[t][0])}" for t in members),
+            f"{c} records in games between members (title game not counted): "
+            + " · ".join(f"{t} {w}-{l}" for t, w, l in conf_records(book, c, y))]
 
 
 def game_impact_block(book, a, b, y):
@@ -225,7 +265,20 @@ def look_rankings(book, season=None, start=1, count=10):
 def look_team(book, team, season=None):
     y = book.season(season)
     t = team_name(book, team, y)
-    return header(book, y) + team_block(book, t, y) + [neighbors(book, t, y)]
+    lines = header(book, y) + team_block(book, t, y) + [neighbors(book, t, y)]
+    c = book.data["team_conf"].get(str(y), {}).get(t)
+    if c and c != INDEPENDENTS:
+        rec = next(((w, l) for x, w, l in conf_records(book, c, y) if x == t), None)
+        if rec:
+            lines.append(f"{t}'s {c} record (games between members): {rec[0]}-{rec[1]}")
+    if y == book.current:
+        ups = next_games(book, t)
+        if ups:
+            lines.append(f"{t} still to play:")
+            lines += [upcoming_line(book, g, y) for g in ups]
+        elif ups is not None:
+            lines.append(f"{t} has no games left on the schedule file.")
+    return lines
 
 
 def look_matchup(book, team_a, team_b, season=None):
@@ -315,6 +368,87 @@ def look_games(book, season=None, order="highest", result="any", count=10):
     return lines
 
 
+def look_upcoming(book, team=None, count=12):
+    """Games not yet played: one team's, or the next week's biggest by TrueCFB rank."""
+    y = book.current
+    ups = book.upcoming()
+    if ups is None:
+        raise Unanswerable("the schedule of games not yet played is not available right now")
+    count = max(1, min(int(count or 12), MAX_LIST))
+    if team:
+        t = team_name(book, team, y)
+        mine = [g for g in ups if t in (g["home"], g["away"])]
+        if not mine:
+            return header(book, y) + [f"{t} has no games left on the schedule file."]
+        return header(book, y) + [f"{t}'s games still to play:"] + [upcoming_line(book, g, y) for g in mine]
+    soon = [g for g in ups if (g["when"] - ups[0]["when"]).days < 8]
+    r = book.data["ratings"][str(y)]
+    best = lambda g: min(r.get(g["home"], [0, 999])[1], r.get(g["away"], [0, 999])[1])
+    soon.sort(key=best)
+    return header(book, y) + [f"The next week's games, the {min(count, len(soon))} with the highest-ranked teams first:"] + [
+        upcoming_line(book, g, y) for g in soon[:count]]
+
+
+def look_what_if(book, team, opponent=None, site=None):
+    """What a win or loss in one game would do, by re-running the engine with that game added."""
+    import reply_whatif as WI
+    y = book.current
+    t = team_name(book, team, y)
+    game = None
+    ups = next_games(book, t) or []
+    if opponent:
+        try:
+            o = team_name(book, opponent, y)
+        except Unanswerable:
+            o = str(opponent)          # an FCS opponent: it counts as a 25, like any FCS team
+        game = next((g for g in ups if o in (g["home"], g["away"])), None)
+    elif ups:
+        game = ups[0]
+        o = game["away"] if game["home"] == t else game["home"]
+    else:
+        raise Unanswerable(f"{t} has no game left on the schedule file; give an opponent")
+    if game and not site:
+        site = "neutral" if game["neutral"] else ("home" if game["home"] == t else "away")
+    site = site if site in ("home", "away", "neutral") else "neutral"
+    if not hasattr(book, "_whatif"):
+        try:
+            book._whatif = WI.WhatIf(book.site_dir, book.data["ratings"][str(y)])
+        except WI.OutOfDate as why:
+            book._whatif = str(why)
+    if isinstance(book._whatif, str):
+        raise Unanswerable(book._whatif)
+    w = book._whatif
+    if w.season != y:
+        raise Unanswerable("what-if data is for another season")
+    pub = book.data["ratings"][str(y)]
+    where = {"home": f"at home against {o}", "away": f"at {o}", "neutral": f"against {o} at a neutral site"}[site]
+    lines = header(book, y) + [
+        f"What-if: {t} {where}" + (f" ({when(game)}" + (f", {game['note']}" if game and game["note"] else "") + ")" if game else "")
+        + ". The engine re-run on this season with this one game added and nothing else changed "
+          "(other games still to be played will move the numbers too).",
+        "Now: " + " · ".join(f"{x} #{pub[x][1]}, Team Rating {r1(pub[x][0])}" for x in (t, o) if x in pub)]
+    base = w.base_rank
+    for sc in w.scenarios(t, o, site):
+        m, table, rank = sc["margin"], sc["table"], sc["rank"]
+        winner = t if m > 0 else o
+        parts = []
+        for x in (t, o):
+            if x not in pub:
+                continue
+            new = round(float(table.rating[x]), 1)
+            move = (f"#{base[x]} to #{rank[x]}" if rank[x] != base[x] else f"stays #{rank[x]}")
+            parts.append(f"{x} {r1(new)} ({signed(new - pub[x][0])}), {move}")
+        passed = [x for x in base if base[x] < base[t] and rank[x] > rank[t]]
+        behind = [x for x in base if base[x] > base[t] and rank[x] < rank[t]]
+        extra = ""
+        if passed:
+            extra += f" · {t} moves past " + ", ".join(sorted(passed, key=base.get)[:4])
+        if behind:
+            extra += f" · {t} falls behind " + ", ".join(sorted(behind, key=base.get)[:4])
+        lines.append(f"If {winner} wins by {abs(m)}: " + " · ".join(parts) + extra)
+    return lines
+
+
 SEASON = {"type": "integer", "description": "A season from 2014 on. Leave it out for the current season."}
 LOOKUPS = [
     {"name": "rankings", "fn": look_rankings,
@@ -356,6 +490,25 @@ LOOKUPS = [
          "season": SEASON, "order": {"type": "string", "enum": ["highest", "lowest"]},
          "result": {"type": "string", "enum": ["any", "win", "loss"]},
          "count": {"type": "integer", "description": f"Default 10, at most {MAX_LIST}."}}}},
+]
+LOOKUPS += [
+    {"name": "upcoming", "fn": look_upcoming,
+     "description": "Games not yet played this season, with kickoff times and each team's rank and Team Rating "
+                    "now: one team's remaining games (including a conference title game once it is set), or, "
+                    "with no team, the next week's games with the highest-ranked teams.",
+     "parameters": {"type": "object", "properties": {
+         "team": {"type": "string", "description": "Leave it out for the week's biggest games."},
+         "count": {"type": "integer", "description": f"Default 12, at most {MAX_LIST}."}}}},
+    {"name": "what_if", "fn": look_what_if,
+     "description": "What one game not yet played would do: the engine re-run with that game added, for a "
+                    "close and a two-score result each way. Gives both teams' new Team Rating, the change, the "
+                    "new rank and who they pass or fall behind. With no opponent, it uses the team's next game.",
+     "parameters": {"type": "object", "properties": {
+         "team": {"type": "string"},
+         "opponent": {"type": "string", "description": "Leave it out for the team's next game."},
+         "site": {"type": "string", "enum": ["home", "away", "neutral"],
+                  "description": "From the team's side. Leave it out to use the schedule."}},
+         "required": ["team"]}},
 ]
 BY_NAME = {x["name"]: x for x in LOOKUPS}
 

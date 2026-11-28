@@ -14,8 +14,28 @@ import reply_book as R  # noqa: E402
 import reply_facts as X  # noqa: E402
 import reply_model as M  # noqa: E402
 
-BOOK = R.Book(os.path.join(ROOT, "site"), os.path.join(ROOT, "data", "bot"))
 README = os.path.join(ROOT, "README.md")
+
+
+def schedule_fixture():
+    """A stand-in for the public schedule file: two games not yet played, between teams ranked now."""
+    import json
+    import tempfile
+    r = json.load(open(os.path.join(ROOT, "site", "data.json")))["ratings"]
+    y = max(r, key=int)
+    order = sorted(r[y], key=lambda t: r[y][t][1])
+    path = os.path.join(tempfile.mkdtemp(), "s{y}.csv")
+    with open(path.format(y=y), "w") as f:
+        f.write("game_id,season,week,season_type,start_date,start_time_tbd,completed,neutral_site,conference_game,"
+                "home_team,away_team,home_points,away_points,notes\n")
+        f.write(f"1,{y},14,regular,2030-11-28T01:00:00.000Z,FALSE,FALSE,FALSE,TRUE,{order[9]},{order[70]},NA,NA,NA\n")
+        f.write(f"2,{y},15,regular,2030-12-05T17:00:00.000Z,TRUE,FALSE,TRUE,TRUE,{order[0]},{order[9]},NA,NA,Title Game\n")
+        f.write(f"3,{y},12,regular,2030-11-21T17:00:00.000Z,FALSE,TRUE,FALSE,TRUE,{order[1]},{order[2]},30,20,NA\n")
+    return "file://" + path, order
+
+
+os.environ["REPLY_SCHEDULE_URL"], ORDER = schedule_fixture()
+BOOK = R.Book(os.path.join(ROOT, "site"), os.path.join(ROOT, "data", "bot"))
 
 
 # ---------- the lookups ----------
@@ -53,6 +73,49 @@ def test_every_lookup_in_every_season():
         assert "Their game in" in X.run(BOOK, "matchup", {"team_a": order[0], "team_b": played, "season": y})
 
 
+def test_upcoming_games():
+    ups = BOOK.upcoming()
+    assert [g["home"] for g in ups] == [ORDER[9], ORDER[0]]               # played games left out, soonest first
+    text = X.run(BOOK, "upcoming", {"team": ORDER[9]})
+    assert "Title Game" in text and "ET" in text and f"(now #10," in text, text
+    assert X.run(BOOK, "upcoming", {}).count("\n- ") == 2
+    assert f"{ORDER[9]} still to play:" in X.run(BOOK, "team", {"team": ORDER[9]})
+    keep = BOOK._upcoming
+    BOOK._upcoming = []
+    assert X.run(BOOK, "upcoming", {}).startswith("Nothing found")
+    BOOK._upcoming = keep
+
+
+def test_conference_records():
+    y = BOOK.current
+    for c in BOOK.conferences(y):
+        recs = X.conf_records(BOOK, c, y)
+        assert sum(w for _, w, _ in recs) == sum(l for _, _, l in recs), c     # every game has a winner and a loser
+        assert "records in games between members" in X.run(BOOK, "conference", {"conference": c})
+
+
+def test_what_if_runs_the_engine():
+    """The season re-run without the extra game gives exactly the published ratings, and the made-up game
+    moves the two teams the way the rules say: a win over a weaker team at home counts less than a road win."""
+    import reply_whatif as WI
+    y = BOOK.current
+    pub = BOOK.data["ratings"][str(y)]
+    try:
+        w = WI.WhatIf(BOOK.site_dir, pub)
+    except WI.OutOfDate as why:
+        print("skipped (site/whatif.json is behind the published ratings):", why)
+        return
+    a, b = ORDER[9], ORDER[70]
+    home = {sc["margin"]: sc["table"].rating[a] for sc in w.scenarios(a, b, "home")}
+    road = {sc["margin"]: sc["table"].rating[a] for sc in w.scenarios(a, b, "away")}
+    assert home[17] > home[3] > home[-3] > home[-17] and road[3] > home[3]
+    text = X.run(BOOK, "what_if", {"team": a})
+    assert f"What-if: {a} at home against {b}" in text and text.count("If ") == 4, text
+    assert "Nothing found" in X.run(BOOK, "what_if", {"team": ORDER[50]})           # no game left, no opponent
+    fcs = X.run(BOOK, "what_if", {"team": a, "opponent": "Montana State", "site": "home"})   # an FCS opponent
+    assert "If Montana State wins by 3:" in fcs and "Montana State #" not in fcs, fcs
+
+
 def test_polls_beside_truecfb():
     text = X.run(BOOK, "polls", {"poll": "cfp"})
     assert "CFP #1 " in text and "TrueCFB #" in text and "Biggest differences from the CFP ranking" in text
@@ -77,7 +140,8 @@ def test_primer_is_the_readme_rules():
 def test_system_prompt_names_every_team():
     s = A.system(BOOK, README)
     assert "Miami (OH)" in s and "Sun Belt" in s and "## The rules" in s
-    assert [t["name"] for t in A.TOOLS] == ["rankings", "team", "matchup", "conference", "polls", "games", "reply"]
+    assert [t["name"] for t in A.TOOLS] == ["rankings", "team", "matchup", "conference", "polls", "games",
+                                            "upcoming", "what_if", "reply"]
 
 
 # ---------- the checks ----------
@@ -119,8 +183,9 @@ class Fake:
         self.system, self.tools = system, tools
         return self
 
-    def say(self, text):
+    def say(self, text, images=()):
         self.sent.append(text)
+        self.images = list(images)
 
     def step(self):
         if self.fail:
@@ -170,6 +235,18 @@ def test_reply_after_a_lookup_is_drafted():
     assert res["lookups"] == ["matchup(Utah, BYU)"]
     assert re.search(r"Game Rating \d+\.\d", fake.results[0][0][1])
     assert "## The rules" in fake.system and "<post>" in fake.sent[0]
+
+
+def test_images_go_to_the_model():
+    fake = Fake([reply("", skip=True)])
+    real = M.chat
+    M.chat = fake
+    try:
+        A.answer(BOOK, "@truecfb what do you think?", "Are these ranked right?", README,
+                 images=[f"https://pbs.twimg.com/media/{i}.jpg" for i in range(6)])
+    finally:
+        M.chat = real
+    assert len(fake.images) == A.MAX_IMAGES and "images come with those posts" in fake.system
 
 
 def test_numbers_must_come_from_this_questions_lookups():
