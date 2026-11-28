@@ -117,12 +117,30 @@ def test_what_if_runs_the_engine():
     assert home[17] > home[3] > home[-3] > home[-17] and road[3] > home[3]
     text = X.run(BOOK, "what_if", {"team": a})
     assert f"What-if: {a} at home against {b}" in text and text.count("If ") == 4, text
-    assert "Nothing found" in X.run(BOOK, "what_if", {"team": ORDER[50]})           # no game left, no opponent
+    assert "How much a win needs: " in text and f"#{w.base_rank[ORDER[8]]} {ORDER[8]} has no game left" in text, text
+    steps = w.margin_steps(a, b, "home")                 # bigger wins never rank lower, ratings only rise
+    assert steps[0][0] == 1
+    assert all(y[1] < x[1] and y[2] > x[2] for x, y in zip(steps, steps[1:])), steps
+    _, both = w.with_games([(a, b, "home", 17), (ORDER[8], ORDER[100], "away", -3)])
+    _, alone = w.with_game(a, b, "home", 17)
+    assert both[a] <= alone[a]                           # a loss above can only help
+    last = BOOK.games(ORDER[0], y)[-1]                   # a game already played, its result changed
+    if last[1] in pub:
+        redo = X.run(BOOK, "what_if", {"team": ORDER[0], "opponent": last[1]})
+        assert "What-if, a game already played:" in redo and "Had " in redo and "How much a win needs" not in redo, redo
+        idx, _ = w.played(ORDER[0], last[1])
+        flip = -(last[3] - last[4])
+        table, _ = w.changed(ORDER[0], last[1], last[3] - last[4])   # the same result: the published ratings
+        assert round(float(table.rating[ORDER[0]]), 1) == pub[ORDER[0]][0]
+    idle = X.run(BOOK, "what_if", {"team": ORDER[50]})                              # no game left, no opponent
+    assert f"{ORDER[50]} has no game left" in idle and "only other results can move it" in idle, idle
+    pic = X.run(BOOK, "stakes", {"start": 9, "count": 3})
+    assert pic.count("\n#") == 3 and f"#10 {ORDER[9]}" in pic and "a close win: #" in pic, pic
     fcs = X.run(BOOK, "what_if", {"team": a, "opponent": "Montana State", "site": "home"})   # an FCS opponent
     assert "If Montana State wins by 3:" in fcs and "Montana State #" not in fcs, fcs
     last = BOOK.games(ORDER[0], y)[-1][1]                    # an opponent already played: said, not hidden
     again = X.run(BOOK, "what_if", {"team": ORDER[0], "opponent": last})
-    assert f"{ORDER[0]} and {last} already played on" in again, again
+    assert f"{ORDER[0]} and {last} already played on" in again or "a game already played" in again, again
     assert "already played" not in text
 
 
@@ -151,7 +169,7 @@ def test_system_prompt_names_every_team():
     s = A.system(BOOK, README)
     assert "Miami (OH)" in s and "Sun Belt" in s and "## The rules" in s
     assert [t["name"] for t in A.TOOLS] == ["rankings", "team", "matchup", "conference", "polls", "games",
-                                            "upcoming", "what_if", "reply"]
+                                            "upcoming", "stakes", "what_if", "reply"]
 
 
 # ---------- the checks ----------

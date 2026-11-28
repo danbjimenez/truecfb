@@ -389,7 +389,7 @@ def look_upcoming(book, team=None, count=12):
         upcoming_line(book, g, y) for g in soon[:count]]
 
 
-def look_what_if(book, team, opponent=None, site=None):
+def look_what_if(book, team, opponent=None, site=None, margin=None):
     """What a win or loss in one game would do, by re-running the engine with that game added."""
     import reply_whatif as WI
     y = book.current
@@ -406,7 +406,7 @@ def look_what_if(book, team, opponent=None, site=None):
         game = ups[0]
         o = game["away"] if game["home"] == t else game["home"]
     else:
-        raise Unanswerable(f"{t} has no game left on the schedule file; give an opponent")
+        return look_help(book, t)
     if game and not site:
         site = "neutral" if game["neutral"] else ("home" if game["home"] == t else "away")
     site = site if site in ("home", "away", "neutral") else "neutral"
@@ -428,13 +428,40 @@ def look_what_if(book, team, opponent=None, site=None):
           "(other games still to be played will move the numbers too).",
         "Now: " + " · ".join(f"{x} #{pub[x][1]}, Team Rating {r1(pub[x][0])}" for x in (t, o) if x in pub)]
     met = None if game else book.meeting(t, o, y)
-    if met:
+    redo = met and w.played(t, o)
+    if redo:
+        g = met[0]
+        site = redo[1]
+        lines[next(i for i, x in enumerate(lines) if x.startswith("What-if: "))] = (f"What-if, a game already played: {t} and {o} played on {MONTHS[int(g[0][:2]) - 1]} "
+                    f"{int(g[0][3:])} ({'at home' if site == 'home' else 'on the road' if site == 'away' else 'neutral site'} "
+                    f"for {t}), and {t} {'won' if g[3] > g[4] else 'lost'} {max(g[3], g[4])}-{min(g[3], g[4])}. The lines below re-run the "
+                    "season with that one result changed and nothing else: say \"would have\", since later games "
+                    "might have gone differently too.")
+    elif met:
         g = met[0]
         lines.append(f"{t} and {o} already played on {MONTHS[int(g[0][:2]) - 1]} {int(g[0][3:])}: {t} "
-                     f"{'won' if g[3] > g[4] else 'lost'} {g[3]}-{g[4]}, and that result is in the numbers above. "
+                     f"{'won' if g[3] > g[4] else 'lost'} {max(g[3], g[4])}-{min(g[3], g[4])}, and that result is in the numbers above. "
                      "This what-if adds a second game between them; say so, or answer about the game played.")
+    elif not game:
+        lines.append(f"{t} vs {o} is not on the schedule file: a made-up game. Call it hypothetical, and do not call "
+                     "it a title game, a bowl or a playoff game unless the post did.")
     base = w.base_rank
-    for sc in w.scenarios(t, o, site):
+    try:
+        margin = int(margin) if margin not in (None, "") else None
+    except (TypeError, ValueError):
+        margin = None
+    if margin == 0:
+        raise Unanswerable("a game cannot end in a tie; give a margin other than 0")
+    if redo:
+        won = met[0][3] > met[0][4]
+        ms = [margin] if margin is not None else ([-3, -17] if won else [3, 17])
+        scen = [dict(zip(("table", "rank"), w.changed(t, o, m)), margin=m) for m in ms]
+    elif margin is None:
+        scen = w.scenarios(t, o, site)
+    else:
+        table, rank = w.with_game(t, o, site, margin)
+        scen = [{"margin": margin, "table": table, "rank": rank}]
+    for sc in scen:
         m, table, rank = sc["margin"], sc["table"], sc["rank"]
         winner = t if m > 0 else o
         parts = []
@@ -451,7 +478,160 @@ def look_what_if(book, team, opponent=None, site=None):
             extra += f" · {t} moves past " + ", ".join(sorted(passed, key=base.get)[:4])
         if behind:
             extra += f" · {t} falls behind " + ", ".join(sorted(behind, key=base.get)[:4])
-        lines.append(f"If {winner} wins by {abs(m)}: " + " · ".join(parts) + extra)
+        lines.append((f"Had {winner} won by {abs(m)}: " if redo else f"If {winner} wins by {abs(m)}: ")
+                     + " · ".join(parts) + extra)
+    if not redo:
+        lines += what_it_takes(book, w, t, o, site, pub)
+    return lines
+
+
+def look_help(book, t):
+    """A team with no game left: which losses by the teams just above would move it up (engine re-runs)."""
+    import reply_whatif as WI
+    y = book.current
+    if not hasattr(book, "_whatif"):
+        try:
+            book._whatif = WI.WhatIf(book.site_dir, book.data["ratings"][str(y)])
+        except WI.OutOfDate as why:
+            book._whatif = str(why)
+    if isinstance(book._whatif, str):
+        raise Unanswerable(book._whatif)
+    w = book._whatif
+    pub = book.data["ratings"][str(y)]
+    base = w.base_rank
+    lines = header(book, y) + [
+        f"{t} has no game left on the schedule file (title games and bowls are added only once set), so for now "
+        f"only other results can move it. Now: {t} #{base[t]}, Team Rating {r1(pub[t][0])}."]
+    losses = []
+    for a in sorted((x for x in base if base[t] - HELP_ABOVE - 1 <= base[x] < base[t]), key=base.get):
+        g = next(iter(next_games(book, a) or []), None)
+        if not g:
+            lines.append(f"#{base[a]} {a} has no game left either.")
+            continue
+        b = g["away"] if g["home"] == a else g["home"]
+        a_site = "neutral" if g["neutral"] else ("home" if g["home"] == a else "away")
+        rank = w.with_game(a, b, a_site, -HELP_LOSS)[1]
+        if rank[t] < rank[a]:
+            losses.append((a, b, a_site))
+            lines.append(f"If #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, {t} moves past it, to #{rank[t]}.")
+        else:
+            lines.append(f"#{base[a]} {a} losing to {b} by {HELP_LOSS} would not drop it below {t}.")
+    if len(losses) > 1:
+        rank = w.with_games([(a, b, s, -HELP_LOSS) for a, b, s in losses])[1]
+        lines.append(f"If all of those lose ({', '.join(a for a, _, _ in losses)}), {t} would be #{rank[t]}.")
+    return lines
+
+
+HELP_ABOVE = 3      # teams just above that the what-if checks for help from other games
+HELP_LOSS = 3       # the loss by a team above used when asking what other results would add (a close one)
+
+
+def what_it_takes(book, w, t, o, site, pub):
+    """How big a win team t needs to move up, and which other results (teams just above losing their next
+    game) would move it further. Display only: the engine re-run with those games added."""
+    import reply_whatif as WI
+    base = w.base_rank
+    steps = w.margin_steps(t, o, site)
+    cap = WI.E.MARGIN_CAP
+    out = []
+    if len(steps) == 1:
+        out.append(f"How much a win needs: any win leaves {t} at #{steps[0][1]}, even one by {cap} or more "
+                   f"(margin stops counting at {cap}).")
+    else:
+        out.append(f"How much a win needs: " + " · ".join(
+            f"by {m} or more, #{r}" if i else f"by 1 or more, #{r}" for i, (m, r, _) in enumerate(steps))
+            + f" (margin stops counting at {cap}).")
+    table, rank = w.with_game(t, o, site, cap)
+    best = rank[t]
+    if best > 1:
+        ahead = next(x for x in rank if rank[x] == best - 1)
+        gap = round(float(table.rating[ahead]) - float(table.rating[t]), 1)
+        if gap > 0:
+            out.append(f"Even after a win by {cap}, {t} would be {r1(gap)} below #{best - 1} {ahead} in Team Rating.")
+    above = sorted((x for x in base if base[t] - HELP_ABOVE <= base[x] < base[t]), key=base.get)
+    _, solo = w.with_game(t, o, site, 1)
+    for a in above:
+        if solo[t] < solo[a]:
+            continue                       # any win already passes it: no help needed
+        g = next((g for g in (next_games(book, a) or []) if t not in (g["home"], g["away"])), None)
+        if not g:
+            out.append(f"#{base[a]} {a} has no game left on the schedule file (title games and bowls are added only "
+                       f"once set), so for now {t} can only pass it on its own results.")
+            continue
+        b = g["away"] if g["home"] == a else g["home"]
+        a_site = "neutral" if g["neutral"] else ("home" if g["home"] == a else "away")
+        need = None
+        for m in range(1, cap + 1):
+            _, both = w.with_games([(t, o, site, m), (a, b, a_site, -HELP_LOSS)])
+            if both[t] < both[a]:
+                need = (m, both[t])
+                break
+        if need:
+            m, r = need
+            own = w.with_game(t, o, site, m)[1][t]
+            out.append(f"Help from elsewhere: if #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, a {t} win "
+                       f"by {m} or more puts {t} past {a}, at #{r} (#{own} with that win and no help)." if m > 1 else
+                       f"Help from elsewhere: if #{base[a]} {a} loses to {b} ({when(g)}), even by {HELP_LOSS}, any {t} "
+                       f"win puts {t} past {a}, at #{r} (#{own} with a win and no help).")
+        else:
+            out.append(f"#{base[a]} {a} losing to {b} by {HELP_LOSS} would not be enough: even with a win by {cap}, "
+                       f"{t} stays behind {a}.")
+    return out
+
+
+STAKES_MAX = 8
+
+
+def look_stakes(book, start=9, count=6):
+    """The playoff picture around a cut: for a slice of TrueCFB's ranking, each team's committee rank, its
+    next game, and what a close win, the biggest win and a close loss would do to its rank (engine re-runs,
+    one game added each)."""
+    import reply_whatif as WI
+    y = book.current
+    try:
+        start, count = max(1, int(start)), max(1, min(int(count), STAKES_MAX))
+    except (TypeError, ValueError):
+        start, count = 9, 6
+    if not hasattr(book, "_whatif"):
+        try:
+            book._whatif = WI.WhatIf(book.site_dir, book.data["ratings"][str(y)])
+        except WI.OutOfDate as why:
+            book._whatif = str(why)
+    if isinstance(book._whatif, str):
+        raise Unanswerable(book._whatif)
+    w = book._whatif
+    pub = book.data["ratings"][str(y)]
+    base = w.base_rank
+    snaps = book.snaps(y)
+    cfp_key = next((k for k in reversed(list(snaps)) if any(r[5] for r in snaps[k])), None)
+    cfp = {r[1]: r[5] for r in snaps[cfp_key]} if cfp_key else {}
+    cap = WI.E.MARGIN_CAP
+    order = sorted(base, key=base.get)[start - 1: start - 1 + count]
+    lines = header(book, y) + [
+        f"The picture from TrueCFB #{start} to #{start + len(order) - 1}: each team's next game and what it would do "
+        "to its TrueCFB rank, with that one game added and nothing else changed. CFP ranks are the committee's "
+        f"latest ({'going into week ' + cfp_key[1:] if cfp_key and cfp_key.startswith('w') else cfp_key or 'none yet'}). TrueCFB does not pick a playoff field."]
+    for t in order:
+        tag = f"#{base[t]} {t} ({r1(pub[t][0])}" + (f", CFP #{cfp[t]})" if cfp.get(t) else ", not in the CFP ranking)")
+        g = next(iter(next_games(book, t) or []), None)
+        if not g:
+            lines.append(f"{tag}: no game left on the schedule file (title games and bowls are added only once set).")
+            continue
+        o = g["away"] if g["home"] == t else g["home"]
+        site = "neutral" if g["neutral"] else ("home" if g["home"] == t else "away")
+        where = {"home": f"vs {o}", "away": f"at {o}", "neutral": f"vs {o} (neutral)"}[site]
+        close = w.with_game(t, o, site, 3)[1][t]
+        big = w.with_game(t, o, site, cap)[1][t]
+        loss = w.with_game(t, o, site, -3)[1][t]
+        above = next((x for x in base if base[x] == base[t] - 1), None)
+        if above:
+            need = next((m for m in range(1, cap + 1) if w.with_game(t, o, site, m)[1][t] < base[t]), None)
+            own = (f"a win by {need} or more moves it up on its own" if need and need > 1 else
+                   "any win moves it up on its own" if need else f"no win moves it past #{base[t] - 1} {above} on its own")
+        else:
+            own = "it is #1"
+        lines.append(f"{tag}: {where} ({when(g)}) · a close win: #{close} · a win by {cap}: #{big} · a close loss: "
+                     f"#{loss} · {own}.")
     return lines
 
 
@@ -505,15 +685,29 @@ LOOKUPS += [
      "parameters": {"type": "object", "properties": {
          "team": {"type": "string", "description": "Leave it out for the week's biggest games."},
          "count": {"type": "integer", "description": f"Default 12, at most {MAX_LIST}."}}}},
+    {"name": "stakes", "fn": look_stakes,
+     "description": "The playoff picture around a cut in one call: for a slice of TrueCFB's ranking, each team's "
+                    "committee rank, its next game, its TrueCFB rank after a close win, a win by 40 and a close "
+                    "loss, and whether a win alone moves it up. For bubble, \"who controls their destiny\" and "
+                    "\"playoff picture\" questions; then what_if for the team that matters most.",
+     "parameters": {"type": "object", "properties": {
+         "start": {"type": "integer", "description": "First TrueCFB rank (default 9)."},
+         "count": {"type": "integer", "description": f"How many teams (default 6, at most {STAKES_MAX})."}}}},
     {"name": "what_if", "fn": look_what_if,
      "description": "What one game not yet played would do: the engine re-run with that game added, for a "
                     "close and a two-score result each way. Gives both teams' new Team Rating, the change, the "
-                    "new rank and who they pass or fall behind. With no opponent, it uses the team's next game.",
+                    "new rank and who they pass or fall behind; how big a win it takes to move up (by 1 to 40, "
+                    "where margin stops counting); and which losses by the teams just above would move it further. "
+                    "With no opponent, it uses the team's next game. For a game already played, it re-runs the "
+                    "season with that result changed (\"what if they had won\"). Use it for playoff and \"what do "
+                    "they need\" questions too.",
      "parameters": {"type": "object", "properties": {
          "team": {"type": "string"},
          "opponent": {"type": "string", "description": "Leave it out for the team's next game."},
          "site": {"type": "string", "enum": ["home", "away", "neutral"],
-                  "description": "From the team's side. Leave it out to use the schedule."}},
+                  "description": "From the team's side. Leave it out to use the schedule."},
+         "margin": {"type": "integer", "description": "One exact result to run, from the team's side: 30 for a "
+                    "30-point win, -7 for a 7-point loss. Leave it out for a close and a two-score result each way."}},
          "required": ["team"]}},
 ]
 BY_NAME = {x["name"]: x for x in LOOKUPS}

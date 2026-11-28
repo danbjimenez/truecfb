@@ -48,15 +48,50 @@ class WhatIf:
         order = E.rank_with_h2h(table, games)[0] if self.h2h else list(table.sort_values("rating", ascending=False).index)
         return table, {t: i + 1 for i, t in enumerate(order)}
 
-    def with_game(self, team, opponent, site, margin):
-        """The season with one more game: team vs opponent, margin from team's side (+ win, - loss).
-        site: home, away or neutral, from team's side. opponent may be an FCS team (any name not in FBS)."""
-        import pandas as pd
+    def row(self, team, opponent, site, margin):
         home, away, m = (opponent, team, -margin) if site == "away" else (team, opponent, margin)
-        row = {"season": self.season, "week": int(self.games.week.max()) + 1, "home": home, "away": away,
-               "home_fbs": home in self.teams, "away_fbs": away in self.teams, "margin_home": int(m),
-               "neutral": site == "neutral", "season_type": "regular", "note": None, "game_id": "what-if"}
-        return self.run(pd.concat([self.games, pd.DataFrame([row])], ignore_index=True))
+        return {"season": self.season, "week": int(self.games.week.max()) + 1, "home": home, "away": away,
+                "home_fbs": home in self.teams, "away_fbs": away in self.teams, "margin_home": int(m),
+                "neutral": site == "neutral", "season_type": "regular", "note": None, "game_id": "what-if"}
+
+    def with_games(self, games):
+        """The season with more games: [(team, opponent, site, margin), ...], margin from team's side
+        (+ win, - loss), site home, away or neutral from team's side. An opponent may be an FCS team."""
+        import pandas as pd
+        rows = [self.row(*g) for g in games]
+        return self.run(pd.concat([self.games, pd.DataFrame(rows)], ignore_index=True))
+
+    def played(self, team, opponent):
+        """The latest game between the two this season: (row index, site from team's side), or None."""
+        g = self.games
+        hit = g[((g.home == team) & (g.away == opponent)) | ((g.home == opponent) & (g.away == team))]
+        if hit.empty:
+            return None
+        r = hit.iloc[-1]
+        return hit.index[-1], ("neutral" if r.neutral else "home" if r.home == team else "away")
+
+    def changed(self, team, opponent, margin):
+        """The season with the game the two already played given a different result (margin from team's
+        side) and nothing else changed."""
+        import pandas as pd
+        idx, site = self.played(team, opponent)
+        row = self.row(team, opponent, site, margin)
+        row["week"] = int(self.games.loc[idx, "week"])
+        return self.run(pd.concat([self.games.drop(index=idx), pd.DataFrame([row])], ignore_index=True))
+
+    def with_game(self, team, opponent, site, margin):
+        """The season with one more game (see with_games)."""
+        return self.with_games([(team, opponent, site, margin)])
+
+    def margin_steps(self, team, opponent, site):
+        """What each size of win does to team's rank: [(smallest margin, rank, Team Rating), ...], one entry
+        per rank reached, from a 1-point win up to the margin cap (a bigger win counts the same)."""
+        steps = []
+        for m in range(1, E.MARGIN_CAP + 1):
+            table, rank = self.with_game(team, opponent, site, m)
+            if not steps or rank[team] != steps[-1][1]:
+                steps.append((m, rank[team], float(table.rating[team])))
+        return steps
 
     def scenarios(self, team, opponent, site, margins=MARGINS):
         out = []
