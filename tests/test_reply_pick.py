@@ -56,7 +56,10 @@ def test_quote_when_the_post_does_not_tag_us():
     sent = []
     RB.tg = lambda method, body: sent.append(body)
     RB.send(os.path.join(bot, "outbox.json"))
-    assert sent[0]["reply_markup"]["inline_keyboard"][0][0] == {"text": "Post as quote", "callback_data": "rquote:555"}
+    rows = sent[0]["reply_markup"]["inline_keyboard"]
+    assert rows[0][0]["text"] == "Reply on X (you send it)", rows
+    assert rows[0][0]["url"] == ("https://x.com/intent/post?in_reply_to=555&text=BYU+can%27t+climb+on+its+own+this+week.")
+    assert rows[1][0] == {"text": "Post as quote", "callback_data": "rquote:555"}
     # Posting: a quote post, no reply field
     told, bodies = [], []
     RB.tell = lambda text, msg=None: told.append(text)
@@ -78,7 +81,7 @@ def test_reply_when_the_post_tags_us():
     sent = []
     RB.tg = lambda method, body: sent.append(body)
     RB.send(os.path.join(bot, "outbox.json"))
-    assert sent[0]["reply_markup"]["inline_keyboard"][0][0]["callback_data"] == "rpost:555"
+    assert sent[0]["reply_markup"]["inline_keyboard"][1][0]["callback_data"] == "rpost:555"
 
 
 def test_own_post_and_drafted_post_are_not_drafted_again():

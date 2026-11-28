@@ -292,7 +292,8 @@ def draft(site_dir, bot_dir, outbox_path):
         item.update({"status": "drafted", "reply": res["reply"], "by": res["by"]})
         seen_threads.add((user, item["thread"]))
         drafted += 1
-        outbox.append({"id": pid, "mode": item.get("mode", "reply"), "text": "\n".join(top + [
+        outbox.append({"id": pid, "mode": item.get("mode", "reply"), "picked": bool(picked), "reply": res["reply"],
+                       "text": "\n".join(top + [
             "", f"Reply (written by {res['by']}, every number checked against the engine):", res["reply"],
             "", *([f"Based on: {res['note']}"] if res["note"] else []), looked])})
 
@@ -310,6 +311,12 @@ def draft(site_dir, bot_dir, outbox_path):
     print(f"{drafted} draft(s), {len(skipped)} not drafted")
 
 
+def intent_link(post_id, text):
+    """X's web intent: opens the reply box under post_id with text filled in."""
+    from urllib.parse import urlencode
+    return "https://x.com/intent/post?" + urlencode({"in_reply_to": str(int(post_id)), "text": text})
+
+
 def send(outbox_path):
     outbox = load(outbox_path, [])
     chat = os.environ["TELEGRAM_CHAT_ID"]
@@ -321,7 +328,12 @@ def send(outbox_path):
                 quote = m.get("mode") == "quote"
                 buttons.insert(0, {"text": "Post as quote" if quote else "Post reply",
                                    "callback_data": f"{'rquote' if quote else 'rpost'}:{m['id']}"})
-            body["reply_markup"] = {"inline_keyboard": [buttons]}
+            rows = [buttons]
+            if m.get("picked") and m.get("reply"):
+                # X's own reply box with the text filled in: Dan sends it himself, logged in as @truecfb,
+                # so it can go under a post that does not tag @truecfb. Not recorded as posted.
+                rows.insert(0, [{"text": "Reply on X (you send it)", "url": intent_link(m["id"], m["reply"])}])
+            body["reply_markup"] = {"inline_keyboard": rows}
         try:
             tg("sendMessage", body)
         except Exception as err:
